@@ -4,7 +4,7 @@ import { Timestamps } from '../../TimeStamp.entity';
 import { Record } from './Record.entity';
 
 @Entity()
-export class UserToAbs extends Timestamps {
+export class RecordToAbs extends Timestamps {
   @PrimaryGeneratedColumn()
   id: number;
 

@@ -4,7 +4,7 @@ import { Legs } from './Legs.entity';
 import { Record } from './Record.entity';
 
 @Entity()
-export class UserToLegs extends Timestamps {
+export class RecordToLegs extends Timestamps {
   @PrimaryGeneratedColumn()
   id: number;
   @ManyToOne(() => Legs, (legs) => legs.id)

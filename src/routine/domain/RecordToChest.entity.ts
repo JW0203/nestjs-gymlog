@@ -4,7 +4,7 @@ import { Chest } from './Chest.entity';
 import { Record } from './Record.entity';
 
 @Entity()
-export class UserToChest extends Timestamps {
+export class RecordToChest extends Timestamps {
   @PrimaryGeneratedColumn()
   id: number;
 

@@ -4,7 +4,7 @@ import { Back } from './Back.entity';
 import { Timestamps } from '../../TimeStamp.entity';
 
 @Entity()
-export class UserToBack extends Timestamps {
+export class RecordToBack extends Timestamps {
   @PrimaryGeneratedColumn()
   id: number;
 
