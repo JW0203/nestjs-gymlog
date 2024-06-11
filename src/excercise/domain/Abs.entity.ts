@@ -1,17 +1,17 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { RecordToArms } from './RecordToArms.entity';
 import { Timestamps } from '../../TimeStamp.entity';
+import { WorkoutLogToAbs } from '../../workoutLog/domain/WorkoutLogToAbs.entity';
 
 @Entity()
-export class Arms extends Timestamps {
+export class Abs extends Timestamps {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
   exerciseName: string;
 
-  @OneToMany(() => RecordToArms, (recordToArms) => recordToArms.arms)
-  public recordToArms: RecordToArms;
+  @OneToMany(() => WorkoutLogToAbs, (workoutLogToAbs) => workoutLogToAbs.abs)
+  public workoutLogToAbs: WorkoutLogToAbs[];
 
   constructor();
   constructor(params: { exerciseName: string });

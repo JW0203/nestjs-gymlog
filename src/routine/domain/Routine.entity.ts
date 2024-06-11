@@ -1,4 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { BodyPart } from '../../excercise/domain/bodyPart.enum';
 
 @Entity()
 export class Routine {
@@ -8,7 +9,7 @@ export class Routine {
   @Column()
   name: string;
 
-  @Column()
+  @Column({ type: 'enum', enum: BodyPart })
   bodyPart: string;
 
   @Column()

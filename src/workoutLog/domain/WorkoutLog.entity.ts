@@ -1,9 +1,9 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { Timestamps } from '../../TimeStamp.entity';
-import { BodyPart } from './bodyPart.enum';
+import { BodyPart } from '../../excercise/domain/bodyPart.enum';
 
 @Entity()
-export class Record extends Timestamps {
+export class WorkoutLog extends Timestamps {
   @PrimaryGeneratedColumn()
   id: number;
 

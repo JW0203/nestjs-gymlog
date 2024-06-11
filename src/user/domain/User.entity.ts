@@ -1,6 +1,6 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Timestamps } from '../../TimeStamp.entity';
-import { Record } from '../../routine/domain/Record.entity';
+import { WorkoutLog } from '../../workoutLog/domain/WorkoutLog.entity';
 
 @Entity()
 export class User extends Timestamps {
@@ -16,8 +16,8 @@ export class User extends Timestamps {
   @Column()
   name: string;
 
-  @OneToMany(() => Record, (record) => record.id)
-  public record: Record[];
+  @OneToMany(() => WorkoutLog, (workoutLog) => workoutLog.id)
+  public workoutLog: WorkoutLog[];
 
   constructor(params: { email: string; password: string; name: string }) {
     super();
