@@ -8,6 +8,7 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { UserModule } from './user/application/user.module';
+import { RoutineModule } from './routine/application/routin.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { UserModule } from './user/application/user.module';
       }),
     }),
     UserModule,
+    RoutineModule,
   ],
   controllers: [AppController],
   providers: [AppService],
