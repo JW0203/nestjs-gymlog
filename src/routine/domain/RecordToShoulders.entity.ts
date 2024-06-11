@@ -3,7 +3,7 @@ import { Shoulders } from './Shoulders.entity';
 import { Routine } from './Routine.entity';
 
 @Entity()
-export class UserToShoulders {
+export class RecordToShouldersEntity {
   @PrimaryGeneratedColumn()
   id: number;
 

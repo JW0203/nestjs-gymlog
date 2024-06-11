@@ -1,5 +1,5 @@
 import { Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { Record } from '../../user/domain/User.entity';
+import { Record } from './Record.entity';
 import { Back } from './Back.entity';
 import { Timestamps } from '../../TimeStamp.entity';
 

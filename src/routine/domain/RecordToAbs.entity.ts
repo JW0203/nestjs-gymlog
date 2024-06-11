@@ -1,7 +1,7 @@
 import { Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Abs } from './Abs.entity';
 import { Timestamps } from '../../TimeStamp.entity';
-import { Record } from './Record-temp.entity';
+import { Record } from './Record.entity';
 
 @Entity()
 export class UserToAbs extends Timestamps {

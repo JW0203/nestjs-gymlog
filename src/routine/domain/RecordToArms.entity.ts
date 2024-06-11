@@ -1,6 +1,6 @@
 import { Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Arms } from './Arms.entity';
-import { Record } from './Record-temp.entity';
+import { Record } from './Record.entity';
 import { Timestamps } from '../../TimeStamp.entity';
 
 @Entity()
