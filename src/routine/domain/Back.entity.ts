@@ -12,4 +12,13 @@ export class Back extends Timestamps {
 
   @OneToMany(() => RecordToBack, (recordToBack) => recordToBack.back)
   public recordToBack: RecordToBack[];
+
+  constructor();
+  constructor(params: { exerciseName: string });
+  constructor(params?: { exerciseName: string }) {
+    super();
+    if (params) {
+      this.exerciseName = params.exerciseName;
+    }
+  }
 }
