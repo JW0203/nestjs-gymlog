@@ -21,7 +21,6 @@ export class UserService {
     if (saltRounds === undefined) {
       throw new Error('SALT_ROUNDS is not defined in the configuration.');
     }
-    console.log(typeof saltRounds);
     const hashedPassword = await bcrypt.hash(password, parseInt(saltRounds));
     const newUser = new User({ ...results, password: hashedPassword });
     return await this.userRepository.save(newUser);
@@ -29,7 +28,7 @@ export class UserService {
 
   async signIn(signInRequestDto: SignInRequestDto): Promise<object> {
     const { email, password } = signInRequestDto;
-    const user: User | null = await this.userRepository.findOne({ where: { email } });
+    const user = await this.userRepository.findOne({ where: { email } });
     if (user === null || user === undefined) {
       throw new BadRequestException('The email does not exist');
     }
