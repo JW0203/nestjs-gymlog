@@ -7,6 +7,11 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
+import { UserModule } from './user/application/user.module';
+import { RoutineModule } from './routine/application/routin.module';
+import { WorkoutLogModule } from './workoutLog/application/workoutLog.module';
+import { ExerciseModule } from './excercise/application/excercise.module';
+import { WorkoutLogToExerciseModule } from './workoutLogToExercise/application/workoutLogToExercise.module';
 
 @Module({
   imports: [
@@ -33,6 +38,11 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
         namingStrategy: new SnakeNamingStrategy(),
       }),
     }),
+    UserModule,
+    RoutineModule,
+    WorkoutLogModule,
+    ExerciseModule,
+    WorkoutLogToExerciseModule,
   ],
   controllers: [AppController],
   providers: [AppService],
