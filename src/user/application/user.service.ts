@@ -14,11 +14,15 @@ export class UserService {
 
   async signUp(user: User): Promise<User> {
     const { password, ...results } = user;
-    const hashingPassword: string = await bcrypt.hash(
-      password,
-      this.configService.get<number>('SALT_ROUNDS') as number,
-    );
-    const newUser = new User({ ...results, password: hashingPassword });
+    // const salt: number = parseInt(this.configService.get<number>('SALT_ROUNDS') as string);
+
+    const saltRounds = this.configService.get<string>('SALT_ROUNDS');
+    if (saltRounds === undefined) {
+      throw new Error('SALT_ROUNDS is not defined in the configuration.');
+    }
+    console.log(typeof saltRounds);
+    const hashedPassword = await bcrypt.hash(password, parseInt(saltRounds));
+    const newUser = new User({ ...results, password: hashedPassword });
     return await this.userRepository.save(newUser);
   }
 }
