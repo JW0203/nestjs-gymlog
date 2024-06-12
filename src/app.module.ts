@@ -10,6 +10,8 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { UserModule } from './user/application/user.module';
 import { RoutineModule } from './routine/application/routin.module';
 import { WorkoutLogModule } from './workoutLog/application/workoutLog.module';
+import { ExerciseModule } from './excercise/application/excercise.module';
+import { WorkoutLogToExerciseModule } from './workoutLogToExercise/application/workoutLogToExercise.module';
 
 @Module({
   imports: [
@@ -39,6 +41,8 @@ import { WorkoutLogModule } from './workoutLog/application/workoutLog.module';
     UserModule,
     RoutineModule,
     WorkoutLogModule,
+    ExerciseModule,
+    WorkoutLogToExerciseModule,
   ],
   controllers: [AppController],
   providers: [AppService],
