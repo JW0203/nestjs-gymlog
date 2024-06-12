@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { SignInRequestDto } from '../dto/signIn.request.dto';
+import { SignUpResponseDto } from '../dto/signUp.response.dto';
 
 @Injectable()
 export class UserService {
@@ -13,7 +14,7 @@ export class UserService {
     private readonly configService: ConfigService,
   ) {}
 
-  async signUp(user: User): Promise<User> {
+  async signUp(user: User): Promise<SignUpResponseDto> {
     const { password, ...results } = user;
     // const salt: number = parseInt(this.configService.get<number>('SALT_ROUNDS') as string);
 
@@ -23,7 +24,8 @@ export class UserService {
     }
     const hashedPassword = await bcrypt.hash(password, parseInt(saltRounds));
     const newUser = new User({ ...results, password: hashedPassword });
-    return await this.userRepository.save(newUser);
+    const savedUser = await this.userRepository.save(newUser);
+    return new SignUpResponseDto({ ...savedUser });
   }
 
   async signIn(signInRequestDto: SignInRequestDto): Promise<object> {
