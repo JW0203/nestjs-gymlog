@@ -1,17 +1,12 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Timestamps } from '../../TimeStamp.entity';
-import { BodyPart } from '../../excercise/domain/bodyPart.enum';
+import { WorkoutLogToExercise } from '../../workoutLogToExercise/domain/WorkoutLogToExercise.entity';
+import { User } from '../../user/domain/User.entity';
 
 @Entity()
 export class WorkoutLog extends Timestamps {
   @PrimaryGeneratedColumn()
   id: number;
-
-  @Column()
-  exerciseName: string;
-
-  @Column({ type: 'enum', enum: BodyPart })
-  bodyPart: string;
 
   @Column()
   set: number;
@@ -21,4 +16,21 @@ export class WorkoutLog extends Timestamps {
 
   @Column()
   repeat: number;
+
+  @OneToMany(() => WorkoutLogToExercise, (workoutLogToExercise) => workoutLogToExercise.workoutLog)
+  public workoutLogToExercises: WorkoutLogToExercise[];
+
+  @ManyToOne(() => User, (user) => user.workoutLogs)
+  public user: User;
+
+  constructor();
+  constructor(params: { set: number; weight: number; repeat: number });
+  constructor(params?: { set: number; weight: number; repeat: number }) {
+    super();
+    if (params) {
+      this.set = params.set;
+      this.weight = params.weight;
+      this.repeat = params.repeat;
+    }
+  }
 }
