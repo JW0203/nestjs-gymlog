@@ -16,8 +16,6 @@ export class UserService {
 
   async signUp(user: User): Promise<SignUpResponseDto> {
     const { password, ...results } = user;
-    // const salt: number = parseInt(this.configService.get<number>('SALT_ROUNDS') as string);
-
     const saltRounds = this.configService.get<string>('SALT_ROUNDS');
     if (saltRounds === undefined) {
       throw new Error('SALT_ROUNDS is not defined in the configuration.');
