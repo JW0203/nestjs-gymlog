@@ -6,12 +6,14 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { SignInRequestDto } from '../dto/signIn.request.dto';
 import { SignUpResponseDto } from '../dto/signUp.response.dto';
+import { AuthService } from '../../auth/application/auth.service';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
     private readonly configService: ConfigService,
+    private readonly authService: AuthService,
   ) {}
 
   async signUp(user: User): Promise<SignUpResponseDto> {
@@ -36,6 +38,7 @@ export class UserService {
     if (!passwordMatch) {
       throw new BadRequestException('The password does not match');
     }
-    return { result: 'login successfully' };
+    const accessToken = await this.authService.signInWithJWT({ userId: user.id });
+    return { accessToken };
   }
 }
