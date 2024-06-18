@@ -4,5 +4,5 @@ export enum BodyPart {
   BACK = 'Back',
   CHEST = 'Chest',
   LEGS = 'Legs',
-  SHOLDERS = 'Shoulders',
+  SHOULDERS = 'Shoulders',
 }

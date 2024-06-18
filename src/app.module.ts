@@ -7,11 +7,12 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
-import { UserModule } from './user/application/user.module';
+import { UserModule } from './user/user.module';
 import { RoutineModule } from './routine/application/routin.module';
 import { WorkoutLogModule } from './workoutLog/application/workoutLog.module';
 import { ExerciseModule } from './excercise/application/excercise.module';
 import { WorkoutLogToExerciseModule } from './workoutLogToExercise/application/workoutLogToExercise.module';
+import { JwtPassportModule } from './common/jwtPassport.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { WorkoutLogToExerciseModule } from './workoutLogToExercise/application/w
     WorkoutLogModule,
     ExerciseModule,
     WorkoutLogToExerciseModule,
+    JwtPassportModule,
   ],
   controllers: [AppController],
   providers: [AppService],
