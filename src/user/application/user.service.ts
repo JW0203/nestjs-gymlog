@@ -57,4 +57,12 @@ export class UserService {
     }
     return new GetMyInfoResponseDto({ ...user });
   }
+
+  async deleteUser(userId: number) {
+    const user = await this.findOneById(userId);
+    if (!user) {
+      throw new BadRequestException('The user does not exist');
+    }
+    await this.userRepository.softDelete(userId);
+  }
 }
