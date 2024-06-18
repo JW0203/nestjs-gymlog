@@ -7,6 +7,7 @@ import * as bcrypt from 'bcrypt';
 import { SignInRequestDto } from '../dto/signIn.request.dto';
 import { SignUpResponseDto } from '../dto/signUp.response.dto';
 import { AuthService } from '../../auth/application/auth.service';
+import { GetMyInfoResponseDto } from '../dto/getMyInfo.response.dto';
 
 @Injectable()
 export class UserService {
@@ -49,11 +50,11 @@ export class UserService {
       },
     });
   }
-  async getMyInfo(userId: number) {
-    return await this.userRepository.findOne({
-      where: {
-        id: userId,
-      },
-    });
+  async getMyInfo(userId: number): Promise<GetMyInfoResponseDto> {
+    const user = await this.findOneById(userId);
+    if (!user) {
+      throw new BadRequestException('The user does not exist');
+    }
+    return new GetMyInfoResponseDto({ ...user });
   }
 }
