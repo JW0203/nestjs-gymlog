@@ -3,14 +3,15 @@ import { UserService } from '../application/user.service';
 import { User } from '../domain/User.entity';
 import { SignInRequestDto } from '../dto/signIn.request.dto';
 import { JwtAuthGuard } from '../../common/jwtPassport/jwtAuth.guard';
+import { SignUpRequestDto } from '../dto/signUp.request.dto';
 
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
-  signUp(@Body() user: User) {
-    return this.userService.signUp(user);
+  signUp(@Body() signUpRequestDto: SignUpRequestDto) {
+    return this.userService.signUp(signUpRequestDto);
   }
 
   @Get()
