@@ -38,7 +38,7 @@ export class UserService {
     if (!passwordMatch) {
       throw new BadRequestException('The password does not match');
     }
-    const accessToken = await this.authService.signInWithJWT({ userId: user.id });
+    const accessToken = this.authService.signInWithJWT({ userId: user.id });
     return { accessToken };
   }
 
