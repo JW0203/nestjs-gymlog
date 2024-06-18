@@ -31,7 +31,7 @@ export class UserService {
   async signIn(signInRequestDto: SignInRequestDto): Promise<object> {
     const { email, password } = signInRequestDto;
     const user = await this.userRepository.findOne({ where: { email } });
-    if (user === null || user === undefined) {
+    if (!user) {
       throw new BadRequestException('The email does not exist');
     }
     const passwordMatch = await bcrypt.compare(password, user.password);
@@ -42,8 +42,18 @@ export class UserService {
     return { accessToken };
   }
 
-  async findOneById(userId: string): Promise<User | null> {
-    const id = parseInt(userId);
-    return await this.userRepository.findOne({ where: { id } });
+  async findOneById(id: number) {
+    return await this.userRepository.findOne({
+      where: {
+        id,
+      },
+    });
+  }
+  async getMyInfo(userId: number) {
+    return await this.userRepository.findOne({
+      where: {
+        id: userId,
+      },
+    });
   }
 }
