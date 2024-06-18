@@ -41,4 +41,9 @@ export class UserService {
     const accessToken = await this.authService.signInWithJWT({ userId: user.id });
     return { accessToken };
   }
+
+  async findOneById(userId: string): Promise<User | null> {
+    const id = parseInt(userId);
+    return await this.userRepository.findOne({ where: { id } });
+  }
 }
