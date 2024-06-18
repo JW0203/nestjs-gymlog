@@ -8,6 +8,7 @@ import { SignInRequestDto } from '../dto/signIn.request.dto';
 import { SignUpResponseDto } from '../dto/signUp.response.dto';
 import { AuthService } from '../../auth/application/auth.service';
 import { GetMyInfoResponseDto } from '../dto/getMyInfo.response.dto';
+import { SignUpRequestDto } from '../dto/signUp.request.dto';
 
 @Injectable()
 export class UserService {
@@ -17,14 +18,18 @@ export class UserService {
     private readonly authService: AuthService,
   ) {}
 
-  async signUp(user: User): Promise<SignUpResponseDto> {
-    const { password, ...results } = user;
+  async signUp(signUpRequestDto: SignUpRequestDto): Promise<SignUpResponseDto> {
+    const { password, email, name } = signUpRequestDto;
+    const foundUser = await this.userRepository.findOne({ where: { email } });
+    if (foundUser) {
+      throw new BadRequestException('Email already exists');
+    }
     const saltRounds = this.configService.get<string>('SALT_ROUNDS');
     if (saltRounds === undefined) {
       throw new Error('SALT_ROUNDS is not defined in the configuration.');
     }
     const hashedPassword = await bcrypt.hash(password, parseInt(saltRounds));
-    const newUser = new User({ ...results, password: hashedPassword });
+    const newUser = new User({ name, email, password: hashedPassword });
     const savedUser = await this.userRepository.save(newUser);
     return new SignUpResponseDto({ ...savedUser });
   }
