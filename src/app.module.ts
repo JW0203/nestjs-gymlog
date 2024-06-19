@@ -13,6 +13,7 @@ import { WorkoutLogModule } from './workoutLog/application/workoutLog.module';
 import { ExerciseModule } from './excercise/application/excercise.module';
 import { WorkoutLogToExerciseModule } from './workoutLogToExercise/application/workoutLogToExercise.module';
 import { JwtPassportModule } from './common/jwtPassport.module';
+import { RoutineToExerciseModule } from './routineToExercise/routineToExercise.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { JwtPassportModule } from './common/jwtPassport.module';
     ExerciseModule,
     WorkoutLogToExerciseModule,
     JwtPassportModule,
+    RoutineToExerciseModule,
   ],
   controllers: [AppController],
   providers: [AppService],
