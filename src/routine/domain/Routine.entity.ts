@@ -1,7 +1,8 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { BodyPart } from '../../excercise/domain/bodyPart.enum';
 import { Timestamps } from '../../TimeStamp.entity';
 import { User } from '../../user/domain/User.entity';
+import { RoutineToExercise } from '../../routineToExercise/domain/RoutineToExercise.entity';
 
 @Entity()
 export class Routine extends Timestamps {
@@ -19,6 +20,9 @@ export class Routine extends Timestamps {
 
   @ManyToOne(() => User, (user) => user.routines)
   public user: User;
+
+  @OneToMany(() => RoutineToExercise, (routineToExercise) => routineToExercise.routine)
+  public routineToExercises: RoutineToExercise[];
 
   constructor();
   constructor(params: { name: string; bodyPart: BodyPart; exerciseName: string });
