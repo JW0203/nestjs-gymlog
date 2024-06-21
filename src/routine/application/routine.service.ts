@@ -6,6 +6,7 @@ import { SaveRoutineRequestDto } from '../dto/saveRoutine.request.dto';
 import { ExerciseService } from '../../excercise/application/exercise.service';
 import { User } from '../../user/domain/User.entity';
 import { RoutineToExerciseService } from '../../routineToExercise/application/routineToExercise.service';
+import { GetRoutineRequestDto } from '../dto/getRoutine.request.dto';
 
 @Injectable()
 export class RoutineService {
@@ -30,5 +31,16 @@ export class RoutineService {
       savedRoutine.push(routineToExercise);
     }
     return savedRoutine;
+  }
+
+  async getRoutineByName(getRoutineRequest: GetRoutineRequestDto, user: User): Promise<Routine[]> {
+    const { name } = getRoutineRequest;
+    const routine = await this.routineRepository.find({
+      where: { name, user: { id: user.id } },
+    });
+    if (!Array.isArray(routine) || routine.length === 0) {
+      throw new BadRequestException(`Routine using name:'${name}' and userId:${user.id} does not found`);
+    }
+    return routine;
   }
 }
