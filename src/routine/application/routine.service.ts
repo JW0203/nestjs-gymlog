@@ -7,6 +7,7 @@ import { ExerciseService } from '../../excercise/application/exercise.service';
 import { User } from '../../user/domain/User.entity';
 import { RoutineToExerciseService } from '../../routineToExercise/application/routineToExercise.service';
 import { GetRoutineRequestDto } from '../dto/getRoutine.request.dto';
+import { PatchRoutineRequestDto } from '../dto/patchRoutine.request.dto';
 
 @Injectable()
 export class RoutineService {
@@ -33,14 +34,27 @@ export class RoutineService {
     return savedRoutine;
   }
 
-  async getRoutineByName(getRoutineRequest: GetRoutineRequestDto, user: User): Promise<Routine[]> {
+  async getRoutineByName(getRoutineRequest: GetRoutineRequestDto, user: User) {
     const { name } = getRoutineRequest;
-    const routine = await this.routineRepository.find({
-      where: { name, user: { id: user.id } },
-    });
-    if (!Array.isArray(routine) || routine.length === 0) {
+    const routines = await this.routineRepository
+      .createQueryBuilder('routine')
+      .leftJoinAndSelect('routine.routineToExercises', 'routineToExercises')
+      .leftJoinAndSelect('routineToExercises.exercise', 'exercise')
+      .innerJoin('routine.user', 'user')
+      .select([
+        'routine.id',
+        'routine.name',
+        'routineToExercises.id',
+        'exercise.id',
+        'exercise.exerciseName',
+        'exercise.bodyPart',
+      ])
+      .where('routine.name = :name AND user.id = :userId', { name: 'test', userId: user.id })
+      .getMany();
+
+    if (!Array.isArray(routines) || routines.length === 0) {
       throw new BadRequestException(`Routine using name:'${name}' and userId:${user.id} does not found`);
     }
-    return routine;
+    return routines;
   }
 }
