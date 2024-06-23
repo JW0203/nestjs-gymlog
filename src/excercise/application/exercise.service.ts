@@ -22,4 +22,13 @@ export class ExerciseService {
     }
     return exercise;
   }
+
+  async findExerciseByRoutineIds(routineIds: number[]): Promise<Exercise[]> {
+    return await this.exerciseRepository
+      .createQueryBuilder('exercise')
+      .innerJoin('exercise.routineToExercises', 'routineToExercises')
+      .innerJoin('routineToExercises.routine', 'routine')
+      .where('routine.id IN (:...routineIds)', { routineIds }) // 여러 ID 처리
+      .getMany();
+  }
 }
