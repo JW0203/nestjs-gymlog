@@ -8,6 +8,7 @@ import { User } from '../../user/domain/User.entity';
 import { RoutineToExerciseService } from '../../routineToExercise/application/routineToExercise.service';
 import { GetRoutineRequestDto } from '../dto/getRoutine.request.dto';
 import { PatchRoutineRequestDto } from '../dto/patchRoutine.request.dto';
+import { DeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
 
 @Injectable()
 export class RoutineService {
@@ -84,5 +85,27 @@ export class RoutineService {
       patchResults.push({ routineId, routineUpdateResult, routineToExerciseId, routineToExerciseUpdateResult });
     }
     return patchResults;
+  }
+
+  async softDeleteRoutine(deleteRoutineRequestDto: DeleteRoutineRequestDto, user: User) {
+    const { routineName } = deleteRoutineRequestDto;
+
+    const routines = await this.routineRepository.find({
+      where: { name: routineName, user: { id: user.id } },
+      relations: { routineToExercises: { exercise: true } },
+    });
+    if (routines.length === 0) {
+      throw new BadRequestException(`Routines not found`);
+    }
+    const routineToExercisesIds = routines.map((routine) => {
+      const routineId = routine.id;
+      const routineToExercisesId = routine.routineToExercises.map((routineToExercises) => routineToExercises.id);
+      return { routineId, routineToExercisesId: routineToExercisesId[0] };
+    });
+
+    for (const { routineId, routineToExercisesId } of routineToExercisesIds) {
+      await this.routineToExerciseService.softDelete(routineToExercisesId);
+      await this.routineRepository.softDelete(routineId);
+    }
   }
 }
