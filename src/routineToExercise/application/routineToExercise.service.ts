@@ -5,7 +5,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { SaveRoutineToExerciseRequestDto } from '../dto/saveRoutineToExercise.request.dto';
 import { TransformSaveRoutineResult } from '../function/transformSaveRoutineResult.function';
 import { UpdateRoutineToExerciseRequestDto } from '../dto/updateRoutineToExercise.request.dto';
-import { Routine } from '../../routine/domain/Routine.entity';
 
 @Injectable()
 export class RoutineToExerciseService {
