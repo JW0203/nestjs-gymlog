@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { RoutineToExercise } from '../domain/RoutineToExercise.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SaveRoutineToExerciseRequestDto } from '../dto/saveRoutineToExercise.request.dto';
 import { TransformSaveRoutineResult } from '../function/transformSaveRoutineResult.function';
 import { UpdateRoutineToExerciseRequestDto } from '../dto/updateRoutineToExercise.request.dto';
+import { Routine } from '../../routine/domain/Routine.entity';
 
 @Injectable()
 export class RoutineToExerciseService {
@@ -18,5 +19,13 @@ export class RoutineToExerciseService {
   async update(id: number, updateRequestDto: UpdateRoutineToExerciseRequestDto) {
     const updateResult = await this.routineToExerciseRepository.update(id, { ...updateRequestDto });
     return updateResult.affected ? 'updated' : false;
+  }
+
+  async softDelete(id: number) {
+    try {
+      await this.routineToExerciseRepository.softDelete({ id });
+    } catch (e) {
+      throw new BadRequestException(e);
+    }
   }
 }
