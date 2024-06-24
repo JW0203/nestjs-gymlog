@@ -57,4 +57,32 @@ export class RoutineService {
     }
     return routines;
   }
+
+  async patchRoutine(patchRoutineRequestDto: PatchRoutineRequestDto, user: User) {
+    const { routineName, dataArray } = patchRoutineRequestDto;
+    const patchResults = [];
+
+    for (const data of dataArray) {
+      const { routineId, exerciseName, bodyPart, routineToExerciseId } = data;
+      let exercise = await this.exerciseService.findByExerciseNameAndBodyPart({ exerciseName, bodyPart });
+      if (!exercise) {
+        exercise = await this.exerciseService.saveExercise({ exerciseName, bodyPart });
+      }
+      const routineUpdate = await this.routineRepository.update({ id: routineId, user }, { name: routineName });
+      const routineUpdateResult = routineUpdate.affected ? 'updated' : false;
+      if (routineUpdateResult === false) {
+        throw new BadRequestException(`updating routineRepository is failed`);
+      }
+      const routine = await this.routineRepository.findOne({ where: { id: routineId } });
+      if (!routine) {
+        throw new BadRequestException(`routineId ${routineId} not found`);
+      }
+      const routineToExerciseUpdateResult = await this.routineToExerciseService.update(routineToExerciseId, {
+        exercise,
+        routine,
+      });
+      patchResults.push({ routineId, routineUpdateResult, routineToExerciseId, routineToExerciseUpdateResult });
+    }
+    return patchResults;
+  }
 }
