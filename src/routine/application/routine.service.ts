@@ -9,6 +9,7 @@ import { RoutineToExerciseService } from '../../routineToExercise/application/ro
 import { GetRoutineRequestDto } from '../dto/getRoutine.request.dto';
 import { PatchRoutineRequestDto } from '../dto/patchRoutine.request.dto';
 import { DeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
+import { Transactional } from 'typeorm-transactional';
 
 @Injectable()
 export class RoutineService {
@@ -18,6 +19,7 @@ export class RoutineService {
     readonly routineToExerciseService: RoutineToExerciseService,
   ) {}
 
+  @Transactional()
   async saveRoutine(user: User, SaveRoutineRequestArray: SaveRoutineRequestDto[]) {
     const savedRoutine = [];
     for (const SaveRoutineRequest of SaveRoutineRequestArray) {
@@ -59,6 +61,7 @@ export class RoutineService {
     return routines;
   }
 
+  @Transactional()
   async patchRoutine(patchRoutineRequestDto: PatchRoutineRequestDto, user: User) {
     const { routineName, dataArray } = patchRoutineRequestDto;
     const patchResults = [];
@@ -87,6 +90,7 @@ export class RoutineService {
     return patchResults;
   }
 
+  @Transactional()
   async softDeleteRoutine(deleteRoutineRequestDto: DeleteRoutineRequestDto, user: User) {
     const { routineName } = deleteRoutineRequestDto;
 
