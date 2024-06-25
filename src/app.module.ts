@@ -14,6 +14,8 @@ import { ExerciseModule } from './excercise/excercise.module';
 import { WorkoutLogToExerciseModule } from './workoutLogToExercise/application/workoutLogToExercise.module';
 import { JwtPassportModule } from './common/jwtPassport.module';
 import { RoutineToExerciseModule } from './routineToExercise/routineToExercise.module';
+import { addTransactionalDataSource } from 'typeorm-transactional';
+import { DataSource } from 'typeorm';
 
 @Module({
   imports: [
@@ -39,6 +41,12 @@ import { RoutineToExerciseModule } from './routineToExercise/routineToExercise.m
         logging: true,
         namingStrategy: new SnakeNamingStrategy(),
       }),
+      async dataSourceFactory(options) {
+        if (!options) {
+          throw new Error('Invalid options passed');
+        }
+        return addTransactionalDataSource(new DataSource(options));
+      },
     }),
     UserModule,
     RoutineModule,
