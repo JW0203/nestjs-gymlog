@@ -50,7 +50,7 @@ export class RoutineService {
         'exercise.exerciseName',
         'exercise.bodyPart',
       ])
-      .where('routine.name = :name AND user.id = :userId', { name: 'test', userId: user.id })
+      .where('routine.name = :name AND user.id = :userId', { name, userId: user.id })
       .getMany();
 
     if (!Array.isArray(routines) || routines.length === 0) {
