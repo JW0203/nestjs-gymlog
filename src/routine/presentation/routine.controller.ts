@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Patch, Post, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Logger, Patch, Post, Request, UseGuards } from '@nestjs/common';
 import { RoutineService } from '../application/routine.service';
 import { JwtAuthGuard } from '../../common/jwtPassport/jwtAuth.guard';
 import { SaveRoutineRequestDto } from '../dto/saveRoutine.request.dto';
@@ -9,6 +9,7 @@ import { User } from '../../user/domain/User.entity';
 
 @Controller('routines')
 export class RoutineController {
+  private readonly logger = new Logger(RoutineController.name);
   constructor(private readonly routineService: RoutineService) {}
 
   @Post()
@@ -20,6 +21,7 @@ export class RoutineController {
   @Get()
   @UseGuards(JwtAuthGuard)
   getRoutine(@Body() getRoutineRequest: GetRoutineRequestDto, @Request() req: any) {
+    this.logger.log(`start getRoutine DTO : ${getRoutineRequest.name}`);
     return this.routineService.getRoutineByName(getRoutineRequest, req.user);
   }
 

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Routine } from '../domain/Routine.entity';
 import { Repository } from 'typeorm';
@@ -13,6 +13,7 @@ import { Transactional } from 'typeorm-transactional';
 
 @Injectable()
 export class RoutineService {
+  private readonly logger = new Logger(RoutineService.name);
   constructor(
     @InjectRepository(Routine) private readonly routineRepository: Repository<Routine>,
     readonly exerciseService: ExerciseService,
@@ -56,8 +57,10 @@ export class RoutineService {
       .getMany();
 
     if (!Array.isArray(routines) || routines.length === 0) {
+      this.logger.error(`Routine using name:'${name}' and userId:${user.id} does not found`);
       throw new BadRequestException(`Routine using name:'${name}' and userId:${user.id} does not found`);
     }
+    this.logger.log(`found routines using ${name}`);
     return routines;
   }
 
