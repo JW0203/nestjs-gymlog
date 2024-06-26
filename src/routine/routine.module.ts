@@ -6,9 +6,10 @@ import { ExerciseModule } from '../excercise/excercise.module';
 import { RoutineToExerciseModule } from '../routineToExercise/routineToExercise.module';
 import { UserModule } from '../user/user.module';
 import { RoutineController } from './presentation/routine.controller';
+import { LoggerModule } from '../common/Logger/logger.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Routine]), ExerciseModule, RoutineToExerciseModule, UserModule],
+  imports: [TypeOrmModule.forFeature([Routine]), ExerciseModule, RoutineToExerciseModule, UserModule, LoggerModule],
   providers: [RoutineService],
   controllers: [RoutineController],
 })
