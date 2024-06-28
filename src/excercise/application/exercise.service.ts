@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Exercise } from '../domain/Exercise.entity';
 import { Repository } from 'typeorm';
@@ -17,10 +17,10 @@ export class ExerciseService {
   async saveExercise(saveExerciseRequestDto: SaveExerciseRequestDto): Promise<Exercise> {
     const { exerciseName, bodyPart } = saveExerciseRequestDto;
     const exercise = await this.findByExerciseNameAndBodyPart({ exerciseName, bodyPart });
-    if (!exercise) {
-      return await this.exerciseRepository.save(saveExerciseRequestDto);
+    if (exercise) {
+      throw new BadRequestException('Exercise already exists');
     }
-    return exercise;
+    return await this.exerciseRepository.save(saveExerciseRequestDto);
   }
 
   async findExerciseByRoutineIds(routineIds: number[]): Promise<Exercise[]> {
