@@ -4,7 +4,6 @@ import { Exercise } from '../domain/Exercise.entity';
 import { Repository } from 'typeorm';
 import { FindByExerciseNameAndBodyPart } from '../dto/findByExerciseNameAndBodyPart.request.dto';
 import { SaveExerciseRequestDto } from '../dto/saveExercise.request.dto';
-import { SoftDeleteRequestDto } from '../dto/softDelete.request.dto';
 
 @Injectable()
 export class ExerciseService {
