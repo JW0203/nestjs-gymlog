@@ -4,6 +4,7 @@ import { Exercise } from '../domain/Exercise.entity';
 import { Repository } from 'typeorm';
 import { FindByExerciseNameAndBodyPart } from '../dto/findByExerciseNameAndBodyPart.request.dto';
 import { SaveExerciseRequestDto } from '../dto/saveExercise.request.dto';
+import { SoftDeleteRequestDto } from '../dto/softDelete.request.dto';
 
 @Injectable()
 export class ExerciseService {
@@ -21,5 +22,9 @@ export class ExerciseService {
       throw new BadRequestException('Exercise already exists');
     }
     return await this.exerciseRepository.save(saveExerciseRequestDto);
+  }
+
+  async softDelete(id: number) {
+    return await this.exerciseRepository.softDelete(id);
   }
 }
