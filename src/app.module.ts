@@ -11,7 +11,7 @@ import { UserModule } from './user/user.module';
 import { RoutineModule } from './routine/routine.module';
 import { WorkoutLogModule } from './workoutLog/application/workoutLog.module';
 import { ExerciseModule } from './excercise/excercise.module';
-import { WorkoutLogToExerciseModule } from './workoutLogToExercise/application/workoutLogToExercise.module';
+import { WorkoutLogToExerciseModule } from './workoutLogToExercise/workoutLogToExercise.module';
 import { JwtPassportModule } from './common/jwtPassport.module';
 import { RoutineToExerciseModule } from './routineToExercise/routineToExercise.module';
 import { addTransactionalDataSource } from 'typeorm-transactional';
