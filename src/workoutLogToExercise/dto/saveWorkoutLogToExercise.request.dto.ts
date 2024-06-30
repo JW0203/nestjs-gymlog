@@ -1,7 +1,3 @@
-import { Exercise } from '../../excercise/domain/Exercise.entity';
-import { WorkoutLog } from '../../workoutLog/domain/WorkoutLog.entity';
+import { WorkoutLogToExerciseDto } from './workoutLogToExercise.dto';
 
-export class SaveWorkoutLogToExerciseRequestDto {
-  exercise: Exercise;
-  workoutLog: WorkoutLog;
-}
+export class SaveWorkoutLogToExerciseRequestDto extends WorkoutLogToExerciseDto {}
