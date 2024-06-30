@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { WorkoutLogToExercise } from '../domain/WorkoutLogToExercise.entity';
 import { SaveWorkoutLogToExerciseRequestDto } from '../dto/saveWorkoutLogToExercise.request.dto';
 import { UpdateWorkoutLogToExerciseRequestDto } from '../dto/updateWorkoutLogToExercise.request.dto';
+import { FindWorkoutLogToExerciseRequestDto } from '../dto/findWorkoutLogToExercise.request.dto';
 
 @Injectable()
 export class WorkoutLogToExerciseService {
@@ -24,6 +25,12 @@ export class WorkoutLogToExerciseService {
     this.logger.error(`Database update starts`);
     const updated = await this.workoutLogToExerciseRepository.update(id, updateWorkoutLogToExerciseRequestDto);
     return updated.affected ? 'updated' : false;
+  }
+
+  async findWorkoutLogToExerciseByWorkoutLogAndExercise(
+    findWorkoutLogToExerciseRequestDto: FindWorkoutLogToExerciseRequestDto,
+  ) {
+    return await this.workoutLogToExerciseRepository.findOne({ where: { ...findWorkoutLogToExerciseRequestDto } });
   }
 
   async deleteWorkoutLogToExercise(workoutId: number) {
