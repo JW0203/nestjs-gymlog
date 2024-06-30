@@ -25,4 +25,8 @@ export class WorkoutLogToExerciseService {
     const updated = await this.workoutLogToExerciseRepository.update(id, updateWorkoutLogToExerciseRequestDto);
     return updated.affected ? 'updated' : false;
   }
+
+  async deleteWorkoutLogToExercise(workoutId: number) {
+    return this.workoutLogToExerciseRepository.softDelete(workoutId);
+  }
 }
