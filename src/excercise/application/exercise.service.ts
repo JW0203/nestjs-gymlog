@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Exercise } from '../domain/Exercise.entity';
 import { Repository } from 'typeorm';
@@ -17,18 +17,13 @@ export class ExerciseService {
   async saveExercise(saveExerciseRequestDto: SaveExerciseRequestDto): Promise<Exercise> {
     const { exerciseName, bodyPart } = saveExerciseRequestDto;
     const exercise = await this.findByExerciseNameAndBodyPart({ exerciseName, bodyPart });
-    if (!exercise) {
-      return await this.exerciseRepository.save(saveExerciseRequestDto);
+    if (exercise) {
+      throw new BadRequestException('Exercise already exists');
     }
-    return exercise;
+    return await this.exerciseRepository.save(saveExerciseRequestDto);
   }
 
-  async findExerciseByRoutineIds(routineIds: number[]): Promise<Exercise[]> {
-    return await this.exerciseRepository
-      .createQueryBuilder('exercise')
-      .innerJoin('exercise.routineToExercises', 'routineToExercises')
-      .innerJoin('routineToExercises.routine', 'routine')
-      .where('routine.id IN (:...routineIds)', { routineIds }) // 여러 ID 처리
-      .getMany();
+  async softDelete(id: number) {
+    return await this.exerciseRepository.softDelete(id);
   }
 }
