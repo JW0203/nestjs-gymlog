@@ -2,6 +2,7 @@ import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'ty
 import { Timestamps } from '../../TimeStamp.entity';
 import { WorkoutLogToExercise } from '../../workoutLogToExercise/domain/WorkoutLogToExercise.entity';
 import { User } from '../../user/domain/User.entity';
+import { Exercise } from '../../excercise/domain/Exercise.entity';
 
 @Entity()
 export class WorkoutLog extends Timestamps {
@@ -17,8 +18,8 @@ export class WorkoutLog extends Timestamps {
   @Column()
   repeat: number;
 
-  @OneToMany(() => WorkoutLogToExercise, (workoutLogToExercise) => workoutLogToExercise.workoutLog)
-  public workoutLogToExercises: WorkoutLogToExercise[];
+  @ManyToOne(() => Exercise, (exercise) => exercise.workoutLogs)
+  public exercise: Exercise;
 
   @ManyToOne(() => User, (user) => user.workoutLogs)
   public user: User;
