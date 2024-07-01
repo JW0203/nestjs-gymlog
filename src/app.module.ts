@@ -9,7 +9,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { UserModule } from './user/user.module';
 import { RoutineModule } from './routine/routine.module';
-import { WorkoutLogModule } from './workoutLog/application/workoutLog.module';
+import { WorkoutLogModule } from './workoutLog/workoutLog.module';
 import { ExerciseModule } from './excercise/excercise.module';
 import { JwtPassportModule } from './common/jwtPassport.module';
 import { RoutineToExerciseModule } from './routineToExercise/routineToExercise.module';
