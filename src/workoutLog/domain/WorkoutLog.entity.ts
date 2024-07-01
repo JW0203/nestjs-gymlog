@@ -1,6 +1,5 @@
-import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Timestamps } from '../../TimeStamp.entity';
-import { WorkoutLogToExercise } from '../../workoutLogToExercise/domain/WorkoutLogToExercise.entity';
 import { User } from '../../user/domain/User.entity';
 import { Exercise } from '../../excercise/domain/Exercise.entity';
 

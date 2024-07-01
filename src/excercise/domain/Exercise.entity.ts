@@ -1,7 +1,6 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Timestamps } from '../../TimeStamp.entity';
 import { BodyPart } from './bodyPart.enum';
-import { WorkoutLogToExercise } from '../../workoutLogToExercise/domain/WorkoutLogToExercise.entity';
 import { RoutineToExercise } from '../../routineToExercise/domain/RoutineToExercise.entity';
 import { WorkoutLog } from '../../workoutLog/domain/WorkoutLog.entity';
 
