@@ -2,7 +2,7 @@ import { WorkoutLog } from '../../domain/WorkoutLog.entity';
 import { User } from '../../../user/domain/User.entity';
 import { Exercise } from '../../../excercise/domain/Exercise.entity';
 
-function reponseFormatWorkoutLog(workoutLog: WorkoutLog, user: User, exercise: Exercise): any {
+function workoutLogResponseFormat(workoutLog: WorkoutLog, user: User, exercise: Exercise): any {
   return {
     ...workoutLog,
     user: {
@@ -17,4 +17,4 @@ function reponseFormatWorkoutLog(workoutLog: WorkoutLog, user: User, exercise: E
   };
 }
 
-export { reponseFormatWorkoutLog };
+export { workoutLogResponseFormat };

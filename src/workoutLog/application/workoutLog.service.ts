@@ -6,7 +6,7 @@ import { SaveWorkoutLogRequestDto } from '../dto/SaveWorkoutLog.request.dto';
 import { ExerciseService } from '../../excercise/application/exercise.service';
 import { Transactional } from 'typeorm-transactional';
 import { UserService } from '../../user/application/user.service';
-import { reponseFormatWorkoutLog } from './functions/reponseFormatWorkoutLog';
+import { workoutLogResponseFormat } from './functions/workoutLogResponseFormat';
 
 @Injectable()
 export class WorkoutLogService {
@@ -63,7 +63,7 @@ export class WorkoutLogService {
       workoutLog.exercise = exercise;
 
       const newWorkoutLog = await this.workoutLogRepository.save(workoutLog);
-      return reponseFormatWorkoutLog(newWorkoutLog, user, exercise);
+      return workoutLogResponseFormat(newWorkoutLog, user, exercise);
     });
 
     return await Promise.all(workoutLogs);
