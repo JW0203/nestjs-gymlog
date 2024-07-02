@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { WorkoutLog } from '../domain/WorkoutLog.entity';
-import { Repository } from 'typeorm';
+import { Between, Raw, Repository } from 'typeorm';
 import { SaveWorkoutLogRequestDto } from '../dto/SaveWorkoutLog.request.dto';
 import { ExerciseService } from '../../excercise/application/exercise.service';
 import { Transactional } from 'typeorm-transactional';
@@ -39,5 +39,25 @@ export class WorkoutLogService {
     });
 
     return await Promise.all(workoutLogs);
+  }
+
+  async getWorkoutLogsByDay(date: string, userId: number) {
+    const user = await this.userService.findOneById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    console.log(user.id);
+
+    const workoutLogs = await this.workoutLogRepository.find({
+      where: {
+        createdAt: Raw((alias) => `Date(${alias}) = :date`, { date }),
+        user: { id: userId },
+      },
+      relations: { exercise: true, user: true },
+    });
+
+    return workoutLogs.map((workoutLog) => {
+      return workoutLogResponseFormat(workoutLog, workoutLog.user, workoutLog.exercise);
+    });
   }
 }
