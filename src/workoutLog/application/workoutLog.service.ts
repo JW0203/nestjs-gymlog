@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { WorkoutLog } from '../domain/WorkoutLog.entity';
 import { Between, Raw, Repository } from 'typeorm';
@@ -10,6 +10,7 @@ import { workoutLogResponseFormat } from './functions/workoutLogResponseFormat';
 
 @Injectable()
 export class WorkoutLogService {
+  private readonly logger = new Logger(WorkoutLogService.name);
   constructor(
     @InjectRepository(WorkoutLog) private workoutLogRepository: Repository<WorkoutLog>,
     private readonly exerciseService: ExerciseService,
@@ -18,6 +19,7 @@ export class WorkoutLogService {
 
   @Transactional()
   async saveWorkoutLogs(userId: number, saveWorkoutLogRequestDtoArray: SaveWorkoutLogRequestDto[]): Promise<any[]> {
+    this.logger.log('start saveWorkoutLogs');
     const user = await this.userService.findOneById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
@@ -37,11 +39,12 @@ export class WorkoutLogService {
       const newWorkoutLog = await this.workoutLogRepository.save(workoutLog);
       return workoutLogResponseFormat(newWorkoutLog, user, exercise);
     });
-
+    this.logger.log('finish saveWorkoutLogs');
     return await Promise.all(workoutLogs);
   }
 
   async getWorkoutLogsByDay(date: string, userId: number) {
+    this.logger.log('Start getWorkoutLogsByDay');
     const user = await this.userService.findOneById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
@@ -55,7 +58,7 @@ export class WorkoutLogService {
       },
       relations: { exercise: true, user: true },
     });
-
+    this.logger.log('Finish getWorkoutLogsByDay');
     return workoutLogs.map((workoutLog) => {
       return workoutLogResponseFormat(workoutLog, workoutLog.user, workoutLog.exercise);
     });
