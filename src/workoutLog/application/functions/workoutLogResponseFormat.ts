@@ -1,19 +1,21 @@
 import { WorkoutLog } from '../../domain/WorkoutLog.entity';
-import { User } from '../../../user/domain/User.entity';
-import { Exercise } from '../../../excercise/domain/Exercise.entity';
 
-function workoutLogResponseFormat(workoutLog: WorkoutLog, user: User, exercise: Exercise): any {
+function workoutLogResponseFormat(workoutLogData: WorkoutLog): any {
   return {
-    ...workoutLog,
+    set: workoutLogData.set,
+    weight: workoutLogData.weight,
+    repeat: workoutLogData.repeat,
     user: {
-      id: user.id,
-      name: user.name,
+      id: workoutLogData.user.id,
+      name: workoutLogData.user.name,
     },
     exercise: {
-      id: exercise.id,
-      exerciseName: exercise.exerciseName,
-      bodyPart: exercise.bodyPart,
+      exerciseName: workoutLogData.exercise.exerciseName,
+      bodyPart: workoutLogData.exercise.bodyPart,
     },
+    createdAt: workoutLogData.createdAt,
+    updatedAt: workoutLogData.updatedAt,
+    id: workoutLogData.id,
   };
 }
 
