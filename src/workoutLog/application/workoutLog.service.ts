@@ -1,15 +1,13 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { WorkoutLog } from '../domain/WorkoutLog.entity';
-import { Between, In, Raw, Repository } from 'typeorm';
+import { In, Raw, Repository } from 'typeorm';
 import { SaveWorkoutLogRequestDto } from '../dto/SaveWorkoutLog.request.dto';
 import { ExerciseService } from '../../excercise/application/exercise.service';
 import { Transactional } from 'typeorm-transactional';
 import { UserService } from '../../user/application/user.service';
 import { workoutLogResponseFormat } from './functions/workoutLogResponseFormat';
-import { BodyPart } from '../../excercise/domain/bodyPart.enum';
 import { ExerciseDataRequestDto } from '../dto/exerciseData.request.dto';
-import { User } from '../../user/domain/User.entity';
 
 @Injectable()
 export class WorkoutLogService {
