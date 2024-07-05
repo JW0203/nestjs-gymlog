@@ -2,6 +2,7 @@ import { Body, Controller, Post, UseGuards, Request, Query, Get } from '@nestjs/
 import { WorkoutLogService } from '../application/workoutLog.service';
 import { SaveWorkoutLogRequestDto } from '../dto/SaveWorkoutLog.request.dto';
 import { JwtAuthGuard } from '../../common/jwtPassport/jwtAuth.guard';
+import { ExerciseDataRequestDto } from '../dto/exerciseData.request.dto';
 
 @Controller('workout-logs')
 export class WorkoutLogController {
@@ -9,8 +10,12 @@ export class WorkoutLogController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  saveWorkoutLogs(@Body() saveWorkoutLogRequestDtoArray: SaveWorkoutLogRequestDto[], @Request() req: any) {
-    return this.workoutLogService.saveWorkoutLogs(req.user.id, saveWorkoutLogRequestDtoArray);
+  saveWorkoutLogs(
+    @Body('workoutLogs') saveWorkoutLogRequestDtoArray: SaveWorkoutLogRequestDto[],
+    @Body('exercise') exercises: ExerciseDataRequestDto[],
+    @Request() req: any,
+  ) {
+    return this.workoutLogService.saveWorkoutLogs(req.user.id, exercises, saveWorkoutLogRequestDtoArray);
   }
 
   @Get()
