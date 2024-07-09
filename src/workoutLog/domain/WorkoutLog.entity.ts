@@ -27,12 +27,18 @@ export class WorkoutLog extends Timestamps {
   @ManyToOne(() => User, (user) => user.workoutLogs)
   public user: User;
 
-  constructor(params: { set: number; weight: number; repeat: number }) {
+  constructor(params: { set: number; weight: number; repeat: number; exercise?: Exercise; user?: User }) {
     super();
     if (params) {
       this.set = params.set;
       this.weight = params.weight;
       this.repeat = params.repeat;
+      if (params.exercise) {
+        this.exercise = params.exercise;
+      }
+      if (params.user) {
+        this.user = params.user;
+      }
     }
   }
 }
