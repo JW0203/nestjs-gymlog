@@ -10,6 +10,7 @@ function workoutLogResponseFormat(workoutLogData: WorkoutLog): any {
       name: workoutLogData.user.name,
     },
     exercise: {
+      id: workoutLogData.exercise.id,
       exerciseName: workoutLogData.exercise.exerciseName,
       bodyPart: workoutLogData.exercise.bodyPart,
     },
