@@ -8,12 +8,14 @@ import { Transactional } from 'typeorm-transactional';
 import { UserService } from '../../user/application/user.service';
 import { workoutLogResponseFormat } from './functions/workoutLogResponseFormat';
 import { ExerciseDataRequestDto } from '../dto/exerciseData.request.dto';
+import { UpdateWorkoutLogRequestDto } from '../dto/updateWorkoutLog.request.dto';
 
 @Injectable()
 export class WorkoutLogService {
   private readonly logger = new Logger(WorkoutLogService.name);
   constructor(
-    @InjectRepository(WorkoutLog) private workoutLogRepository: Repository<WorkoutLog>,
+    @InjectRepository(WorkoutLog)
+    private workoutLogRepository: Repository<WorkoutLog>,
     private readonly exerciseService: ExerciseService,
     private readonly userService: UserService,
   ) {}
@@ -81,5 +83,68 @@ export class WorkoutLogService {
     return workoutLogs.map((workoutLog) => {
       return workoutLogResponseFormat(workoutLog);
     });
+  }
+
+  @Transactional()
+  async bulkUpdateWorkoutLogs(
+    userId: number,
+    exercises: ExerciseDataRequestDto[],
+    updateWorkoutLogRequestDtoArray: UpdateWorkoutLogRequestDto[],
+  ) {
+    const user = await this.userService.findOneById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    const newExercises = await this.exerciseService.findNewExercise(exercises);
+    if (newExercises) {
+      await this.exerciseService.saveExercises(newExercises);
+    }
+    const updatedWorkoutLogIds: number[] = [];
+    const workoutLogs = await Promise.all(
+      updateWorkoutLogRequestDtoArray.map(async (updateWorkoutLog) => {
+        const { id, exerciseName, bodyPart, set, weight, repeat } = updateWorkoutLog;
+        updatedWorkoutLogIds.push(id);
+        const exercise = await this.exerciseService.findByExerciseNameAndBodyPart({
+          exerciseName,
+          bodyPart,
+        });
+
+        if (!exercise) {
+          throw new BadRequestException(`Cannot find ${exerciseName} and ${bodyPart}`);
+        }
+
+        return {
+          id,
+          set,
+          weight,
+          repeat,
+          userId: user.id,
+          exerciseId: exercise.id,
+        };
+      }),
+    );
+    const values = workoutLogs
+      .map((log) => `(${log.id}, ${log.set}, ${log.weight}, ${log.repeat}, ${log.userId}, ${log.exerciseId})`)
+      .join(', ');
+    const query = `
+        INSERT INTO workout_log (id, \`set\`, weight, \`repeat\`, user_id, exercise_id)
+        VALUES ${values} as new
+        ON DUPLICATE KEY UPDATE
+          \`set\` = new.\`set\`,
+          weight = new.weight,
+          \`repeat\` = new.\`repeat\`,
+          user_id = new.user_id,
+          exercise_id = new.exercise_id;
+      `;
+    const result = await this.workoutLogRepository.query(query);
+    const warnings = await this.workoutLogRepository.query('SHOW WARNINGS');
+    const updatedWorkoutLogs = await this.workoutLogRepository.find({
+      where: { id: In(updatedWorkoutLogIds) },
+      relations: ['user', 'exercise'],
+    });
+    const workoutLogResponse = updatedWorkoutLogs.map((workoutLog) => {
+      return workoutLogResponseFormat(workoutLog);
+    });
+    return { queryResult: result.info, warnings, updatedResults: workoutLogResponse };
   }
 }
