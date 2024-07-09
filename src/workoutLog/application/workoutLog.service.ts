@@ -48,10 +48,7 @@ export class WorkoutLogService {
         throw new BadRequestException(`${exerciseName} and ${bodyPart} are not exist`);
       }
 
-      const workoutLog = new WorkoutLog({ set, weight, repeat });
-      workoutLog.exercise = exercise;
-      workoutLog.user = user;
-      return workoutLog;
+      return new WorkoutLog({ set, weight, repeat, exercise, user });
     });
 
     const workoutLogs = await Promise.all(workoutLogsPromises);
