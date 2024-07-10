@@ -1,9 +1,10 @@
-import { Body, Controller, Post, UseGuards, Request, Query, Get, Patch } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards, Request, Query, Get, Patch, Delete, HttpCode } from '@nestjs/common';
 import { WorkoutLogService } from '../application/workoutLog.service';
 import { SaveWorkoutLogRequestDto } from '../dto/SaveWorkoutLog.request.dto';
 import { JwtAuthGuard } from '../../common/jwtPassport/jwtAuth.guard';
 import { ExerciseDataRequestDto } from '../dto/exerciseData.request.dto';
 import { UpdateWorkoutLogRequestDto } from '../dto/updateWorkoutLog.request.dto';
+import { SoftDeleteWorkoutLogRequestDto } from '../dto/softDeleteWorkoutLog.request.dto';
 
 @Controller('workout-logs')
 export class WorkoutLogController {
@@ -33,5 +34,12 @@ export class WorkoutLogController {
     @Body('workoutLogs') updateWorkoutLogRequestDtoArray: UpdateWorkoutLogRequestDto[],
   ) {
     return this.workoutLogService.bulkUpdateWorkoutLogs(req.user.id, exercises, updateWorkoutLogRequestDtoArray);
+  }
+
+  @Delete()
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(204)
+  softDeleteWorkoutLogs(@Body() softDeleteWorkoutLogRequestDto: SoftDeleteWorkoutLogRequestDto, @Request() req: any) {
+    return this.workoutLogService.softDeleteWorkoutLogs(softDeleteWorkoutLogRequestDto, req.user);
   }
 }
