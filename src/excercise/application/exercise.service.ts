@@ -40,7 +40,7 @@ export class ExerciseService {
   }
 
   @Transactional()
-  async saveExercises(exercisesData: ExerciseDataRequestDto[]) {
+  async bulkInsertExercises(exercisesData: ExerciseDataRequestDto[]) {
     try {
       const newExercises = await this.findNewExercise(exercisesData);
       if (newExercises.length > 0) {
