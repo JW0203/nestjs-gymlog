@@ -1,7 +1,7 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Exercise } from '../domain/Exercise.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { FindByExerciseNameAndBodyPart } from '../dto/findByExerciseNameAndBodyPart.request.dto';
 import { SaveExerciseRequestDto } from '../dto/saveExercise.request.dto';
 import { ExerciseDataRequestDto } from '../../workoutLog/dto/exerciseData.request.dto';
@@ -9,11 +9,17 @@ import { Transactional } from 'typeorm-transactional';
 
 @Injectable()
 export class ExerciseService {
+  private readonly logger = new Logger(ExerciseService.name);
   constructor(@InjectRepository(Exercise) private exerciseRepository: Repository<Exercise>) {}
 
   async findByExerciseNameAndBodyPart(findByExerciseNameAndBodyPart: FindByExerciseNameAndBodyPart) {
     const { exerciseName, bodyPart } = findByExerciseNameAndBodyPart;
-    return await this.exerciseRepository.findOne({ where: { exerciseName, bodyPart } });
+    const foundExercise = await this.exerciseRepository.findOne({ where: { exerciseName, bodyPart } });
+    if (!foundExercise) {
+      this.logger.log(`can not find ${exerciseName} and ${bodyPart}`);
+      throw new NotFoundException(`can not find ${exerciseName} and ${bodyPart}`);
+    }
+    return foundExercise;
   }
 
   async findAll(exercisesData: ExerciseDataRequestDto[]) {
@@ -21,7 +27,12 @@ export class ExerciseService {
       exerciseName: exercise.exerciseName,
       bodyPart: exercise.bodyPart,
     }));
-    return await this.exerciseRepository.find({ where: exercises });
+    const foundExercises = await this.exerciseRepository.find({ where: exercises });
+    if (!foundExercises) {
+      this.logger.log(`can not find all exercises`);
+      throw new NotFoundException(` Can not find all exercises`);
+    }
+    return foundExercises;
   }
 
   async findNewExercise(exercisesData: ExerciseDataRequestDto[]) {
@@ -42,8 +53,13 @@ export class ExerciseService {
     try {
       const newExercises = await this.findNewExercise(exercisesData);
       if (newExercises.length > 0) {
-        await this.exerciseRepository.insert(newExercises);
-        return this.findAll(newExercises);
+        const result = await this.exerciseRepository.insert(newExercises);
+        const ids = result.identifiers.map((data) => data.id);
+        const newData = await this.exerciseRepository.findBy({ id: In(ids) });
+        if (!newData) {
+          throw new NotFoundException('Something went wrong while creating new exercise!');
+        }
+        return newData;
       }
       return 'All exercises are already saved';
     } catch (error) {
@@ -65,12 +81,7 @@ export class ExerciseService {
     }
 
     try {
-      await this.exerciseRepository.insert(saveExerciseRequestDto);
-      const savedExercise = await this.findByExerciseNameAndBodyPart(saveExerciseRequestDto);
-      if (!savedExercise) {
-        throw new NotFoundException('savedExercise can not find by requested data');
-      }
-      return savedExercise;
+      return await this.exerciseRepository.save(saveExerciseRequestDto);
     } catch (error) {
       if (error instanceof Error) {
         if (error.message.includes('Duplicate entry')) {
