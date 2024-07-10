@@ -1,17 +1,21 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn, Unique } from 'typeorm';
 import { Timestamps } from '../../TimeStamp.entity';
 import { BodyPart } from './bodyPart.enum';
 import { RoutineToExercise } from '../../routineToExercise/domain/RoutineToExercise.entity';
 import { WorkoutLog } from '../../workoutLog/domain/WorkoutLog.entity';
+import { IsNotEmpty } from 'class-validator';
 
 @Entity()
+@Unique(['exerciseName'])
 export class Exercise extends Timestamps {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @IsNotEmpty()
   @Column({ type: 'enum', enum: BodyPart })
   bodyPart: BodyPart;
 
+  @IsNotEmpty()
   @Column()
   exerciseName: string;
 
