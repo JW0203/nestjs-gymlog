@@ -9,6 +9,8 @@ import { UserService } from '../../user/application/user.service';
 import { workoutLogResponseFormat } from './functions/workoutLogResponseFormat';
 import { ExerciseDataRequestDto } from '../dto/exerciseData.request.dto';
 import { UpdateWorkoutLogRequestDto } from '../dto/updateWorkoutLog.request.dto';
+import { SoftDeleteWorkoutLogRequestDto } from '../dto/softDeleteWorkoutLog.request.dto';
+import { User } from '../../user/domain/User.entity';
 
 @Injectable()
 export class WorkoutLogService {
@@ -143,5 +145,13 @@ export class WorkoutLogService {
       return workoutLogResponseFormat(workoutLog);
     });
     return { queryResult: result.info, warnings, updatedResults: workoutLogResponse };
+  }
+
+  async softDeleteWorkoutLogs(softDeleteRequestDto: SoftDeleteWorkoutLogRequestDto, user: User) {
+    await this.workoutLogRepository
+      .createQueryBuilder()
+      .softDelete()
+      .where({ id: In(softDeleteRequestDto.ids), user: user })
+      .execute();
   }
 }
