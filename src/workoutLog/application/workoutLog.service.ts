@@ -23,7 +23,7 @@ export class WorkoutLogService {
   ) {}
 
   @Transactional()
-  async saveWorkoutLogs(
+  async bulkInsertWorkoutLogs(
     userId: number,
     exercises: ExerciseDataRequestDto[],
     saveWorkoutLogRequestDtoArray: SaveWorkoutLogRequestDto[],
@@ -34,28 +34,21 @@ export class WorkoutLogService {
     }
 
     const newExercises = await this.exerciseService.findNewExercise(exercises);
-    if (newExercises) {
+    if (newExercises.length > 0) {
       await this.exerciseService.bulkInsertExercises(newExercises);
     }
+    const workoutLogs = await Promise.all(
+      saveWorkoutLogRequestDtoArray.map(async (saveWorkoutLogRequestDto) => {
+        const { exerciseName, bodyPart, set, weight, repeat } = saveWorkoutLogRequestDto;
+        const exercise = await this.exerciseService.findByExerciseNameAndBodyPart({
+          exerciseName,
+          bodyPart,
+        });
+        return new WorkoutLog({ set, weight, repeat, exercise, user });
+      }),
+    );
 
-    const workoutLogsPromises = saveWorkoutLogRequestDtoArray.map(async (saveWorkoutLogRequestDto) => {
-      const { exerciseName, bodyPart, set, weight, repeat } = saveWorkoutLogRequestDto;
-
-      const exercise = await this.exerciseService.findByExerciseNameAndBodyPart({
-        exerciseName,
-        bodyPart,
-      });
-      if (!exercise) {
-        this.logger.log(`[not exist] ${exerciseName} and ${bodyPart}`);
-        throw new BadRequestException(`${exerciseName} and ${bodyPart} are not exist`);
-      }
-
-      return new WorkoutLog({ set, weight, repeat, exercise, user });
-    });
-
-    const workoutLogs = await Promise.all(workoutLogsPromises);
     const result = await this.workoutLogRepository.insert(workoutLogs);
-
     const ids = result.identifiers.map((id) => id.id);
     const savedWorkoutLogs = await this.workoutLogRepository.find({
       where: { id: In(ids) },
