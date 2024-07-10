@@ -35,7 +35,7 @@ export class WorkoutLogService {
 
     const newExercises = await this.exerciseService.findNewExercise(exercises);
     if (newExercises) {
-      await this.exerciseService.saveExercises(newExercises);
+      await this.exerciseService.bulkInsertExercises(newExercises);
     }
 
     const workoutLogsPromises = saveWorkoutLogRequestDtoArray.map(async (saveWorkoutLogRequestDto) => {
@@ -96,7 +96,7 @@ export class WorkoutLogService {
     }
     const newExercises = await this.exerciseService.findNewExercise(exercises);
     if (newExercises) {
-      await this.exerciseService.saveExercises(newExercises);
+      await this.exerciseService.bulkInsertExercises(newExercises);
     }
     const updatedWorkoutLogIds: number[] = [];
     const workoutLogs = await Promise.all(
