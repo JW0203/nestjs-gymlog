@@ -11,6 +11,7 @@ export class WorkoutLogController {
   constructor(private workoutLogService: WorkoutLogService) {}
 
   @Post()
+  @HttpCode(201)
   @UseGuards(JwtAuthGuard)
   saveWorkoutLogs(
     @Body('workoutLogs') saveWorkoutLogRequestDtoArray: SaveWorkoutLogRequestDto[],
@@ -21,12 +22,14 @@ export class WorkoutLogController {
   }
 
   @Get()
+  @HttpCode(200)
   @UseGuards(JwtAuthGuard)
   getWorkoutLogs(@Query('date') date: string, @Request() req: any) {
     return this.workoutLogService.getWorkoutLogsByDay(date, req.user.id);
   }
 
   @Patch()
+  @HttpCode(200)
   @UseGuards(JwtAuthGuard)
   bulkUpdateWorkoutLogs(
     @Request() req: any,
