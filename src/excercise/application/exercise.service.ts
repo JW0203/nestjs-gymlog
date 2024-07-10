@@ -1,12 +1,10 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Exercise } from '../domain/Exercise.entity';
-import { In, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { FindByExerciseNameAndBodyPart } from '../dto/findByExerciseNameAndBodyPart.request.dto';
 import { SaveExerciseRequestDto } from '../dto/saveExercise.request.dto';
-import { BodyPart } from '../domain/bodyPart.enum';
 import { ExerciseDataRequestDto } from '../../workoutLog/dto/exerciseData.request.dto';
-import { WorkoutLog } from '../../workoutLog/domain/WorkoutLog.entity';
 import { Transactional } from 'typeorm-transactional';
 
 @Injectable()
