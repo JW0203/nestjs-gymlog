@@ -15,10 +15,10 @@ export class WorkoutLogController {
   @UseGuards(JwtAuthGuard)
   saveWorkoutLogs(
     @Body('workoutLogs') saveWorkoutLogRequestDtoArray: SaveWorkoutLogRequestDto[],
-    @Body('exercise') exercises: ExerciseDataRequestDto[],
+    @Body('exercises') exercises: ExerciseDataRequestDto[],
     @Request() req: any,
   ) {
-    return this.workoutLogService.saveWorkoutLogs(req.user.id, exercises, saveWorkoutLogRequestDtoArray);
+    return this.workoutLogService.bulkInsertWorkoutLogs(req.user.id, exercises, saveWorkoutLogRequestDtoArray);
   }
 
   @Get()
