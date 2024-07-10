@@ -1,6 +1,6 @@
 import { Body, Controller, Post, UseGuards, Request, Query, Get, Patch, Delete, HttpCode } from '@nestjs/common';
 import { WorkoutLogService } from '../application/workoutLog.service';
-import { SaveWorkoutLogRequestDto } from '../dto/SaveWorkoutLog.request.dto';
+import { SaveWorkoutLogRequestDto } from '../dto/saveWorkoutLog.request.dto';
 import { JwtAuthGuard } from '../../common/jwtPassport/jwtAuth.guard';
 import { ExerciseDataRequestDto } from '../dto/exerciseData.request.dto';
 import { UpdateWorkoutLogRequestDto } from '../dto/updateWorkoutLog.request.dto';

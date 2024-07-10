@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, Logger, NotFoundException } from '@nes
 import { InjectRepository } from '@nestjs/typeorm';
 import { WorkoutLog } from '../domain/WorkoutLog.entity';
 import { In, Raw, Repository } from 'typeorm';
-import { SaveWorkoutLogRequestDto } from '../dto/SaveWorkoutLog.request.dto';
+import { SaveWorkoutLogRequestDto } from '../dto/saveWorkoutLog.request.dto';
 import { ExerciseService } from '../../excercise/application/exercise.service';
 import { Transactional } from 'typeorm-transactional';
 import { UserService } from '../../user/application/user.service';
