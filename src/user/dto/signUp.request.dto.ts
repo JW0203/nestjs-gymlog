@@ -1,6 +1,6 @@
 import { IsNotEmpty, Matches, MaxLength, MinLength } from 'class-validator';
-import { NoWhitespace } from '../../common/NoWhitespace.validation';
-import { IsEmailCustom } from '../../common/isEmailValidation.custom';
+import { NoWhitespace } from '../../common/validation/NoWhitespace.validation';
+import { IsEmailCustom } from '../../common/validation/isEmailValidation.custom';
 
 export class SignUpRequestDto {
   @IsEmailCustom()
