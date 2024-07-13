@@ -7,6 +7,7 @@ export class ExerciseController {
   constructor(private readonly exerciseService: ExerciseService) {}
 
   @Delete(':id')
+  @HttpCode(204)
   softDelete(@Param('id') id: string) {
     return this.exerciseService.softDelete(parseInt(id));
   }
