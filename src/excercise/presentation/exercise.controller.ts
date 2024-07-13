@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Post } from '@nestjs/common';
 import { ExerciseService } from '../application/exercise.service';
 import { SaveExerciseRequestDto } from '../dto/saveExercise.request.dto';
 
@@ -12,16 +12,19 @@ export class ExerciseController {
   }
 
   @Post()
+  @HttpCode(201)
   save(@Body() saveExerciseRequestDto: SaveExerciseRequestDto[]) {
     return this.exerciseService.bulkInsertExercises(saveExerciseRequestDto);
   }
 
   @Get()
+  @HttpCode(200)
   get(@Body() saveExerciseRequestDto: SaveExerciseRequestDto) {
     return this.exerciseService.findByExerciseNameAndBodyPart(saveExerciseRequestDto);
   }
 
   @Get('all')
+  @HttpCode(200)
   getAll(@Body() saveExerciseRequestDto: SaveExerciseRequestDto[]) {
     return this.exerciseService.findAll(saveExerciseRequestDto);
   }
