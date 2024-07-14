@@ -1,32 +1,28 @@
-import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Exercise } from '../domain/Exercise.entity';
 import { In, Repository } from 'typeorm';
-import { FindByExerciseNameAndBodyPart } from '../dto/findByExerciseNameAndBodyPart.request.dto';
 import { SaveExerciseRequestDto } from '../dto/saveExercise.request.dto';
-import { ExerciseDataRequestDto } from '../../workoutLog/dto/exerciseData.request.dto';
+import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
 import { Transactional } from 'typeorm-transactional';
+import { isExerciseDataArrayValidation } from '../../common/validation/isExerciseData.validation';
 
 @Injectable()
 export class ExerciseService {
   private readonly logger = new Logger(ExerciseService.name);
   constructor(@InjectRepository(Exercise) private exerciseRepository: Repository<Exercise>) {}
 
-  async findByExerciseNameAndBodyPart(findByExerciseNameAndBodyPart: FindByExerciseNameAndBodyPart) {
+  async findByExerciseNameAndBodyPart(findByExerciseNameAndBodyPart: ExerciseDataFormatDto) {
     const { exerciseName, bodyPart } = findByExerciseNameAndBodyPart;
-    const foundExercise = await this.exerciseRepository.findOne({ where: { exerciseName, bodyPart } });
-    if (!foundExercise) {
-      this.logger.log(`can not find ${exerciseName} and ${bodyPart}`);
-      throw new NotFoundException(`can not find ${exerciseName} and ${bodyPart}`);
-    }
-    return foundExercise;
+    return await this.exerciseRepository.findOne({ where: { exerciseName, bodyPart } });
   }
 
-  async findAll(exercisesData: ExerciseDataRequestDto[]) {
+  async findAll(exercisesData: ExerciseDataFormatDto[]) {
     const exercises = exercisesData.map((exercise) => ({
       exerciseName: exercise.exerciseName,
       bodyPart: exercise.bodyPart,
     }));
+
     const foundExercises = await this.exerciseRepository.find({ where: exercises });
     if (!foundExercises) {
       this.logger.log(`can not find all exercises`);
@@ -35,11 +31,16 @@ export class ExerciseService {
     return foundExercises;
   }
 
-  async findNewExercise(exercisesData: ExerciseDataRequestDto[]) {
+  async findNewExercises(exerciseDataArray: ExerciseDataFormatDto[]) {
     try {
-      const foundExercise = await this.findAll(exercisesData);
+      const invalidExerciseDataArray = isExerciseDataArrayValidation(exerciseDataArray);
+      if (!invalidExerciseDataArray.isValid) {
+        throw new BadRequestException(invalidExerciseDataArray.errors);
+      }
+
+      const foundExercise = await this.findAll(exerciseDataArray);
       const existingMap = new Map(foundExercise.map((ex) => [ex.bodyPart + ex.exerciseName, ex]));
-      return exercisesData.filter((ex) => !existingMap.has(ex.bodyPart + ex.exerciseName));
+      return exerciseDataArray.filter((ex) => !existingMap.has(ex.bodyPart + ex.exerciseName));
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(`Error while finding new exercises: ${error.message}`);
@@ -49,10 +50,16 @@ export class ExerciseService {
   }
 
   @Transactional()
-  async bulkInsertExercises(exercisesData: ExerciseDataRequestDto[]) {
+  async bulkInsertExercises(exerciseDataArray: SaveExerciseRequestDto[]) {
+    const invalidExerciseDataArray = isExerciseDataArrayValidation(exerciseDataArray);
+    if (!invalidExerciseDataArray.isValid) {
+      throw new BadRequestException(invalidExerciseDataArray.errors);
+    }
     try {
-      const newExercises = await this.findNewExercise(exercisesData);
+      const newExercises = await this.findNewExercises(exerciseDataArray);
+
       if (newExercises.length > 0) {
+        // await Promise.all(newExercises.map((exercise) => validateOrReject(exercise)));
         const result = await this.exerciseRepository.insert(newExercises);
         const ids = result.identifiers.map((data) => data.id);
         const newData = await this.exerciseRepository.findBy({ id: In(ids) });
@@ -81,7 +88,14 @@ export class ExerciseService {
     }
 
     try {
-      return await this.exerciseRepository.save(saveExerciseRequestDto);
+      // return await this.exerciseRepository.save(saveExerciseRequestDto);
+      const result = await this.exerciseRepository.insert(saveExerciseRequestDto);
+      const id = result.identifiers[0].id;
+      const newData = await this.exerciseRepository.findOne({ where: { id } });
+      if (!newData) {
+        throw new NotFoundException('Something went wrong while creating new exercise!');
+      }
+      return newData;
     } catch (error) {
       if (error instanceof Error) {
         if (error.message.includes('Duplicate entry')) {
