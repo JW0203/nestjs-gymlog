@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, Post, ValidationPipe } from '@nestjs/common';
 import { ExerciseService } from '../application/exercise.service';
 import { SaveExerciseRequestDto } from '../dto/saveExercise.request.dto';
-import { ExerciseDataRequestDto } from '../../common/dto/exerciseData.request.dto';
+import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
 
 @Controller('exercises')
 export class ExerciseController {
@@ -27,13 +27,13 @@ export class ExerciseController {
 
   @Get()
   @HttpCode(200)
-  get(@Body() exerciseDataRequestDto: ExerciseDataRequestDto) {
-    return this.exerciseService.findByExerciseNameAndBodyPart(exerciseDataRequestDto);
+  get(@Body() exerciseData: ExerciseDataFormatDto) {
+    return this.exerciseService.findByExerciseNameAndBodyPart(exerciseData);
   }
 
   @Get('all')
   @HttpCode(200)
-  getAll(@Body() exerciseDataRequestDtoArray: ExerciseDataRequestDto[]) {
-    return this.exerciseService.findAll(exerciseDataRequestDtoArray);
+  getAll(@Body() exerciseDataArray: ExerciseDataFormatDto[]) {
+    return this.exerciseService.findAll(exerciseDataArray);
   }
 }
