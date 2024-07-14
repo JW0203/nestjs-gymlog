@@ -2,7 +2,8 @@ import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Timestamps } from '../../TimeStamp.entity';
 import { WorkoutLog } from '../../workoutLog/domain/WorkoutLog.entity';
 import { Routine } from '../../routine/domain/Routine.entity';
-import { IsNotEmpty } from 'class-validator';
+import { IsNotEmpty, Matches, MaxLength, MinLength } from 'class-validator';
+import { NoWhitespace } from '../../common/validation/NoWhitespace.validation';
 
 @Entity()
 export class User extends Timestamps {
@@ -14,10 +15,16 @@ export class User extends Timestamps {
   email: string;
 
   @IsNotEmpty()
+  @NoWhitespace()
+  @MinLength(8)
+  @MaxLength(15)
   @Column()
   password: string;
 
   @IsNotEmpty()
+  @MinLength(2)
+  @MaxLength(15)
+  @Matches(/^[A-Za-z0-9]+$/)
   @Column()
   name: string;
 
