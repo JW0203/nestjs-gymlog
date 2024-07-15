@@ -1,7 +1,8 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Post, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Post } from '@nestjs/common';
 import { ExerciseService } from '../application/exercise.service';
 import { SaveExerciseRequestDto } from '../dto/saveExercise.request.dto';
 import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
+import { ExerciseDataArrayRequestDto } from '../dto/saveExerciseAll.request.dto';
 
 @Controller('exercises')
 export class ExerciseController {
@@ -21,8 +22,8 @@ export class ExerciseController {
 
   @Post('all')
   @HttpCode(201)
-  save(@Body(ValidationPipe) saveExerciseRequestDto: SaveExerciseRequestDto[]) {
-    return this.exerciseService.bulkInsertExercises(saveExerciseRequestDto);
+  saveArray(@Body() exerciseDataArray: ExerciseDataArrayRequestDto) {
+    return this.exerciseService.bulkInsertExercises(exerciseDataArray);
   }
 
   @Get()
