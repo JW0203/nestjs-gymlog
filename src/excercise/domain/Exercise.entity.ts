@@ -2,7 +2,7 @@ import { Column, Entity, OneToMany, PrimaryGeneratedColumn, Unique } from 'typeo
 import { Timestamps } from '../../TimeStamp.entity';
 import { RoutineToExercise } from '../../routineToExercise/domain/RoutineToExercise.entity';
 import { WorkoutLog } from '../../workoutLog/domain/WorkoutLog.entity';
-import { IsEnum, IsNotEmpty } from 'class-validator';
+import { IsEnum, IsNotEmpty, validateOrReject } from 'class-validator';
 import { BodyPart } from '../../common/bodyPart.enum';
 import { IsExerciseName } from '../../common/validation/isExerciseName.validation';
 
@@ -35,6 +35,9 @@ export class Exercise extends Timestamps {
     if (params) {
       this.exerciseName = params.exerciseName;
       this.bodyPart = params.bodyPart;
+      validateOrReject(this).catch((errors) => {
+        console.log('(Exercise entity validation failed). Errors: ', errors);
+      });
     }
   }
 }
