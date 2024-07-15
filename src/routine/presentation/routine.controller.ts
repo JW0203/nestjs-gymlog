@@ -5,7 +5,6 @@ import { SaveRoutineRequestDto } from '../dto/saveRoutine.request.dto';
 import { GetRoutineRequestDto } from '../dto/getRoutine.request.dto';
 import { PatchRoutineRequestDto } from '../dto/patchRoutine.request.dto';
 import { DeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
-import { User } from '../../user/domain/User.entity';
 
 @Controller('routines')
 export class RoutineController {
