@@ -2,7 +2,7 @@ import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Timestamps } from '../../TimeStamp.entity';
 import { WorkoutLog } from '../../workoutLog/domain/WorkoutLog.entity';
 import { Routine } from '../../routine/domain/Routine.entity';
-import { IsNotEmpty, Matches, MaxLength, MinLength } from 'class-validator';
+import { IsNotEmpty, Matches, MaxLength, MinLength, validateOrReject } from 'class-validator';
 import { NoWhitespace } from '../../common/validation/NoWhitespace.validation';
 
 @Entity()
@@ -40,6 +40,10 @@ export class User extends Timestamps {
       this.email = params.email;
       this.password = params.password;
       this.name = params.name;
+
+      validateOrReject(this).catch((errors) => {
+        console.log(`Errors while make new user entity`, errors);
+      });
     }
   }
 }
