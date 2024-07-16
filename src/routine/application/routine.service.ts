@@ -1,15 +1,15 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Routine } from '../domain/Routine.entity';
-import { Repository } from 'typeorm';
-import { SaveRoutineRequestDto } from '../dto/saveRoutine.request.dto';
+import { In, Repository } from 'typeorm';
 import { ExerciseService } from '../../excercise/application/exercise.service';
 import { User } from '../../user/domain/User.entity';
-import { RoutineToExerciseService } from '../../routineToExercise/application/routineToExercise.service';
 import { GetRoutineRequestDto } from '../dto/getRoutine.request.dto';
-import { PatchRoutineRequestDto } from '../dto/patchRoutine.request.dto';
+import { UpdateRoutineRequestDto } from '../dto/updateRoutine.request.dto';
 import { DeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
 import { Transactional } from 'typeorm-transactional';
+import { SaveAllRoutineRequestDto } from '../dto/saveAllRoutine.request.dto';
+import { RoutineResponseFromt } from './functions/RoutineResponse.fromat';
 
 @Injectable()
 export class RoutineService {
@@ -17,26 +17,56 @@ export class RoutineService {
   constructor(
     @InjectRepository(Routine) private readonly routineRepository: Repository<Routine>,
     readonly exerciseService: ExerciseService,
-    readonly routineToExerciseService: RoutineToExerciseService,
   ) {}
 
   @Transactional()
-  async saveRoutine(user: User, SaveRoutineRequestArray: SaveRoutineRequestDto[]) {
-    const savedRoutine = [];
-    for (const SaveRoutineRequest of SaveRoutineRequestArray) {
-      const { routineName, exerciseName, bodyPart } = SaveRoutineRequest;
-      const newRoutine = await this.routineRepository.save({ name: routineName, user });
-
-      let exercise = await this.exerciseService.findByExerciseNameAndBodyPart({ exerciseName, bodyPart });
-      if (!exercise) {
-        exercise = await this.exerciseService.saveExercise({ exerciseName, bodyPart });
-      }
-
-      const routineToExercise = await this.routineToExerciseService.saveRelation({ exercise, routine: newRoutine });
-      savedRoutine.push(routineToExercise);
+  async bulkInsertRoutines(user: User, saveRoutines: SaveAllRoutineRequestDto) {
+    const newExercises = await this.exerciseService.findNewExercises(saveRoutines);
+    if (newExercises.length > 0) {
+      console.log(newExercises);
+      await this.exerciseService.bulkInsertExercises({ exercises: newExercises });
     }
-    return savedRoutine;
+
+    const promiseRoutine = await Promise.all(
+      saveRoutines.routines.map(async (routine) => {
+        const { routineName, exerciseName, bodyPart } = routine;
+
+        const exercise = await this.exerciseService.findByExerciseNameAndBodyPart({ exerciseName, bodyPart });
+        if (!exercise) {
+          throw new NotFoundException(
+            `exercise (${exerciseName}, ${bodyPart}) not found. : ${JSON.stringify(exercise)} `,
+          );
+        }
+        return new Routine({ name: routineName, user: user, exercise: exercise });
+      }),
+    );
+
+    const savedRoutines = await this.routineRepository.insert(promiseRoutine);
+    const ids: number[] = savedRoutines.identifiers.map((routine) => {
+      return routine.id;
+    });
+    const foundRoutines = await this.routineRepository.find({
+      where: { id: In(ids) },
+      relations: ['user', 'exercise'],
+    });
+    // Todo: 선택된 반환 값을 보여주기 위한 dto 만들기
+    return foundRoutines.map((routine) => RoutineResponseFromt(routine));
   }
+
+  // Todo : 루틴을 하나만 저장하는 것은 말이 안된다고 생각하고 삭제, 하지만 한번 더 고려
+  // @Transactional()
+  // async saveRoutine(user: User, SaveRoutineRequest: SaveRoutineRequestDto) {
+  //   const { routineName, exerciseName, bodyPart } = SaveRoutineRequest;
+  //   const exercise = await this.exerciseService.findByExerciseNameAndBodyPart({ exerciseName, bodyPart });
+  //   if (!exercise) {
+  //     throw new NotFoundException(`exercise not found. : ${JSON.stringify(exercise)} `);
+  //   }
+  //   const newRoutine = await this.routineRepository.save({ name: routineName, user });
+  //   return await this.routineRepository.findOne({
+  //     where: { id: newRoutine.id },
+  //     relations: ['user', 'exercise'],
+  //   });
+  // }
 
   async getRoutineByName(getRoutineRequest: GetRoutineRequestDto, user: User) {
     const { name } = getRoutineRequest;
@@ -95,23 +125,22 @@ export class RoutineService {
 
   @Transactional()
   async softDeleteRoutine(deleteRoutineRequestDto: DeleteRoutineRequestDto, user: User) {
+    // Todo: bulk delete 구현
     const { routineName } = deleteRoutineRequestDto;
-
+    console.log(user.id);
     const routines = await this.routineRepository.find({
-      where: { name: routineName, user: { id: user.id } },
-      relations: { routineToExercises: { exercise: true } },
+      where: { name: routineName },
+      relations: { exercise: true },
     });
     if (routines.length === 0) {
       throw new BadRequestException(`Routines not found`);
     }
     const routineToExercisesIds = routines.map((routine) => {
       const routineId = routine.id;
-      const routineToExercisesId = routine.routineToExercises.map((routineToExercises) => routineToExercises.id);
-      return { routineId, routineToExercisesId: routineToExercisesId[0] };
+      return { routineId };
     });
 
-    for (const { routineId, routineToExercisesId } of routineToExercisesIds) {
-      await this.routineToExerciseService.softDelete(routineToExercisesId);
+    for (const { routineId } of routineToExercisesIds) {
       await this.routineRepository.softDelete(routineId);
     }
   }
