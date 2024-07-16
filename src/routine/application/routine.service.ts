@@ -95,34 +95,42 @@ export class RoutineService {
   }
 
   @Transactional()
-  async patchRoutine(patchRoutineRequestDto: PatchRoutineRequestDto, user: User) {
-    const { routineName, dataArray } = patchRoutineRequestDto;
-    const patchResults = [];
-
-    for (const data of dataArray) {
-      const { routineId, exerciseName, bodyPart, routineToExerciseId } = data;
-      let exercise = await this.exerciseService.findByExerciseNameAndBodyPart({ exerciseName, bodyPart });
-      if (!exercise) {
-        exercise = await this.exerciseService.saveExercise({ exerciseName, bodyPart });
-      }
-      const routineUpdate = await this.routineRepository.update({ id: routineId, user }, { name: routineName });
-      const routineUpdateResult = routineUpdate.affected ? 'updated' : false;
-      if (routineUpdateResult === false) {
-        throw new BadRequestException(`updating routineRepository is failed`);
-      }
-      const routine = await this.routineRepository.findOne({ where: { id: routineId } });
-      if (!routine) {
-        throw new BadRequestException(`routineId ${routineId} not found`);
-      }
-      const routineToExerciseUpdateResult = await this.routineToExerciseService.update(routineToExerciseId, {
-        exercise,
-        routine,
-      });
-      patchResults.push({ routineId, routineUpdateResult, routineToExerciseId, routineToExerciseUpdateResult });
+  async updateRoutine(updateRoutineRequest: UpdateRoutineRequestDto, user: User) {
+    const NewExercises = await this.exerciseService.findNewExercises(updateRoutineRequest);
+    if (NewExercises.length > 0) {
+      await this.exerciseService.bulkInsertExercises({ exercises: NewExercises });
     }
-    return patchResults;
-  }
 
+    const promiseUpdatedIds = await Promise.all(
+      updateRoutineRequest.updateData.map(async (updateRoutine) => {
+        const { routineName, id, exerciseName, bodyPart } = updateRoutine;
+        console.log(routineName);
+        const exercise = await this.exerciseService.findByExerciseNameAndBodyPart({ exerciseName, bodyPart });
+        if (!exercise) {
+          throw new NotFoundException(`${exerciseName}, ${bodyPart} can not find`);
+        }
+
+        await this.routineRepository.update(id, { name: routineName, exercise, user });
+        return id;
+      }),
+    );
+    // Todo: response 를 어떻게 해야 업데이트가 되었다는 걸 확인 할 수 있으까?
+    const result = await this.routineRepository
+      .createQueryBuilder('routine')
+      .leftJoinAndSelect('routine.user', 'user', 'user.id = :userId', { userId: user.id })
+      .leftJoinAndSelect('routine.exercise', 'exercise')
+      .select([
+        'routine.id',
+        'routine.name',
+        'routine.createdAt',
+        'routine.updatedAt',
+        'user.id',
+        'exercise.exerciseName',
+        'exercise.bodyPart',
+      ])
+      .where('routine.id IN (:...ids)', { ids: promiseUpdatedIds })
+      .getMany();
+    return result;
   @Transactional()
   async softDeleteRoutine(deleteRoutineRequestDto: DeleteRoutineRequestDto, user: User) {
     // Todo: bulk delete 구현
