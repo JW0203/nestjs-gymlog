@@ -131,6 +131,8 @@ export class RoutineService {
       .where('routine.id IN (:...ids)', { ids: promiseUpdatedIds })
       .getMany();
     return result;
+  }
+
   @Transactional()
   async softDeleteRoutine(deleteRoutineRequestDto: DeleteRoutineRequestDto, user: User) {
     // Todo: bulk delete 구현
