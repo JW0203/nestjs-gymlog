@@ -19,12 +19,13 @@ export class Routine extends Timestamps {
   public exercise: Exercise;
 
   constructor();
-  constructor(params: { name: string; user: User });
-  constructor(params?: { name: string; user: User }) {
+  constructor(params: { name: string; user: User; exercise: Exercise });
+  constructor(params?: { name: string; user: User; exercise: Exercise }) {
     super();
     if (params) {
       this.name = params.name;
       this.user = params.user;
+      this.exercise = params.exercise;
 
       validateOrReject(this).catch((errors) => {
         console.log('(Routine entity validation failed). Errors: ', errors);
