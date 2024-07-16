@@ -12,7 +12,6 @@ import { RoutineModule } from './routine/routine.module';
 import { WorkoutLogModule } from './workoutLog/workoutLog.module';
 import { ExerciseModule } from './excercise/excercise.module';
 import { JwtPassportModule } from './common/jwtPassport.module';
-import { RoutineToExerciseModule } from './routineToExercise/routineToExercise.module';
 import { addTransactionalDataSource } from 'typeorm-transactional';
 import { DataSource } from 'typeorm';
 
@@ -36,7 +35,7 @@ import { DataSource } from 'typeorm';
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
         autoLoadEntities: true,
-        synchronize: false,
+        synchronize: true,
         logging: true,
         namingStrategy: new SnakeNamingStrategy(),
       }),
@@ -52,7 +51,6 @@ import { DataSource } from 'typeorm';
     WorkoutLogModule,
     ExerciseModule,
     JwtPassportModule,
-    RoutineToExerciseModule,
   ],
   controllers: [AppController],
   providers: [AppService],
