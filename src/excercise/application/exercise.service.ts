@@ -49,18 +49,14 @@ export class ExerciseService {
   @Transactional()
   async bulkInsertExercises(exerciseDataArray: ExerciseDataArrayRequestDto) {
     try {
-      const newExercises = await this.findNewExercises(exerciseDataArray);
-
-      if (newExercises.length > 0) {
-        const result = await this.exerciseRepository.insert(newExercises);
-        const ids = result.identifiers.map((data) => data.id);
-        const newData = await this.exerciseRepository.findBy({ id: In(ids) });
-        if (!newData) {
-          throw new NotFoundException('Something went wrong while creating new exercise!');
-        }
-        return newData;
+      const exerciseData = exerciseDataArray.exercises;
+      const result = await this.exerciseRepository.insert(exerciseData);
+      const ids = result.identifiers.map((data) => data.id);
+      const newData = await this.exerciseRepository.findBy({ id: In(ids) });
+      if (!newData) {
+        throw new NotFoundException('Something went wrong while creating new exercise!');
       }
-      return 'All exercises are already saved';
+      return newData;
     } catch (error) {
       if (error instanceof Error) {
         if (error.message.includes('Duplicate entry')) {
@@ -80,13 +76,8 @@ export class ExerciseService {
     }
 
     try {
-      const result = await this.exerciseRepository.insert(saveExerciseRequestDto);
-      const id = result.identifiers[0].id;
-      const newData = await this.exerciseRepository.findOne({ where: { id } });
-      if (!newData) {
-        throw new NotFoundException('Something went wrong while creating new exercise!');
-      }
-      return newData;
+      const newExercise = new Exercise({ exerciseName, bodyPart });
+      return await this.exerciseRepository.save(newExercise);
     } catch (error) {
       if (error instanceof Error) {
         if (error.message.includes('Duplicate entry')) {
