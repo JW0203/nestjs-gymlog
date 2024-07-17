@@ -1,14 +1,20 @@
-import { UserResponseDto } from '../../user/dto/user.response.dto';
+import { UserDataResponseDto } from '../../common/dto/UserData.response.dto';
+import { ExerciseDataResponseDto } from '../../common/dto/exerciseData.response.dto';
 
 export class RoutineResponseDto {
   id: number;
   name: string;
-  user: UserResponseDto;
-  constructor(params: { id: number; name: string; user: UserResponseDto }) {
-    if (params) {
-      this.id = params.id;
-      this.name = params.name;
-      this.user = params.user;
-    }
+  user: UserDataResponseDto;
+  exercise: ExerciseDataResponseDto;
+  createdAt: string;
+  updatedAt: string;
+
+  constructor(routine: any) {
+    this.id = routine.id;
+    this.name = routine.name;
+    this.user = new UserDataResponseDto(routine.user);
+    this.exercise = new ExerciseDataResponseDto(routine.exercise);
+    this.createdAt = routine.createdAt;
+    this.updatedAt = routine.updatedAt;
   }
 }
