@@ -50,8 +50,14 @@ export class ExerciseService {
   async bulkInsertExercises(exerciseDataArray: SaveExercisesRequestDto) {
     try {
       const exerciseData = exerciseDataArray.exercises;
-      // ToDo: dto 에 있는 데이터 말고  new Exercise 이용할 것
-      const result = await this.exerciseRepository.insert(exerciseData);
+      const exercises = exerciseData.map(
+        (exercise) =>
+          new Exercise({
+            exerciseName: exercise.exerciseName,
+            bodyPart: exercise.bodyPart,
+          }),
+      );
+      const result = await this.exerciseRepository.insert(exercises);
       const ids = result.identifiers.map((data) => data.id);
       const newData = await this.exerciseRepository.findBy({ id: In(ids) });
       if (!newData) {
