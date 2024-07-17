@@ -1,10 +1,10 @@
 import { Body, Controller, Delete, Get, HttpCode, Logger, Patch, Post, Request, UseGuards } from '@nestjs/common';
 import { RoutineService } from '../application/routine.service';
 import { JwtAuthGuard } from '../../common/jwtPassport/jwtAuth.guard';
-import { SaveRoutineRequestDto } from '../dto/saveRoutine.request.dto';
 import { GetRoutineRequestDto } from '../dto/getRoutine.request.dto';
-import { PatchRoutineRequestDto } from '../dto/patchRoutine.request.dto';
+import { UpdateRoutineRequestDto } from '../dto/updateRoutine.request.dto';
 import { DeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
+import { SaveRoutinesRequestDto } from '../dto/saveRoutines.request.dto';
 
 @Controller('routines')
 export class RoutineController {
@@ -14,8 +14,8 @@ export class RoutineController {
   @Post()
   @UseGuards(JwtAuthGuard)
   @HttpCode(201)
-  postRoutine(@Body() saveRoutineRequestDtoArray: SaveRoutineRequestDto[], @Request() req: any) {
-    return this.routineService.saveRoutine(req.user, saveRoutineRequestDtoArray);
+  postRoutine(@Body() saveRoutines: SaveRoutinesRequestDto, @Request() req: any) {
+    return this.routineService.bulkInsertRoutines(req.user, saveRoutines);
   }
 
   @Get()
@@ -29,8 +29,8 @@ export class RoutineController {
   @Patch()
   @UseGuards(JwtAuthGuard)
   @HttpCode(200)
-  patchRoutine(@Body() patchRoutineRequestDto: PatchRoutineRequestDto, @Request() req: any) {
-    return this.routineService.patchRoutine(patchRoutineRequestDto, req.user);
+  patchRoutine(@Body() updateRoutineRequest: UpdateRoutineRequestDto, @Request() req: any) {
+    return this.routineService.bulkUpdateRoutines(updateRoutineRequest, req.user);
   }
 
   @Delete()
