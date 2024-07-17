@@ -50,24 +50,8 @@ export class RoutineService {
       where: { id: In(ids) },
       relations: ['user', 'exercise'],
     });
-    // Todo: 선택된 반환 값을 보여주기 위한 dto 만들기
     return foundRoutines.map((routine) => RoutineResponseFromt(routine));
   }
-
-  // Todo : 루틴을 하나만 저장하는 것은 말이 안된다고 생각하고 삭제, 하지만 한번 더 고려
-  // @Transactional()
-  // async saveRoutine(user: User, SaveRoutineRequest: SaveRoutineFormatDto) {
-  //   const { routineName, exerciseName, bodyPart } = SaveRoutineRequest;
-  //   const exercise = await this.exerciseService.findByExerciseNameAndBodyPart({ exerciseName, bodyPart });
-  //   if (!exercise) {
-  //     throw new NotFoundException(`exercise not found. : ${JSON.stringify(exercise)} `);
-  //   }
-  //   const newRoutine = await this.routineRepository.save({ name: routineName, user });
-  //   return await this.routineRepository.findOne({
-  //     where: { id: newRoutine.id },
-  //     relations: ['user', 'exercise'],
-  //   });
-  // }
 
   async getRoutineByName(getRoutineRequest: GetRoutineRequestDto, user: User) {
     const { name } = getRoutineRequest;
@@ -107,7 +91,6 @@ export class RoutineService {
 
   @Transactional()
   async softDeleteRoutine(deleteRoutineRequestDto: DeleteRoutineRequestDto, user: User) {
-    // Todo: bulk delete 구현
     const { routineName } = deleteRoutineRequestDto;
     console.log(user.id);
     const routines = await this.routineRepository.find({
