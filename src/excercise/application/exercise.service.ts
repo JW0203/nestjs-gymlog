@@ -63,8 +63,7 @@ export class ExerciseService {
       if (!newData) {
         throw new NotFoundException('Something went wrong while creating new exercise!');
       }
-      // ToDo: dto 적용
-      return newData;
+      return newData.map((exercise) => new ExerciseDataResponseDto(exercise));
     } catch (error) {
       if (error instanceof Error) {
         if (error.message.includes('Duplicate entry')) {
