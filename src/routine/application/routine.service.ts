@@ -92,21 +92,16 @@ export class RoutineService {
   @Transactional()
   async softDeleteRoutine(deleteRoutineRequestDto: DeleteRoutineRequestDto, user: User) {
     const { routineName } = deleteRoutineRequestDto;
-    console.log(user.id);
     const routines = await this.routineRepository.find({
-      where: { name: routineName },
-      relations: { exercise: true },
+      where: { name: routineName, user: { id: user.id } },
+      relations: ['user', 'exercise'],
     });
     if (routines.length === 0) {
       throw new BadRequestException(`Routines not found`);
     }
-    const routineToExercisesIds = routines.map((routine) => {
-      const routineId = routine.id;
-      return { routineId };
+    const routineIds = routines.map((routine) => {
+      return routine.id;
     });
-
-    for (const { routineId } of routineToExercisesIds) {
-      await this.routineRepository.softDelete(routineId);
-    }
+    await this.routineRepository.softDelete(routineIds);
   }
 }
