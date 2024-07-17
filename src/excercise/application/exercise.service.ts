@@ -5,7 +5,7 @@ import { In, Repository } from 'typeorm';
 import { SaveExerciseRequestDto } from '../dto/saveExercise.request.dto';
 import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
 import { Transactional } from 'typeorm-transactional';
-import { ExerciseDataArrayRequestDto } from '../dto/saveExerciseAll.request.dto';
+import { ExerciseDataArrayRequestDto } from '../dto/saveExercises.request.dto';
 
 @Injectable()
 export class ExerciseService {
@@ -22,12 +22,12 @@ export class ExerciseService {
       exerciseName: exercise.exerciseName,
       bodyPart: exercise.bodyPart,
     }));
-
     const foundExercises = await this.exerciseRepository.find({ where: exercises });
     if (!foundExercises) {
       this.logger.log(`can not find all exercises`);
       throw new NotFoundException(` Can not find all exercises`);
     }
+    // ToDo: dto 적용
     return foundExercises;
   }
 
@@ -37,6 +37,7 @@ export class ExerciseService {
 
       const foundExercise = await this.findAll(exerciseData);
       const existingMap = new Map(foundExercise.map((ex) => [ex.bodyPart + ex.exerciseName, ex]));
+      // ToDo: dto 적용
       return exerciseData.filter((ex) => !existingMap.has(ex.bodyPart + ex.exerciseName));
     } catch (error) {
       if (error instanceof Error) {
@@ -50,12 +51,14 @@ export class ExerciseService {
   async bulkInsertExercises(exerciseDataArray: ExerciseDataArrayRequestDto) {
     try {
       const exerciseData = exerciseDataArray.exercises;
+      // ToDo: dto 에 있는 데이터 말고  new Exercise 이용할 것
       const result = await this.exerciseRepository.insert(exerciseData);
       const ids = result.identifiers.map((data) => data.id);
       const newData = await this.exerciseRepository.findBy({ id: In(ids) });
       if (!newData) {
         throw new NotFoundException('Something went wrong while creating new exercise!');
       }
+      // ToDo: dto 적용
       return newData;
     } catch (error) {
       if (error instanceof Error) {
@@ -68,6 +71,7 @@ export class ExerciseService {
     }
   }
 
+  // ToDo: 필요 없는 메소드
   async saveExercise(saveExerciseRequestDto: SaveExerciseRequestDto): Promise<Exercise> {
     const { exerciseName, bodyPart } = saveExerciseRequestDto;
     const exercise = await this.findByExerciseNameAndBodyPart({ exerciseName, bodyPart });
@@ -89,6 +93,7 @@ export class ExerciseService {
     }
   }
 
+  // ToDo: dto 적용 , bulk delete 적용
   async softDelete(id: number) {
     return await this.exerciseRepository.softDelete(id);
   }
