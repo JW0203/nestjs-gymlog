@@ -90,7 +90,7 @@ export class RoutineService {
   }
 
   @Transactional()
-  async softDeleteRoutine(deleteRoutineRequestDto: DeleteRoutineRequestDto, user: User) {
+  async softDeleteRoutines(deleteRoutineRequestDto: DeleteRoutineRequestDto, user: User) {
     const { routineName } = deleteRoutineRequestDto;
     const routines = await this.routineRepository.find({
       where: { name: routineName, user: { id: user.id } },
