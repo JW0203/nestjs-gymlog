@@ -71,28 +71,11 @@ export class RoutineService {
 
   async getRoutineByName(getRoutineRequest: GetRoutineRequestDto, user: User) {
     const { name } = getRoutineRequest;
-    const routines = await this.routineRepository
-      .createQueryBuilder('routine')
-      .leftJoinAndSelect('routine.routineToExercises', 'routineToExercises')
-      .leftJoinAndSelect('routineToExercises.exercise', 'exercise')
-      .innerJoin('routine.user', 'user')
-      .select([
-        'routine.id',
-        'routine.name',
-        'routineToExercises.id',
-        'exercise.id',
-        'exercise.exerciseName',
-        'exercise.bodyPart',
-      ])
-      .where('routine.name = :name AND user.id = :userId', { name, userId: user.id })
-      .getMany();
-
-    if (!Array.isArray(routines) || routines.length === 0) {
-      this.logger.error(`Routine using name:'${name}' and userId:${user.id} does not found`);
-      throw new BadRequestException(`Routine using name:'${name}' and userId:${user.id} does not found`);
-    }
-    this.logger.log(`found routines using ${name}`);
-    return routines;
+    const foundRoutines = await this.routineRepository.find({
+      where: { name, user: { id: user.id } },
+      relations: ['user', 'exercise'],
+    });
+    return foundRoutines.map((routine) => new RoutineResponseDto(routine));
   }
 
   @Transactional()
