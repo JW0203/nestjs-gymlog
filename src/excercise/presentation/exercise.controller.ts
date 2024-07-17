@@ -2,18 +2,19 @@ import { Body, Controller, Delete, Get, HttpCode, Param, Post } from '@nestjs/co
 import { ExerciseService } from '../application/exercise.service';
 import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
 import { SaveExercisesRequestDto } from '../dto/saveExercises.request.dto';
+import { DeleteExerciseRequestDto } from '../dto/deleteExercise.request.dto';
 
 @Controller('exercises')
 export class ExerciseController {
   constructor(private readonly exerciseService: ExerciseService) {}
 
-  @Delete(':id')
+  @Delete()
   @HttpCode(204)
-  softDelete(@Param('id') id: string) {
-    return this.exerciseService.softDelete(parseInt(id));
+  softDelete(@Body() deleteExerciseRequestDto: DeleteExerciseRequestDto) {
+    return this.exerciseService.softDelete(deleteExerciseRequestDto);
   }
 
-  @Post('all')
+  @Post()
   @HttpCode(201)
   saveArray(@Body() exerciseDataArray: SaveExercisesRequestDto) {
     return this.exerciseService.bulkInsertExercises(exerciseDataArray);
