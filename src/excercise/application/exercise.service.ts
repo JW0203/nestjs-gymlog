@@ -5,6 +5,7 @@ import { In, Repository } from 'typeorm';
 import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
 import { Transactional } from 'typeorm-transactional';
 import { SaveExercisesRequestDto } from '../dto/saveExercises.request.dto';
+import { ExerciseDataResponseDto } from '../../common/dto/exerciseData.response.dto';
 
 @Injectable()
 export class ExerciseService {
@@ -26,8 +27,7 @@ export class ExerciseService {
       this.logger.log(`can not find all exercises`);
       throw new NotFoundException(` Can not find all exercises`);
     }
-    // ToDo: dto 적용
-    return foundExercises;
+    return foundExercises.map((exercise) => new ExerciseDataResponseDto(exercise));
   }
 
   async findNewExercises(exerciseDataArray: SaveExercisesRequestDto) {
@@ -36,8 +36,8 @@ export class ExerciseService {
 
       const foundExercise = await this.findAll(exerciseData);
       const existingMap = new Map(foundExercise.map((ex) => [ex.bodyPart + ex.exerciseName, ex]));
-      // ToDo: dto 적용
-      return exerciseData.filter((ex) => !existingMap.has(ex.bodyPart + ex.exerciseName));
+      const newExercises = exerciseData.filter((ex) => !existingMap.has(ex.bodyPart + ex.exerciseName));
+      return newExercises.map((exercise) => new ExerciseDataResponseDto(exercise));
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(`Error while finding new exercises: ${error.message}`);
