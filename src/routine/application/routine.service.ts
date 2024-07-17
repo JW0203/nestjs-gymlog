@@ -10,6 +10,7 @@ import { DeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
 import { Transactional } from 'typeorm-transactional';
 import { SaveAllRoutineRequestDto } from '../dto/saveAllRoutine.request.dto';
 import { RoutineResponseFromt } from './functions/RoutineResponse.fromat';
+import { RoutineResponseDto } from '../dto/routine.response.dto';
 
 @Injectable()
 export class RoutineService {
@@ -114,23 +115,11 @@ export class RoutineService {
         return id;
       }),
     );
-    // Todo: response 를 어떻게 해야 업데이트가 되었다는 걸 확인 할 수 있으까?
-    const result = await this.routineRepository
-      .createQueryBuilder('routine')
-      .leftJoinAndSelect('routine.user', 'user', 'user.id = :userId', { userId: user.id })
-      .leftJoinAndSelect('routine.exercise', 'exercise')
-      .select([
-        'routine.id',
-        'routine.name',
-        'routine.createdAt',
-        'routine.updatedAt',
-        'user.id',
-        'exercise.exerciseName',
-        'exercise.bodyPart',
-      ])
-      .where('routine.id IN (:...ids)', { ids: promiseUpdatedIds })
-      .getMany();
-    return result;
+    const foundRoutines = await this.routineRepository.find({
+      where: { id: In(promiseUpdatedIds) },
+      relations: ['exercise', 'user'],
+    });
+    return foundRoutines.map((routine) => new RoutineResponseDto(routine));
   }
 
   @Transactional()
