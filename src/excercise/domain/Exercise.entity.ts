@@ -28,9 +28,7 @@ export class Exercise extends Timestamps {
   @OneToMany(() => Routine, (routine) => routine.exercise)
   routines: Routine[];
 
-  constructor();
-  constructor(params: { bodyPart: BodyPart; exerciseName: string });
-  constructor(params?: { bodyPart: BodyPart; exerciseName: string }) {
+  constructor(params: { bodyPart: BodyPart; exerciseName: string }) {
     super();
     if (params) {
       this.exerciseName = params.exerciseName;
