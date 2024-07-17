@@ -4,7 +4,7 @@ import { Exercise } from '../domain/Exercise.entity';
 import { In, Repository } from 'typeorm';
 import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
 import { Transactional } from 'typeorm-transactional';
-import { ExerciseDataArrayRequestDto } from '../dto/saveExercises.request.dto';
+import { SaveExercisesRequestDto } from '../dto/saveExercises.request.dto';
 
 @Injectable()
 export class ExerciseService {
@@ -30,7 +30,7 @@ export class ExerciseService {
     return foundExercises;
   }
 
-  async findNewExercises(exerciseDataArray: ExerciseDataArrayRequestDto) {
+  async findNewExercises(exerciseDataArray: SaveExercisesRequestDto) {
     try {
       const exerciseData = exerciseDataArray.exercises;
 
@@ -47,7 +47,7 @@ export class ExerciseService {
   }
 
   @Transactional()
-  async bulkInsertExercises(exerciseDataArray: ExerciseDataArrayRequestDto) {
+  async bulkInsertExercises(exerciseDataArray: SaveExercisesRequestDto) {
     try {
       const exerciseData = exerciseDataArray.exercises;
       // ToDo: dto 에 있는 데이터 말고  new Exercise 이용할 것
