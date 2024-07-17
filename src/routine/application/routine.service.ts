@@ -9,7 +9,6 @@ import { UpdateRoutinesRequestDto } from '../dto/updateRoutines.request.dto';
 import { DeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
 import { Transactional } from 'typeorm-transactional';
 import { SaveRoutinesRequestDto } from '../dto/saveRoutines.request.dto';
-import { RoutineResponseFromt } from './functions/RoutineResponse.fromat';
 import { RoutineResponseDto } from '../dto/routine.response.dto';
 
 @Injectable()
@@ -50,7 +49,7 @@ export class RoutineService {
       where: { id: In(ids) },
       relations: ['user', 'exercise'],
     });
-    return foundRoutines.map((routine) => RoutineResponseFromt(routine));
+    return foundRoutines.map((routine) => new RoutineResponseDto(routine));
   }
 
   async getRoutineByName(getRoutineRequest: GetRoutineRequestDto, user: User) {
@@ -68,7 +67,7 @@ export class RoutineService {
     if (NewExercises.length > 0) {
       await this.exerciseService.bulkInsertExercises({ exercises: NewExercises });
     }
-
+    // Todo: 저장하기 전에 중복 체크 필요....
     const promiseUpdatedIds = await Promise.all(
       updateRoutineRequest.updateData.map(async (updateRoutine) => {
         const { routineName, id, exerciseName, bodyPart } = updateRoutine;
