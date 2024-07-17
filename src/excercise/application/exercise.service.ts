@@ -2,7 +2,6 @@ import { ConflictException, Injectable, Logger, NotFoundException } from '@nestj
 import { InjectRepository } from '@nestjs/typeorm';
 import { Exercise } from '../domain/Exercise.entity';
 import { In, Repository } from 'typeorm';
-import { SaveExerciseRequestDto } from '../dto/saveExercise.request.dto';
 import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
 import { Transactional } from 'typeorm-transactional';
 import { ExerciseDataArrayRequestDto } from '../dto/saveExercises.request.dto';
@@ -60,28 +59,6 @@ export class ExerciseService {
       }
       // ToDo: dto 적용
       return newData;
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.message.includes('Duplicate entry')) {
-          throw new ConflictException('[Duplicate entry] Exercise already exists');
-        }
-        throw new Error(`Error while saving exercise: ${error.message}`);
-      }
-      throw new Error('unknown Error occurred while saving exercise');
-    }
-  }
-
-  // ToDo: 필요 없는 메소드
-  async saveExercise(saveExerciseRequestDto: SaveExerciseRequestDto): Promise<Exercise> {
-    const { exerciseName, bodyPart } = saveExerciseRequestDto;
-    const exercise = await this.findByExerciseNameAndBodyPart({ exerciseName, bodyPart });
-    if (exercise) {
-      throw new ConflictException('Exercise already exists');
-    }
-
-    try {
-      const newExercise = new Exercise({ exerciseName, bodyPart });
-      return await this.exerciseRepository.save(newExercise);
     } catch (error) {
       if (error instanceof Error) {
         if (error.message.includes('Duplicate entry')) {
