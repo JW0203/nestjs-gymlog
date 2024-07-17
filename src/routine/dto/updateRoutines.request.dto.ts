@@ -3,7 +3,7 @@ import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto'
 import { Type } from 'class-transformer';
 import { UpdateRoutine } from './updateRoutine.format.dto';
 
-export class UpdateRoutineRequestDto {
+export class UpdateRoutinesRequestDto {
   @ValidateNested()
   @Type(() => UpdateRoutine)
   updateData: UpdateRoutine[];

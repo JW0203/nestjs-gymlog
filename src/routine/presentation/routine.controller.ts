@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, HttpCode, Logger, Patch, Post, Request, 
 import { RoutineService } from '../application/routine.service';
 import { JwtAuthGuard } from '../../common/jwtPassport/jwtAuth.guard';
 import { GetRoutineRequestDto } from '../dto/getRoutine.request.dto';
-import { UpdateRoutineRequestDto } from '../dto/updateRoutine.request.dto';
+import { UpdateRoutinesRequestDto } from '../dto/updateRoutines.request.dto';
 import { DeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
 import { SaveRoutinesRequestDto } from '../dto/saveRoutines.request.dto';
 
@@ -29,7 +29,7 @@ export class RoutineController {
   @Patch()
   @UseGuards(JwtAuthGuard)
   @HttpCode(200)
-  patchRoutine(@Body() updateRoutineRequest: UpdateRoutineRequestDto, @Request() req: any) {
+  patchRoutine(@Body() updateRoutineRequest: UpdateRoutinesRequestDto, @Request() req: any) {
     return this.routineService.bulkUpdateRoutines(updateRoutineRequest, req.user);
   }
 

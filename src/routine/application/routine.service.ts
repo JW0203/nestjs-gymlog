@@ -5,7 +5,7 @@ import { In, Repository } from 'typeorm';
 import { ExerciseService } from '../../excercise/application/exercise.service';
 import { User } from '../../user/domain/User.entity';
 import { GetRoutineRequestDto } from '../dto/getRoutine.request.dto';
-import { UpdateRoutineRequestDto } from '../dto/updateRoutine.request.dto';
+import { UpdateRoutinesRequestDto } from '../dto/updateRoutines.request.dto';
 import { DeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
 import { Transactional } from 'typeorm-transactional';
 import { SaveRoutinesRequestDto } from '../dto/saveRoutines.request.dto';
@@ -96,7 +96,7 @@ export class RoutineService {
   }
 
   @Transactional()
-  async bulkUpdateRoutines(updateRoutineRequest: UpdateRoutineRequestDto, user: User) {
+  async bulkUpdateRoutines(updateRoutineRequest: UpdateRoutinesRequestDto, user: User) {
     const NewExercises = await this.exerciseService.findNewExercises(updateRoutineRequest);
     if (NewExercises.length > 0) {
       await this.exerciseService.bulkInsertExercises({ exercises: NewExercises });
