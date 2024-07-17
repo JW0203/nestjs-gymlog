@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Exercise } from '../domain/Exercise.entity';
 import { In, Repository } from 'typeorm';
@@ -6,6 +6,7 @@ import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto'
 import { Transactional } from 'typeorm-transactional';
 import { SaveExercisesRequestDto } from '../dto/saveExercises.request.dto';
 import { ExerciseDataResponseDto } from '../../common/dto/exerciseData.response.dto';
+import { DeleteExerciseRequestDto } from '../dto/deleteExercise.request.dto';
 
 @Injectable()
 export class ExerciseService {
@@ -76,7 +77,12 @@ export class ExerciseService {
   }
 
   // ToDo: dto 적용 , bulk delete 적용
-  async softDelete(id: number) {
-    return await this.exerciseRepository.softDelete(id);
+  async softDelete(deleteExerciseRequestDto: DeleteExerciseRequestDto) {
+    const { ids } = deleteExerciseRequestDto;
+    const foundExercises = await this.exerciseRepository.find({ where: { id: In(ids) } });
+    if (ids.length === foundExercises.length) {
+      throw new BadRequestException(`Some exercises do not exist in the exercise entity.`);
+    }
+    await this.exerciseRepository.softDelete(ids);
   }
 }
