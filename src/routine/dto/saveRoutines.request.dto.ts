@@ -1,12 +1,12 @@
 import { ValidateNested } from 'class-validator';
-import { SaveRoutineRequestDto } from './saveRoutine.request.dto';
+import { SaveRoutineFormatDto } from './saveRoutine.format.dto';
 import { Type } from 'class-transformer';
 import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
 
-export class SaveAllRoutineRequestDto {
+export class SaveRoutinesRequestDto {
   @ValidateNested()
-  @Type(() => SaveRoutineRequestDto)
-  routines: SaveRoutineRequestDto[];
+  @Type(() => SaveRoutineFormatDto)
+  routines: SaveRoutineFormatDto[];
 
   @ValidateNested({ each: true })
   @Type(() => ExerciseDataFormatDto)

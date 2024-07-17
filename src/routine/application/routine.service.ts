@@ -8,7 +8,7 @@ import { GetRoutineRequestDto } from '../dto/getRoutine.request.dto';
 import { UpdateRoutineRequestDto } from '../dto/updateRoutine.request.dto';
 import { DeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
 import { Transactional } from 'typeorm-transactional';
-import { SaveAllRoutineRequestDto } from '../dto/saveAllRoutine.request.dto';
+import { SaveRoutinesRequestDto } from '../dto/saveRoutines.request.dto';
 import { RoutineResponseFromt } from './functions/RoutineResponse.fromat';
 import { RoutineResponseDto } from '../dto/routine.response.dto';
 
@@ -21,7 +21,7 @@ export class RoutineService {
   ) {}
 
   @Transactional()
-  async bulkInsertRoutines(user: User, saveRoutines: SaveAllRoutineRequestDto) {
+  async bulkInsertRoutines(user: User, saveRoutines: SaveRoutinesRequestDto) {
     const newExercises = await this.exerciseService.findNewExercises(saveRoutines);
     if (newExercises.length > 0) {
       console.log(newExercises);
@@ -56,7 +56,7 @@ export class RoutineService {
 
   // Todo : 루틴을 하나만 저장하는 것은 말이 안된다고 생각하고 삭제, 하지만 한번 더 고려
   // @Transactional()
-  // async saveRoutine(user: User, SaveRoutineRequest: SaveRoutineRequestDto) {
+  // async saveRoutine(user: User, SaveRoutineRequest: SaveRoutineFormatDto) {
   //   const { routineName, exerciseName, bodyPart } = SaveRoutineRequest;
   //   const exercise = await this.exerciseService.findByExerciseNameAndBodyPart({ exerciseName, bodyPart });
   //   if (!exercise) {
