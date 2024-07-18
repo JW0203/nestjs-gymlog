@@ -2,15 +2,15 @@ import { BadRequestException, Injectable, Logger, NotFoundException } from '@nes
 import { InjectRepository } from '@nestjs/typeorm';
 import { WorkoutLog } from '../domain/WorkoutLog.entity';
 import { In, Raw, Repository } from 'typeorm';
-import { SaveWorkoutLogRequestDto } from '../dto/saveWorkoutLog.request.dto';
 import { ExerciseService } from '../../excercise/application/exercise.service';
 import { Transactional } from 'typeorm-transactional';
 import { UserService } from '../../user/application/user.service';
-import { workoutLogResponseFormat } from './functions/workoutLogResponseFormat';
-import { ExerciseDataRequestDto } from '../dto/exerciseData.request.dto';
-import { UpdateWorkoutLogRequestDto } from '../dto/updateWorkoutLog.request.dto';
 import { SoftDeleteWorkoutLogRequestDto } from '../dto/softDeleteWorkoutLog.request.dto';
 import { User } from '../../user/domain/User.entity';
+import { SaveWorkoutLogsRequestDto } from '../dto/saveWorkoutLogs.request.dto';
+import { UpdateWorkoutLogsRequestDto } from '../dto/updateWorkoutLogs.request.dto';
+import { WorkoutLogResponseDto } from '../dto/workoutLog.response.dto';
+import { UpdateWorkoutLogsResponseDto } from '../dto/updateWorkoutLogs.response.dto';
 
 @Injectable()
 export class WorkoutLogService {
@@ -23,28 +23,35 @@ export class WorkoutLogService {
   ) {}
 
   @Transactional()
-  async bulkInsertWorkoutLogs(
-    userId: number,
-    exercises: ExerciseDataRequestDto[],
-    saveWorkoutLogRequestDtoArray: SaveWorkoutLogRequestDto[],
-  ): Promise<any> {
+  async bulkInsertWorkoutLogs(userId: number, saveWorkoutLogs: SaveWorkoutLogsRequestDto): Promise<any> {
     const user = await this.userService.findOneById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    const newExercises = await this.exerciseService.findNewExercise(exercises);
+    const newExercises = await this.exerciseService.findNewExercises(saveWorkoutLogs);
     if (newExercises.length > 0) {
-      await this.exerciseService.bulkInsertExercises(newExercises);
+      await this.exerciseService.bulkInsertExercises(saveWorkoutLogs);
     }
+    const exerciseEntities = await this.exerciseService.findAll(saveWorkoutLogs.exercises);
+
     const workoutLogs = await Promise.all(
-      saveWorkoutLogRequestDtoArray.map(async (saveWorkoutLogRequestDto) => {
-        const { exerciseName, bodyPart, set, weight, repeat } = saveWorkoutLogRequestDto;
-        const exercise = await this.exerciseService.findByExerciseNameAndBodyPart({
-          exerciseName,
-          bodyPart,
+      saveWorkoutLogs.workoutLogs.map(async (workoutLog) => {
+        const { exerciseName, bodyPart, ...workoutLogData } = workoutLog;
+
+        const exercise = exerciseEntities.find(
+          (exercise) => exercise.exerciseName === exerciseName && exercise.bodyPart === bodyPart,
+        );
+        if (!exercise) {
+          throw new NotFoundException('Exercise not found');
+        }
+        return new WorkoutLog({
+          setCount: workoutLogData.setCount,
+          weight: workoutLogData.weight,
+          repeatCount: workoutLogData.repeatCount,
+          exercise,
+          user,
         });
-        return new WorkoutLog({ set, weight, repeat, exercise, user });
       }),
     );
 
@@ -54,7 +61,8 @@ export class WorkoutLogService {
       where: { id: In(ids) },
       relations: ['user', 'exercise'],
     });
-    return savedWorkoutLogs.map((workoutLog) => workoutLogResponseFormat(workoutLog));
+
+    return savedWorkoutLogs.map((workoutLog) => new WorkoutLogResponseDto(workoutLog));
   }
 
   async getWorkoutLogsByDay(date: string, userId: number) {
@@ -73,28 +81,24 @@ export class WorkoutLogService {
     });
     this.logger.log('Finish getWorkoutLogsByDay');
     return workoutLogs.map((workoutLog) => {
-      return workoutLogResponseFormat(workoutLog);
+      return new WorkoutLogResponseDto(workoutLog);
     });
   }
 
   @Transactional()
-  async bulkUpdateWorkoutLogs(
-    userId: number,
-    exercises: ExerciseDataRequestDto[],
-    updateWorkoutLogRequestDtoArray: UpdateWorkoutLogRequestDto[],
-  ) {
+  async bulkUpdateWorkoutLogs(userId: number, updateWorkoutLogs: UpdateWorkoutLogsRequestDto) {
     const user = await this.userService.findOneById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    const newExercises = await this.exerciseService.findNewExercise(exercises);
+    const newExercises = await this.exerciseService.findNewExercises(updateWorkoutLogs);
     if (newExercises) {
-      await this.exerciseService.bulkInsertExercises(newExercises);
+      await this.exerciseService.bulkInsertExercises({ exercises: newExercises });
     }
     const updatedWorkoutLogIds: number[] = [];
     const workoutLogs = await Promise.all(
-      updateWorkoutLogRequestDtoArray.map(async (updateWorkoutLog) => {
-        const { id, exerciseName, bodyPart, set, weight, repeat } = updateWorkoutLog;
+      updateWorkoutLogs.updateWorkoutLogs.map(async (updateWorkoutLog) => {
+        const { id, exerciseName, bodyPart, setCount, weight, repeatCount } = updateWorkoutLog;
         updatedWorkoutLogIds.push(id);
         const exercise = await this.exerciseService.findByExerciseNameAndBodyPart({
           exerciseName,
@@ -107,24 +111,24 @@ export class WorkoutLogService {
 
         return {
           id,
-          set,
+          setCount,
           weight,
-          repeat,
+          repeatCount,
           userId: user.id,
           exerciseId: exercise.id,
         };
       }),
     );
     const values = workoutLogs
-      .map((log) => `(${log.id}, ${log.set}, ${log.weight}, ${log.repeat}, ${log.userId}, ${log.exerciseId})`)
+      .map((log) => `(${log.id}, ${log.setCount}, ${log.weight}, ${log.repeatCount}, ${log.userId}, ${log.exerciseId})`)
       .join(', ');
     const query = `
-        INSERT INTO workout_log (id, \`set\`, weight, \`repeat\`, user_id, exercise_id)
+        INSERT INTO workout_log (id, setCount, weight, repeatCount, user_id, exercise_id)
         VALUES ${values} as new
         ON DUPLICATE KEY UPDATE
-          \`set\` = new.\`set\`,
+          setCount = new.setCount,
           weight = new.weight,
-          \`repeat\` = new.\`repeat\`,
+          repeatCount = new.repeatCount,
           user_id = new.user_id,
           exercise_id = new.exercise_id;
       `;
@@ -134,10 +138,10 @@ export class WorkoutLogService {
       where: { id: In(updatedWorkoutLogIds) },
       relations: ['user', 'exercise'],
     });
-    const workoutLogResponse = updatedWorkoutLogs.map((workoutLog) => {
-      return workoutLogResponseFormat(workoutLog);
+    const updatedResults = updatedWorkoutLogs.map((workoutLog) => {
+      return new WorkoutLogResponseDto(workoutLog);
     });
-    return { queryResult: result.info, warnings, updatedResults: workoutLogResponse };
+    return new UpdateWorkoutLogsResponseDto({ queryResult: result.info, warnings, updatedResults });
   }
 
   async softDeleteWorkoutLogs(softDeleteRequestDto: SoftDeleteWorkoutLogRequestDto, user: User) {
