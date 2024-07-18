@@ -1,15 +1,38 @@
 import { UserDataResponseDto } from '../../common/dto/UserData.response.dto';
 import { ExerciseDataResponseDto } from '../../common/dto/exerciseData.response.dto';
-import { validateOrReject } from 'class-validator';
+import { IsDate, IsInt, IsNotEmpty, IsNumber, Max, Min, validateOrReject } from 'class-validator';
 
 export class WorkoutLogResponseDto {
+  @IsNotEmpty()
+  @IsNumber()
   id: number;
+
+  @IsNotEmpty()
+  @IsInt()
+  @Min(1)
+  @Max(100)
   setCount: number;
+
+  @IsNotEmpty()
+  @IsInt()
+  @Min(1)
+  @Max(1000)
   weight: number;
+
+  @IsNotEmpty()
+  @IsNumber()
   repeatCount: number;
+
+  @IsNotEmpty()
   user: UserDataResponseDto;
+  @IsNotEmpty()
   exercise: ExerciseDataResponseDto;
+
+  @IsNotEmpty()
+  @IsDate()
   createdAt: string;
+  @IsNotEmpty()
+  @IsDate()
   updatedAt: string;
 
   constructor(workoutLog: any) {
