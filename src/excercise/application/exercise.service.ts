@@ -76,7 +76,6 @@ export class ExerciseService {
     }
   }
 
-  // ToDo: dto 적용 , bulk delete 적용
   async softDelete(deleteExerciseRequestDto: DeleteExerciseRequestDto) {
     const { ids } = deleteExerciseRequestDto;
     const foundExercises = await this.exerciseRepository.find({ where: { id: In(ids) } });
