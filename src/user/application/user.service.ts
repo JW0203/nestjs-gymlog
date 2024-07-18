@@ -20,10 +20,6 @@ export class UserService {
     private readonly authService: AuthService,
   ) {}
 
-  delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
   async signUp(signUpRequestDto: SignUpRequestDto): Promise<any> {
     const { password, email, name } = signUpRequestDto;
     const queryRunner = this.dataSource.createQueryRunner();
@@ -42,7 +38,6 @@ export class UserService {
       const hashedPassword = await bcrypt.hash(password, parseInt(saltRounds));
       user = new User({ name, email, password: hashedPassword });
 
-      await this.delay(5000);
       const newUser = await queryRunner.manager.save(user);
       await queryRunner.commitTransaction();
       return new SignUpResponseDto({ ...newUser });
