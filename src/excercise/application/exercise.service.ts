@@ -28,7 +28,7 @@ export class ExerciseService {
       this.logger.log(`can not find all exercises`);
       throw new NotFoundException(` Can not find all exercises`);
     }
-    return foundExercises.map((exercise) => new ExerciseDataResponseDto(exercise));
+    return foundExercises;
   }
 
   async findNewExercises(exerciseDataArray: SaveExercisesRequestDto) {
