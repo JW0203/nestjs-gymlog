@@ -17,7 +17,7 @@ export class User extends Timestamps {
   @IsNotEmpty()
   @NoWhitespace()
   @MinLength(8)
-  @MaxLength(15)
+  @MaxLength(50)
   @Column()
   password: string;
 
