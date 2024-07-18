@@ -1,8 +1,8 @@
-import { ArrayNotEmpty, IsArray, IsNumber } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsInt } from 'class-validator';
 
 export class SoftDeleteWorkoutLogRequestDto {
   @IsArray()
   @ArrayNotEmpty()
-  @IsNumber({}, { each: true })
+  @IsInt({ each: true })
   ids: number[];
 }

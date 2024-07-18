@@ -1,8 +1,8 @@
 import { BodyPart } from '../../common/bodyPart.enum';
-import { IsEnum, IsInt, IsNotEmpty, IsString, Min } from 'class-validator';
+import { IsEnum, IsInt, IsNotEmpty, IsString, Max, Min } from 'class-validator';
 import { IsExerciseName } from '../../common/validation/isExerciseName.validation';
 
-export class UpdateWorkoutLogRequestDto {
+export class UpdateWorkoutLogFormatDto {
   @IsNotEmpty()
   @IsString()
   @IsExerciseName()
@@ -18,15 +18,17 @@ export class UpdateWorkoutLogRequestDto {
   @IsInt()
   @IsNotEmpty()
   @Min(1)
-  set: number;
+  @Max(100)
+  setCount: number;
 
   @IsInt()
   @IsNotEmpty()
   @Min(1)
+  @Max(1000)
   weight: number;
 
   @IsInt()
   @IsNotEmpty()
   @Min(1)
-  repeat: number;
+  repeatCount: number;
 }

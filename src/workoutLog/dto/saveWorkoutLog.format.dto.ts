@@ -2,7 +2,7 @@ import { BodyPart } from '../../common/bodyPart.enum';
 import { IsEnum, IsInt, IsNotEmpty, IsString, Min } from 'class-validator';
 import { IsExerciseName } from '../../common/validation/isExerciseName.validation';
 
-export class SaveWorkoutLogRequestDto {
+export class SaveWorkoutLogFormatDto {
   @IsNotEmpty()
   @IsString()
   @IsExerciseName()
@@ -13,7 +13,7 @@ export class SaveWorkoutLogRequestDto {
 
   @IsInt()
   @Min(1)
-  set: number;
+  setCount: number;
 
   @IsInt()
   @Min(1)
@@ -21,5 +21,5 @@ export class SaveWorkoutLogRequestDto {
 
   @IsInt()
   @Min(1)
-  repeat: number;
+  repeatCount: number;
 }
