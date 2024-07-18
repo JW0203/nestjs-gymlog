@@ -1,4 +1,4 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Timestamps } from '../../TimeStamp.entity';
 import { WorkoutLog } from '../../workoutLog/domain/WorkoutLog.entity';
 import { IsEnum, IsNotEmpty, validateOrReject } from 'class-validator';
@@ -7,7 +7,6 @@ import { IsExerciseName } from '../../common/validation/isExerciseName.validatio
 import { Routine } from '../../routine/domain/Routine.entity';
 
 @Entity()
-@Unique(['bodyPart', 'exerciseName'])
 export class Exercise extends Timestamps {
   @PrimaryGeneratedColumn()
   id: number;
