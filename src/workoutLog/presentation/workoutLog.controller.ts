@@ -1,10 +1,9 @@
 import { Body, Controller, Post, UseGuards, Request, Query, Get, Patch, Delete, HttpCode } from '@nestjs/common';
 import { WorkoutLogService } from '../application/workoutLog.service';
-import { SaveWorkoutLogRequestDto } from '../dto/saveWorkoutLog.request.dto';
 import { JwtAuthGuard } from '../../common/jwtPassport/jwtAuth.guard';
-import { ExerciseDataRequestDto } from '../dto/exerciseData.request.dto';
-import { UpdateWorkoutLogRequestDto } from '../dto/updateWorkoutLog.request.dto';
 import { SoftDeleteWorkoutLogRequestDto } from '../dto/softDeleteWorkoutLog.request.dto';
+import { SaveWorkoutLogsRequestDto } from '../dto/saveWorkoutLogs.request.dto';
+import { UpdateWorkoutLogsRequestDto } from '../dto/updateWorkoutLogs.request.dto';
 
 @Controller('workout-logs')
 export class WorkoutLogController {
@@ -13,12 +12,8 @@ export class WorkoutLogController {
   @Post()
   @HttpCode(201)
   @UseGuards(JwtAuthGuard)
-  saveWorkoutLogs(
-    @Body('workoutLogs') saveWorkoutLogRequestDtoArray: SaveWorkoutLogRequestDto[],
-    @Body('exercises') exercises: ExerciseDataRequestDto[],
-    @Request() req: any,
-  ) {
-    return this.workoutLogService.bulkInsertWorkoutLogs(req.user.id, exercises, saveWorkoutLogRequestDtoArray);
+  saveWorkoutLogs(@Body() saveWorkoutLogs: SaveWorkoutLogsRequestDto, @Request() req: any) {
+    return this.workoutLogService.bulkInsertWorkoutLogs(req.user.id, saveWorkoutLogs);
   }
 
   @Get()
@@ -31,12 +26,8 @@ export class WorkoutLogController {
   @Patch()
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
-  bulkUpdateWorkoutLogs(
-    @Request() req: any,
-    @Body('exercises') exercises: ExerciseDataRequestDto[],
-    @Body('workoutLogs') updateWorkoutLogRequestDtoArray: UpdateWorkoutLogRequestDto[],
-  ) {
-    return this.workoutLogService.bulkUpdateWorkoutLogs(req.user.id, exercises, updateWorkoutLogRequestDtoArray);
+  bulkUpdateWorkoutLogs(@Request() req: any, @Body('workoutLogs') updateWorkoutLogs: UpdateWorkoutLogsRequestDto) {
+    return this.workoutLogService.bulkUpdateWorkoutLogs(req.user.id, updateWorkoutLogs);
   }
 
   @Delete()

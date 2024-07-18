@@ -1,28 +1,24 @@
-import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Exercise } from '../domain/Exercise.entity';
 import { In, Repository } from 'typeorm';
-import { FindByExerciseNameAndBodyPart } from '../dto/findByExerciseNameAndBodyPart.request.dto';
-import { SaveExerciseRequestDto } from '../dto/saveExercise.request.dto';
-import { ExerciseDataRequestDto } from '../../workoutLog/dto/exerciseData.request.dto';
+import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
 import { Transactional } from 'typeorm-transactional';
+import { SaveExercisesRequestDto } from '../dto/saveExercises.request.dto';
+import { ExerciseDataResponseDto } from '../../common/dto/exerciseData.response.dto';
+import { DeleteExerciseRequestDto } from '../dto/deleteExercise.request.dto';
 
 @Injectable()
 export class ExerciseService {
   private readonly logger = new Logger(ExerciseService.name);
   constructor(@InjectRepository(Exercise) private exerciseRepository: Repository<Exercise>) {}
 
-  async findByExerciseNameAndBodyPart(findByExerciseNameAndBodyPart: FindByExerciseNameAndBodyPart) {
+  async findByExerciseNameAndBodyPart(findByExerciseNameAndBodyPart: ExerciseDataFormatDto) {
     const { exerciseName, bodyPart } = findByExerciseNameAndBodyPart;
-    const foundExercise = await this.exerciseRepository.findOne({ where: { exerciseName, bodyPart } });
-    if (!foundExercise) {
-      this.logger.log(`can not find ${exerciseName} and ${bodyPart}`);
-      throw new NotFoundException(`can not find ${exerciseName} and ${bodyPart}`);
-    }
-    return foundExercise;
+    return await this.exerciseRepository.findOne({ where: { exerciseName, bodyPart } });
   }
 
-  async findAll(exercisesData: ExerciseDataRequestDto[]) {
+  async findAll(exercisesData: ExerciseDataFormatDto[]) {
     const exercises = exercisesData.map((exercise) => ({
       exerciseName: exercise.exerciseName,
       bodyPart: exercise.bodyPart,
@@ -35,11 +31,14 @@ export class ExerciseService {
     return foundExercises;
   }
 
-  async findNewExercise(exercisesData: ExerciseDataRequestDto[]) {
+  async findNewExercises(exerciseDataArray: SaveExercisesRequestDto) {
     try {
-      const foundExercise = await this.findAll(exercisesData);
+      const exerciseData = exerciseDataArray.exercises;
+
+      const foundExercise = await this.findAll(exerciseData);
       const existingMap = new Map(foundExercise.map((ex) => [ex.bodyPart + ex.exerciseName, ex]));
-      return exercisesData.filter((ex) => !existingMap.has(ex.bodyPart + ex.exerciseName));
+      const newExercises = exerciseData.filter((ex) => !existingMap.has(ex.bodyPart + ex.exerciseName));
+      return newExercises.map((exercise) => new ExerciseDataResponseDto(exercise));
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(`Error while finding new exercises: ${error.message}`);
@@ -49,19 +48,23 @@ export class ExerciseService {
   }
 
   @Transactional()
-  async bulkInsertExercises(exercisesData: ExerciseDataRequestDto[]) {
+  async bulkInsertExercises(exerciseDataArray: SaveExercisesRequestDto) {
     try {
-      const newExercises = await this.findNewExercise(exercisesData);
-      if (newExercises.length > 0) {
-        const result = await this.exerciseRepository.insert(newExercises);
-        const ids = result.identifiers.map((data) => data.id);
-        const newData = await this.exerciseRepository.findBy({ id: In(ids) });
-        if (!newData) {
-          throw new NotFoundException('Something went wrong while creating new exercise!');
-        }
-        return newData;
+      const exerciseData = exerciseDataArray.exercises;
+      const exercises = exerciseData.map(
+        (exercise) =>
+          new Exercise({
+            exerciseName: exercise.exerciseName,
+            bodyPart: exercise.bodyPart,
+          }),
+      );
+      const result = await this.exerciseRepository.insert(exercises);
+      const ids = result.identifiers.map((data) => data.id);
+      const newData = await this.exerciseRepository.findBy({ id: In(ids) });
+      if (!newData) {
+        throw new NotFoundException('Something went wrong while creating new exercise!');
       }
-      return 'All exercises are already saved';
+      return newData.map((exercise) => new ExerciseDataResponseDto(exercise));
     } catch (error) {
       if (error instanceof Error) {
         if (error.message.includes('Duplicate entry')) {
@@ -73,27 +76,13 @@ export class ExerciseService {
     }
   }
 
-  async saveExercise(saveExerciseRequestDto: SaveExerciseRequestDto): Promise<Exercise> {
-    const { exerciseName, bodyPart } = saveExerciseRequestDto;
-    const exercise = await this.findByExerciseNameAndBodyPart({ exerciseName, bodyPart });
-    if (exercise) {
-      throw new ConflictException('Exercise already exists');
+  // ToDo: dto 적용 , bulk delete 적용
+  async softDelete(deleteExerciseRequestDto: DeleteExerciseRequestDto) {
+    const { ids } = deleteExerciseRequestDto;
+    const foundExercises = await this.exerciseRepository.find({ where: { id: In(ids) } });
+    if (ids.length === foundExercises.length) {
+      throw new BadRequestException(`Some exercises do not exist in the exercise entity.`);
     }
-
-    try {
-      return await this.exerciseRepository.save(saveExerciseRequestDto);
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.message.includes('Duplicate entry')) {
-          throw new ConflictException('[Duplicate entry] Exercise already exists');
-        }
-        throw new Error(`Error while saving exercise: ${error.message}`);
-      }
-      throw new Error('unknown Error occurred while saving exercise');
-    }
-  }
-
-  async softDelete(id: number) {
-    return await this.exerciseRepository.softDelete(id);
+    await this.exerciseRepository.softDelete(ids);
   }
 }

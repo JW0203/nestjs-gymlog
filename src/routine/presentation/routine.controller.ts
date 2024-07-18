@@ -1,11 +1,10 @@
-import { Body, Controller, Delete, Get, Logger, Patch, Post, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Logger, Patch, Post, Request, UseGuards } from '@nestjs/common';
 import { RoutineService } from '../application/routine.service';
 import { JwtAuthGuard } from '../../common/jwtPassport/jwtAuth.guard';
-import { SaveRoutineRequestDto } from '../dto/saveRoutine.request.dto';
 import { GetRoutineRequestDto } from '../dto/getRoutine.request.dto';
-import { PatchRoutineRequestDto } from '../dto/patchRoutine.request.dto';
+import { UpdateRoutinesRequestDto } from '../dto/updateRoutines.request.dto';
 import { DeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
-import { User } from '../../user/domain/User.entity';
+import { SaveRoutinesRequestDto } from '../dto/saveRoutines.request.dto';
 
 @Controller('routines')
 export class RoutineController {
@@ -14,12 +13,14 @@ export class RoutineController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  postRoutine(@Body() saveRoutineRequestDtoArray: SaveRoutineRequestDto[], @Request() req: any) {
-    return this.routineService.saveRoutine(req.user, saveRoutineRequestDtoArray);
+  @HttpCode(201)
+  postRoutine(@Body() saveRoutines: SaveRoutinesRequestDto, @Request() req: any) {
+    return this.routineService.bulkInsertRoutines(req.user, saveRoutines);
   }
 
   @Get()
   @UseGuards(JwtAuthGuard)
+  @HttpCode(200)
   getRoutine(@Body() getRoutineRequest: GetRoutineRequestDto, @Request() req: any) {
     this.logger.log(`start getRoutine DTO : ${getRoutineRequest.name}`);
     return this.routineService.getRoutineByName(getRoutineRequest, req.user);
@@ -27,13 +28,15 @@ export class RoutineController {
 
   @Patch()
   @UseGuards(JwtAuthGuard)
-  patchRoutine(@Body() patchRoutineRequestDto: PatchRoutineRequestDto, @Request() req: any) {
-    return this.routineService.patchRoutine(patchRoutineRequestDto, req.user);
+  @HttpCode(200)
+  patchRoutine(@Body() updateRoutineRequest: UpdateRoutinesRequestDto, @Request() req: any) {
+    return this.routineService.bulkUpdateRoutines(updateRoutineRequest, req.user);
   }
 
   @Delete()
   @UseGuards(JwtAuthGuard)
+  @HttpCode(204)
   deleteRoutine(@Body() deleteRoutineRequestDto: DeleteRoutineRequestDto, @Request() req: any) {
-    return this.routineService.softDeleteRoutine(deleteRoutineRequestDto, req.user);
+    return this.routineService.softDeleteRoutines(deleteRoutineRequestDto, req.user);
   }
 }

@@ -9,6 +9,7 @@ import { SignUpResponseDto } from '../dto/signUp.response.dto';
 import { AuthService } from '../../auth/application/auth.service';
 import { GetMyInfoResponseDto } from '../dto/getMyInfo.response.dto';
 import { SignUpRequestDto } from '../dto/signUp.request.dto';
+import { SignInResponseDto } from '../dto/signIn.response.dto';
 
 @Injectable()
 export class UserService {
@@ -34,7 +35,7 @@ export class UserService {
     return new SignUpResponseDto({ ...savedUser });
   }
 
-  async signIn(signInRequestDto: SignInRequestDto): Promise<object> {
+  async signIn(signInRequestDto: SignInRequestDto): Promise<SignInResponseDto> {
     const { email, password } = signInRequestDto;
     const user = await this.userRepository.findOne({ where: { email } });
     if (!user) {
@@ -45,7 +46,7 @@ export class UserService {
       throw new BadRequestException('The password does not match');
     }
     const accessToken = this.authService.signInWithJWT({ userId: user.id });
-    return { accessToken };
+    return new SignInResponseDto(accessToken);
   }
 
   async findOneById(id: number) {

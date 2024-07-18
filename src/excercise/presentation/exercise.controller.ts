@@ -1,28 +1,34 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Post } from '@nestjs/common';
 import { ExerciseService } from '../application/exercise.service';
-import { SaveExerciseRequestDto } from '../dto/saveExercise.request.dto';
+import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
+import { SaveExercisesRequestDto } from '../dto/saveExercises.request.dto';
+import { DeleteExerciseRequestDto } from '../dto/deleteExercise.request.dto';
 
 @Controller('exercises')
 export class ExerciseController {
   constructor(private readonly exerciseService: ExerciseService) {}
 
-  @Delete(':id')
-  softDelete(@Param('id') id: string) {
-    return this.exerciseService.softDelete(parseInt(id));
+  @Delete()
+  @HttpCode(204)
+  softDelete(@Body() deleteExerciseRequestDto: DeleteExerciseRequestDto) {
+    return this.exerciseService.softDelete(deleteExerciseRequestDto);
   }
 
   @Post()
-  save(@Body() saveExerciseRequestDto: SaveExerciseRequestDto[]) {
-    return this.exerciseService.bulkInsertExercises(saveExerciseRequestDto);
+  @HttpCode(201)
+  saveArray(@Body() exerciseDataArray: SaveExercisesRequestDto) {
+    return this.exerciseService.bulkInsertExercises(exerciseDataArray);
   }
 
   @Get()
-  get(@Body() saveExerciseRequestDto: SaveExerciseRequestDto) {
-    return this.exerciseService.findByExerciseNameAndBodyPart(saveExerciseRequestDto);
+  @HttpCode(200)
+  get(@Body() exerciseData: ExerciseDataFormatDto) {
+    return this.exerciseService.findByExerciseNameAndBodyPart(exerciseData);
   }
 
   @Get('all')
-  getAll(@Body() saveExerciseRequestDto: SaveExerciseRequestDto[]) {
-    return this.exerciseService.findAll(saveExerciseRequestDto);
+  @HttpCode(200)
+  getAll(@Body() exerciseDataArray: ExerciseDataFormatDto[]) {
+    return this.exerciseService.findAll(exerciseDataArray);
   }
 }
