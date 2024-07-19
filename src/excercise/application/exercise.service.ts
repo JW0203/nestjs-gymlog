@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Exercise } from '../domain/Exercise.entity';
 import { DataSource, In, Repository } from 'typeorm';
@@ -26,19 +26,16 @@ export class ExerciseService {
       exerciseName: exercise.exerciseName,
       bodyPart: exercise.bodyPart,
     }));
-    const foundExercises = await this.exerciseRepository.find({ where: exercises });
-    if (!foundExercises) {
-      this.logger.log(`can not find all exercises`);
-      throw new NotFoundException(` Can not find all exercises`);
-    }
-    return foundExercises;
+    return await this.exerciseRepository.find({ where: exercises });
   }
 
   async findNewExercises(exerciseDataArray: SaveExercisesRequestDto) {
     try {
       const exerciseData = exerciseDataArray.exercises;
-
       const foundExercise = await this.findAll(exerciseData);
+      if (foundExercise.length < 1) {
+        return exerciseData;
+      }
       const existingMap = new Map(foundExercise.map((ex) => [ex.bodyPart + ex.exerciseName, ex]));
       const newExercises = exerciseData.filter((ex) => !existingMap.has(ex.bodyPart + ex.exerciseName));
       return newExercises.map((exercise) => new ExerciseDataResponseDto(exercise));
