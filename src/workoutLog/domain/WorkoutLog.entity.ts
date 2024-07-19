@@ -2,7 +2,7 @@ import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Timestamps } from '../../TimeStamp.entity';
 import { User } from '../../user/domain/User.entity';
 import { Exercise } from '../../excercise/domain/Exercise.entity';
-import { IsNotEmpty, IsNumber, Max, Min, validate, validateOrReject } from 'class-validator';
+import { IsNotEmpty, IsNumber, Max, Min, validateOrReject } from 'class-validator';
 import { Logger } from '@nestjs/common';
 
 @Entity()
