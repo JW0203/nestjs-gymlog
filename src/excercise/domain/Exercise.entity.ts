@@ -1,13 +1,13 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Timestamps } from '../../TimeStamp.entity';
 import { WorkoutLog } from '../../workoutLog/domain/WorkoutLog.entity';
-import { IsEnum, IsNotEmpty, validateOrReject } from 'class-validator';
+import { IsEnum, IsNotEmpty, validate } from 'class-validator';
 import { BodyPart } from '../../common/bodyPart.enum';
 import { IsExerciseName } from '../../common/validation/isExerciseName.validation';
 import { Routine } from '../../routine/domain/Routine.entity';
+import { Logger } from '@nestjs/common';
 
 @Entity()
-@Unique(['bodyPart', 'exerciseName'])
 export class Exercise extends Timestamps {
   @PrimaryGeneratedColumn()
   id: number;
@@ -33,8 +33,13 @@ export class Exercise extends Timestamps {
     if (params) {
       this.exerciseName = params.exerciseName;
       this.bodyPart = params.bodyPart;
-      validateOrReject(this).catch((errors) => {
-        console.log('(Exercise entity validation failed). Errors: ', errors);
+      validate(this).then((errors) => {
+        const logger = new Logger('Exercise Entity');
+        if (errors.length > 0) {
+          logger.log('(Exercise entity validation failed). errors:', errors);
+        } else {
+          logger.log('(Exercise entity validation succeed)');
+        }
       });
     }
   }

@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../domain/User.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { SignInRequestDto } from '../dto/signIn.request.dto';
@@ -14,25 +14,39 @@ import { SignInResponseDto } from '../dto/signIn.response.dto';
 @Injectable()
 export class UserService {
   constructor(
+    private dataSource: DataSource,
     @InjectRepository(User) private userRepository: Repository<User>,
     private readonly configService: ConfigService,
     private readonly authService: AuthService,
   ) {}
 
-  async signUp(signUpRequestDto: SignUpRequestDto): Promise<SignUpResponseDto> {
+  async signUp(signUpRequestDto: SignUpRequestDto): Promise<any> {
     const { password, email, name } = signUpRequestDto;
-    const foundUser = await this.userRepository.findOne({ where: { email } });
-    if (foundUser) {
-      throw new BadRequestException('Email already exists');
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      let user = await queryRunner.manager.findOne(User, { where: { email }, lock: { mode: 'pessimistic_write' } });
+      if (user) {
+        throw new Error('Email already exists');
+      }
+      const saltRounds = this.configService.get<string>('SALT_ROUNDS');
+      if (saltRounds === undefined) {
+        throw new Error('SALT_ROUNDS is not defined in the configuration.');
+      }
+      const hashedPassword = await bcrypt.hash(password, parseInt(saltRounds));
+      user = new User({ name, email, password: hashedPassword });
+
+      const newUser = await queryRunner.manager.save(user);
+      await queryRunner.commitTransaction();
+      return new SignUpResponseDto({ ...newUser });
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
-    const saltRounds = this.configService.get<string>('SALT_ROUNDS');
-    if (saltRounds === undefined) {
-      throw new Error('SALT_ROUNDS is not defined in the configuration.');
-    }
-    const hashedPassword = await bcrypt.hash(password, parseInt(saltRounds));
-    const newUser = new User({ name, email, password: hashedPassword });
-    const savedUser = await this.userRepository.save(newUser);
-    return new SignUpResponseDto({ ...savedUser });
   }
 
   async signIn(signInRequestDto: SignInRequestDto): Promise<SignInResponseDto> {
