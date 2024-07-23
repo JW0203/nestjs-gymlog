@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty, Matches, MaxLength, MinLength } from 'class-validator';
+import { IsInt, IsNotEmpty, Matches, MaxLength, MinLength, validateOrReject } from 'class-validator';
 import { IsEmailCustom } from '../../common/validation/isEmail.validation.custom';
 
 export class SignUpResponseDto {
@@ -19,5 +19,7 @@ export class SignUpResponseDto {
     this.id = params.id;
     this.email = params.email;
     this.name = params.name;
+
+    validateOrReject(this).catch((error) => console.log('SignUpResponseDto validation failed', error));
   }
 }
