@@ -10,7 +10,6 @@ import { DeleteExerciseRequestDto } from '../dto/deleteExercise.request.dto';
 
 @Injectable()
 export class ExerciseService {
-  private readonly logger = new Logger(ExerciseService.name);
   constructor(
     private dataSource: DataSource,
     @InjectRepository(Exercise) private exerciseRepository: Repository<Exercise>,
