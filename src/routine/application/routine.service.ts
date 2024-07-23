@@ -138,6 +138,6 @@ export class RoutineService {
     const routineIds = routines.map((routine) => {
       return routine.id;
     });
-    await this.routineRepository.softDelete(routineIds);
+    await this.routineRepository.softDelete({ id: In(routineIds) });
   }
 }
