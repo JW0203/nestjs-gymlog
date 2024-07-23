@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Routine } from '../domain/Routine.entity';
 import { DataSource, In, Repository } from 'typeorm';
@@ -35,7 +35,6 @@ export class RoutineService {
       }
       const newExercises = await this.exerciseService.findNewExercises(saveRoutines);
       if (newExercises.length > 0) {
-        console.log(newExercises);
         await this.exerciseService.bulkInsertExercises({ exercises: newExercises });
       }
       const exerciseEntities = await this.exerciseService.findAll(saveRoutines.exercises);
