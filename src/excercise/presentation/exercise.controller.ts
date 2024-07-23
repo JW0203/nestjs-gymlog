@@ -11,7 +11,7 @@ export class ExerciseController {
   @Delete()
   @HttpCode(204)
   softDelete(@Body() deleteExerciseRequestDto: DeleteExerciseRequestDto) {
-    return this.exerciseService.softDelete(deleteExerciseRequestDto);
+    return this.exerciseService.bulkSoftDelete(deleteExerciseRequestDto);
   }
 
   @Post()

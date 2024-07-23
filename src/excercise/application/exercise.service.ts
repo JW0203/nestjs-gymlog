@@ -86,12 +86,12 @@ export class ExerciseService {
   }
 
   @Transactional()
-  async softDelete(deleteExerciseRequestDto: DeleteExerciseRequestDto) {
+  async bulkSoftDelete(deleteExerciseRequestDto: DeleteExerciseRequestDto) {
     const { ids } = deleteExerciseRequestDto;
     const foundExercises = await this.exerciseRepository.find({ where: { id: In(ids) } });
-    if (ids.length === foundExercises.length) {
+    if (ids.length !== foundExercises.length) {
       throw new BadRequestException(`Some exercises do not exist in the exercise entity.`);
     }
-    await this.exerciseRepository.softDelete(ids);
+    await this.exerciseRepository.softDelete({ id: In(ids) });
   }
 }
