@@ -13,7 +13,6 @@ import { RoutineResponseDto } from '../dto/routine.response.dto';
 
 @Injectable()
 export class RoutineService {
-  private readonly logger = new Logger(RoutineService.name);
   constructor(
     private dataSource: DataSource,
     @InjectRepository(Routine) private readonly routineRepository: Repository<Routine>,
