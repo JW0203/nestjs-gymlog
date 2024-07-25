@@ -26,7 +26,7 @@ export class WorkoutLogController {
   @Patch()
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
-  bulkUpdateWorkoutLogs(@Request() req: any, @Body('workoutLogs') updateWorkoutLogs: UpdateWorkoutLogsRequestDto) {
+  bulkUpdateWorkoutLogs(@Request() req: any, @Body() updateWorkoutLogs: UpdateWorkoutLogsRequestDto) {
     return this.workoutLogService.bulkUpdateWorkoutLogs(req.user.id, updateWorkoutLogs);
   }
 
