@@ -98,62 +98,64 @@ export class WorkoutLogService {
   }
 
   @Transactional()
-  async bulkUpdateWorkoutLogs(userId: number, updateWorkoutLogs: UpdateWorkoutLogsRequestDto) {
+  async bulkUpdateWorkoutLogs(userId: number, updateWorkoutLogsRequest: UpdateWorkoutLogsRequestDto) {
     const user = await this.userService.findOneById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    const newExercises = await this.exerciseService.findNewExercises(updateWorkoutLogs);
-    if (newExercises) {
+
+    const ids = updateWorkoutLogsRequest.updateWorkoutLogs.map((workoutLog) => {
+      return workoutLog.id;
+    });
+
+    const foundWorkoutLogs = await this.workoutLogRepository.find({
+      where: { id: In(ids) },
+    });
+    if (!foundWorkoutLogs) {
+      throw new BadRequestException('WorkoutLogs not found');
+    }
+
+    const newExercises = await this.exerciseService.findNewExercises(updateWorkoutLogsRequest);
+    if (newExercises.length > 0) {
       await this.exerciseService.bulkInsertExercises({ exercises: newExercises });
     }
+
+    const exercises = await this.exerciseService.findAll(updateWorkoutLogsRequest.exercises);
+    if (exercises.length === 0) {
+      throw new NotFoundException('Exercises not found');
+    }
     const updatedWorkoutLogIds: number[] = [];
-    const workoutLogs = await Promise.all(
-      updateWorkoutLogs.updateWorkoutLogs.map(async (updateWorkoutLog) => {
-        const { id, exerciseName, bodyPart, setCount, weight, repeatCount } = updateWorkoutLog;
-        updatedWorkoutLogIds.push(id);
-        const exercise = await this.exerciseService.findByExerciseNameAndBodyPart({
-          exerciseName,
-          bodyPart,
-        });
+    const promiseUpdateWorkoutLogs = updateWorkoutLogsRequest.updateWorkoutLogs.map(async (workoutLog) => {
+      const { id, setCount, repeatCount, weight, exerciseName, bodyPart } = workoutLog;
+      updatedWorkoutLogIds.push(id);
+      const exercise = exercises.find(
+        (exercise) => exercise.exerciseName === exerciseName && exercise.bodyPart === bodyPart,
+      );
+      if (!exercise) {
+        throw new BadRequestException(`Cannot find ${exerciseName} and ${bodyPart}`);
+      }
 
-        if (!exercise) {
-          throw new BadRequestException(`Cannot find ${exerciseName} and ${bodyPart}`);
-        }
-
-        return {
-          id,
-          setCount,
-          weight,
-          repeatCount,
-          userId: user.id,
-          exerciseId: exercise.id,
-        };
-      }),
-    );
-    const values = workoutLogs
-      .map((log) => `(${log.id}, ${log.setCount}, ${log.weight}, ${log.repeatCount}, ${log.userId}, ${log.exerciseId})`)
-      .join(', ');
-    const query = `
-        INSERT INTO workout_log (id, setCount, weight, repeatCount, user_id, exercise_id)
-        VALUES ${values} as new
-        ON DUPLICATE KEY UPDATE
-          setCount = new.setCount,
-          weight = new.weight,
-          repeatCount = new.repeatCount,
-          user_id = new.user_id,
-          exercise_id = new.exercise_id;
-      `;
-    const result = await this.workoutLogRepository.query(query);
-    const warnings = await this.workoutLogRepository.query('SHOW WARNINGS');
-    const updatedWorkoutLogs = await this.workoutLogRepository.find({
+      const foundWorkoutLog = await this.workoutLogRepository.findOneBy({ id: workoutLog.id });
+      if (!foundWorkoutLog) {
+        throw 'workoutLogs not found';
+      }
+      foundWorkoutLog.update({
+        setCount,
+        weight,
+        repeatCount,
+        user,
+        exercise,
+      });
+    });
+    await Promise.all(promiseUpdateWorkoutLogs);
+    const foundUpdatedWorkoutLogs = await this.workoutLogRepository.find({
       where: { id: In(updatedWorkoutLogIds) },
       relations: ['user', 'exercise'],
     });
-    const updatedResults = updatedWorkoutLogs.map((workoutLog) => {
+
+    return foundUpdatedWorkoutLogs.map((workoutLog) => {
       return new WorkoutLogResponseDto(workoutLog);
     });
-    return new UpdateWorkoutLogsResponseDto({ queryResult: result.info, warnings, updatedResults });
   }
 
   async softDeleteWorkoutLogs(softDeleteRequestDto: SoftDeleteWorkoutLogRequestDto, user: User) {
