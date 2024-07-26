@@ -45,14 +45,13 @@ export class WorkoutLogService {
           throw new NotFoundException('Exercise not found');
         }
 
-        const newWorkoutLog = new WorkoutLog({
+        return new WorkoutLog({
           setCount,
           weight,
           repeatCount,
           exercise,
           user,
         });
-        return newWorkoutLog;
       }),
     );
 
