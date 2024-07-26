@@ -1,4 +1,4 @@
-import { IsDate, IsInt, IsNotEmpty, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { IsDate, IsInt, IsNotEmpty, Matches, MaxLength, MinLength, validateOrReject } from 'class-validator';
 import { IsEmailCustom } from '../../common/validation/isEmail.validation.custom';
 
 export class GetMyInfoResponseDto {
@@ -30,6 +30,8 @@ export class GetMyInfoResponseDto {
       this.name = params.name;
       this.createdAt = params.createdAt;
       this.updatedAt = params.updatedAt;
+
+      validateOrReject(this).catch((error) => console.log(error));
     }
   }
 }

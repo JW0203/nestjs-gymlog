@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Exercise } from '../domain/Exercise.entity';
 import { DataSource, In, Repository } from 'typeorm';
@@ -10,7 +10,6 @@ import { DeleteExerciseRequestDto } from '../dto/deleteExercise.request.dto';
 
 @Injectable()
 export class ExerciseService {
-  private readonly logger = new Logger(ExerciseService.name);
   constructor(
     private dataSource: DataSource,
     @InjectRepository(Exercise) private exerciseRepository: Repository<Exercise>,
@@ -21,11 +20,14 @@ export class ExerciseService {
     return await this.exerciseRepository.findOne({ where: { exerciseName, bodyPart } });
   }
 
-  async findAll(exercisesData: ExerciseDataFormatDto[]) {
+  async findAll(exercisesData: ExerciseDataFormatDto[], lock?: boolean): Promise<Exercise[]> {
     const exercises = exercisesData.map((exercise) => ({
       exerciseName: exercise.exerciseName,
       bodyPart: exercise.bodyPart,
     }));
+    if (lock) {
+      return await this.exerciseRepository.find({ where: exercises, lock: { mode: 'pessimistic_write' } });
+    }
     return await this.exerciseRepository.find({ where: exercises });
   }
 
@@ -47,51 +49,44 @@ export class ExerciseService {
     }
   }
 
+  @Transactional()
   async bulkInsertExercises(exerciseDataArray: SaveExercisesRequestDto) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    const exerciseData = exerciseDataArray.exercises;
+    const exerciseEntities = exerciseData.map(
+      (exercise) =>
+        new Exercise({
+          exerciseName: exercise.exerciseName,
+          bodyPart: exercise.bodyPart,
+        }),
+    );
 
-    try {
-      const exerciseData = exerciseDataArray.exercises;
-      const exerciseEntities = exerciseData.map(
-        (exercise) =>
-          new Exercise({
-            exerciseName: exercise.exerciseName,
-            bodyPart: exercise.bodyPart,
-          }),
-      );
-      const foundExercises = await queryRunner.manager.find(Exercise, {
-        where: exerciseEntities.map((entity) => ({
-          exerciseName: entity.exerciseName,
-          bodyPart: entity.bodyPart,
-        })),
-        lock: { mode: 'pessimistic_write' },
-      });
+    const foundExercises = await this.exerciseRepository.find({
+      where: exerciseEntities.map((entity) => ({
+        exerciseName: entity.exerciseName,
+        bodyPart: entity.bodyPart,
+      })),
+      lock: {
+        mode: 'pessimistic_write',
+      },
+    });
 
-      if (foundExercises.length > 0) {
-        throw new ConflictException('Some or all exercises already exist. No new data was saved.');
-      }
-      const insertResults = await queryRunner.manager.insert(Exercise, exerciseEntities);
-      const ids = insertResults.identifiers.map((data) => data.id);
-      const newFoundExercises = await queryRunner.manager.findBy(Exercise, { id: In(ids) });
-      await queryRunner.commitTransaction();
-      return newFoundExercises.map((exercise) => new ExerciseDataResponseDto(exercise));
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release();
+    if (foundExercises.length > 0) {
+      throw new ConflictException('Some or all exercises already exist. No new data was saved.');
     }
+
+    const insertedExercises = await this.exerciseRepository.insert(exerciseData);
+    const exerciseIds = insertedExercises.identifiers.map((data) => data.id);
+    const foundInsertedExercises = await this.exerciseRepository.find({ where: { id: In(exerciseIds) } });
+    return foundInsertedExercises.map((exercise) => new ExerciseDataResponseDto(exercise));
   }
 
   @Transactional()
-  async softDelete(deleteExerciseRequestDto: DeleteExerciseRequestDto) {
+  async bulkSoftDelete(deleteExerciseRequestDto: DeleteExerciseRequestDto) {
     const { ids } = deleteExerciseRequestDto;
     const foundExercises = await this.exerciseRepository.find({ where: { id: In(ids) } });
-    if (ids.length === foundExercises.length) {
+    if (ids.length !== foundExercises.length) {
       throw new BadRequestException(`Some exercises do not exist in the exercise entity.`);
     }
-    await this.exerciseRepository.softDelete(ids);
+    await this.exerciseRepository.softDelete({ id: In(ids) });
   }
 }
