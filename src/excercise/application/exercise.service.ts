@@ -20,11 +20,14 @@ export class ExerciseService {
     return await this.exerciseRepository.findOne({ where: { exerciseName, bodyPart } });
   }
 
-  async findAll(exercisesData: ExerciseDataFormatDto[]) {
+  async findAll(exercisesData: ExerciseDataFormatDto[], lock?: boolean): Promise<Exercise[]> {
     const exercises = exercisesData.map((exercise) => ({
       exerciseName: exercise.exerciseName,
       bodyPart: exercise.bodyPart,
     }));
+    if (lock) {
+      return await this.exerciseRepository.find({ where: exercises, lock: { mode: 'pessimistic_write' } });
+    }
     return await this.exerciseRepository.find({ where: exercises });
   }
 

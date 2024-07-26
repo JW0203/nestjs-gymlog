@@ -32,7 +32,7 @@ export class WorkoutLogService {
       await this.exerciseService.bulkInsertExercises({ exercises: newExercises });
     }
 
-    const exerciseEntities = await this.exerciseService.findAll(saveWorkoutLogs.exercises);
+    const exerciseEntities = await this.exerciseService.findAll(saveWorkoutLogs.exercises, true);
 
     const workoutLogs = await Promise.all(
       saveWorkoutLogs.workoutLogs.map(async (workoutLog) => {
@@ -98,6 +98,7 @@ export class WorkoutLogService {
 
     const foundWorkoutLogs = await this.workoutLogRepository.find({
       where: { id: In(ids) },
+      lock: { mode: 'pessimistic_write' },
     });
     if (!foundWorkoutLogs) {
       throw new BadRequestException('WorkoutLogs not found');
