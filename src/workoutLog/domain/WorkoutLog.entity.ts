@@ -51,11 +51,12 @@ export class WorkoutLog extends Timestamps {
       this.repeatCount = params.repeatCount;
       this.exercise = params.exercise;
       this.user = params.user;
+
+      validateOrReject(this).catch((errors) => {
+        const logger = new Logger('WorkoutLog Entity');
+        logger.log('(WorkoutLog entity validation failed). Errors: ', errors);
+      });
     }
-    validateOrReject(this).catch((errors) => {
-      const logger = new Logger('WorkoutLog Entity');
-      logger.log('(WorkoutLog entity validation failed). Errors: ', errors);
-    });
   }
 
   update(params: { setCount: number; weight: number; repeatCount: number; user: User; exercise: Exercise }) {
