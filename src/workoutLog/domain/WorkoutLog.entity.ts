@@ -36,7 +36,14 @@ export class WorkoutLog extends Timestamps {
   @ManyToOne(() => User, (user) => user.workoutLogs)
   public user: User;
 
-  constructor(params: { setCount: number; weight: number; repeatCount: number; exercise: Exercise; user: User }) {
+  constructor(params: {
+    id?: number;
+    setCount: number;
+    weight: number;
+    repeatCount: number;
+    exercise: Exercise;
+    user: User;
+  }) {
     super();
     if (params) {
       this.setCount = params.setCount;
@@ -48,6 +55,17 @@ export class WorkoutLog extends Timestamps {
     validateOrReject(this).catch((errors) => {
       const logger = new Logger('WorkoutLog Entity');
       logger.log('(WorkoutLog entity validation failed). Errors: ', errors);
+    });
+  }
+
+  update(params: { setCount: number; weight: number; repeatCount: number; user: User; exercise: Exercise }) {
+    return new WorkoutLog({
+      id: this.id,
+      setCount: params.setCount,
+      weight: params.weight,
+      repeatCount: params.repeatCount,
+      exercise: params.exercise,
+      user: params.user,
     });
   }
 }
