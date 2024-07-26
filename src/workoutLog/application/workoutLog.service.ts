@@ -146,6 +146,7 @@ export class WorkoutLogService {
     });
   }
 
+  @Transactional()
   async softDeleteWorkoutLogs(softDeleteRequestDto: SoftDeleteWorkoutLogRequestDto, user: User) {
     await this.workoutLogRepository
       .createQueryBuilder()
