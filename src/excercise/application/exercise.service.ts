@@ -46,10 +46,11 @@ export class ExerciseService {
     }
   }
 
+  @Transactional()
   async bulkInsertExercises(exerciseDataArray: SaveExercisesRequestDto) {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    // const queryRunner = this.dataSource.createQueryRunner();
+    // await queryRunner.connect();
+    // await queryRunner.startTransaction();
 
     try {
       const exerciseData = exerciseDataArray.exercises;
@@ -60,28 +61,40 @@ export class ExerciseService {
             bodyPart: exercise.bodyPart,
           }),
       );
-      const foundExercises = await queryRunner.manager.find(Exercise, {
+      // const foundExercises = await queryRunner.manager.find(Exercise, {
+      //   where: exerciseEntities.map((entity) => ({
+      //     exerciseName: entity.exerciseName,
+      //     bodyPart: entity.bodyPart,
+      //   })),
+      //   lock: { mode: 'pessimistic_write' },
+      // });
+      const foundExercises = await this.exerciseRepository.find({
         where: exerciseEntities.map((entity) => ({
           exerciseName: entity.exerciseName,
           bodyPart: entity.bodyPart,
         })),
-        lock: { mode: 'pessimistic_write' },
+        lock: {
+          mode: 'pessimistic_write',
+        },
       });
 
       if (foundExercises.length > 0) {
         throw new ConflictException('Some or all exercises already exist. No new data was saved.');
       }
-      const insertResults = await queryRunner.manager.insert(Exercise, exerciseEntities);
-      const ids = insertResults.identifiers.map((data) => data.id);
-      const newFoundExercises = await queryRunner.manager.findBy(Exercise, { id: In(ids) });
-      await queryRunner.commitTransaction();
-      return newFoundExercises.map((exercise) => new ExerciseDataResponseDto(exercise));
+      // const insertResults = await queryRunner.manager.insert(Exercise, exerciseEntities);
+      const insertedExercises = await this.exerciseRepository.insert(exerciseData);
+      const exerciseIds = insertedExercises.identifiers.map((data) => data.id);
+      // const newFoundExercises = await queryRunner.manager.findBy(Exercise, { id: In(ids) });
+      const foundInsertedExercises = await this.exerciseRepository.find({ where: { id: In(exerciseIds) } });
+      // await queryRunner.commitTransaction();
+      return foundInsertedExercises.map((exercise) => new ExerciseDataResponseDto(exercise));
     } catch (error) {
-      await queryRunner.rollbackTransaction();
+      // await queryRunner.rollbackTransaction();
       throw error;
-    } finally {
-      await queryRunner.release();
     }
+    // finally {
+    //   await queryRunner.release();
+    // }
   }
 
   @Transactional()
