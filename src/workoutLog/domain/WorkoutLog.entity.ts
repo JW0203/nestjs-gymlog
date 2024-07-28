@@ -69,7 +69,7 @@ export class WorkoutLog extends Timestamps {
     validateOrReject(this).catch((errors) => {
       const logger = new Logger('WorkoutLog Entity Update');
       logger.error('Validation failed during update.', errors);
-      throw errors; // Optionally re-throw if you want to ensure no updates on validation failure
+      throw errors;
     });
   }
 }
