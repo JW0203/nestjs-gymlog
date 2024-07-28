@@ -26,7 +26,7 @@ export class RoutineService {
       relations: ['user'],
       lock: { mode: 'pessimistic_write' },
     });
-    if (isExistRoutine) {
+    if (isExistRoutine.length > 0) {
       throw new BadRequestException('Routine already exists');
     }
     const newExercises = await this.exerciseService.findNewExercises(saveRoutines);
@@ -74,7 +74,7 @@ export class RoutineService {
       relations: ['user'],
       lock: { mode: 'pessimistic_write' },
     });
-    if (!isExistRoutine) {
+    if (isExistRoutine.length === 0) {
       throw new BadRequestException('Routine is not exists');
     }
 
@@ -83,22 +83,33 @@ export class RoutineService {
       await this.exerciseService.bulkInsertExercises({ exercises: NewExercises });
     }
     const exercises = await this.exerciseService.findAll(updateRoutineRequest.exercises);
-    const promiseUpdatedIds = await Promise.all(
+    const updatedIds: number[] = [];
+    const promiseUpdateRoutine = await Promise.all(
       updateRoutineRequest.updateData.map(async (updateRoutine) => {
         const { routineName, id, exerciseName, bodyPart } = updateRoutine;
+        updatedIds.push(id);
         const exercise = exercises.find(
           (exercise) => exercise.exerciseName === exerciseName && exercise.bodyPart === bodyPart,
         );
         if (!exercise) {
           throw new NotFoundException(`${exerciseName}, ${bodyPart} can not find`);
         }
-
-        await this.routineRepository.update(id, { name: routineName, exercise, user });
-        return id;
+        const foundRoutine = await this.routineRepository.findOne({ where: { id }, relations: ['user', 'exercise'] });
+        if (!foundRoutine) {
+          throw new BadRequestException(`Routine with id ${id} not found.`);
+        }
+        foundRoutine.update({
+          name: routineName,
+          exercise,
+          user,
+        });
+        return foundRoutine;
       }),
     );
+    const updateRoutines = await Promise.all(promiseUpdateRoutine);
+    await this.routineRepository.save(updateRoutines);
     const foundRoutines = await this.routineRepository.find({
-      where: { id: In(promiseUpdatedIds) },
+      where: { id: In(updatedIds) },
       relations: ['exercise', 'user'],
     });
     return foundRoutines.map((routine) => new RoutineResponseDto(routine));
