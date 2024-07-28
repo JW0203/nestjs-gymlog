@@ -18,9 +18,7 @@ export class Routine extends Timestamps {
   @ManyToOne(() => Exercise, (Exercise) => Exercise.routines)
   public exercise: Exercise;
 
-  constructor();
-  constructor(params: { name: string; user: User; exercise: Exercise });
-  constructor(params?: { name: string; user: User; exercise: Exercise }) {
+  constructor(params: { name: string; user: User; exercise: Exercise }) {
     super();
     if (params) {
       this.name = params.name;
