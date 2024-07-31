@@ -158,10 +158,13 @@ export class WorkoutLogService {
 
   @Transactional()
   async softDeleteWorkoutLogs(softDeleteRequestDto: SoftDeleteWorkoutLogRequestDto, user: User) {
-    await this.workoutLogRepository
-      .createQueryBuilder()
-      .softDelete()
-      .where({ id: In(softDeleteRequestDto.ids), user: user })
-      .execute();
+    const foundWorkoutLogs = await this.workoutLogRepository.find({
+      where: { id: In(softDeleteRequestDto.ids), user: { id: user.id } },
+      relations: ['user', 'exercise'],
+    });
+    if (foundWorkoutLogs.length === 0) {
+      throw new BadRequestException(`WorkoutLogs are not existed`);
+    }
+    await this.workoutLogRepository.softDelete({ id: In(softDeleteRequestDto.ids), user: { id: user.id } });
   }
 }
