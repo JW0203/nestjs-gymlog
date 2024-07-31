@@ -6,6 +6,7 @@ import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto'
 export class SaveRoutinesRequestDto {
   @IsString()
   routineName: string;
+
   @ValidateNested()
   @Type(() => SaveRoutineFormatDto)
   routines: SaveRoutineFormatDto[];

@@ -88,6 +88,7 @@ export class WorkoutLogService {
   @Transactional()
   async bulkUpdateWorkoutLogs(userId: number, updateWorkoutLogsRequest: UpdateWorkoutLogsRequestDto) {
     const user = await this.userService.findOneById(userId);
+    console.log(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -97,10 +98,12 @@ export class WorkoutLogService {
     });
 
     const foundWorkoutLogs = await this.workoutLogRepository.find({
-      where: { id: In(ids) },
+      where: { id: In(ids), user: { id: userId } },
+      relations: ['user'],
       lock: { mode: 'pessimistic_write' },
     });
-    if (!foundWorkoutLogs) {
+
+    if (foundWorkoutLogs.length === 0) {
       throw new BadRequestException('WorkoutLogs not found');
     }
 
@@ -124,7 +127,10 @@ export class WorkoutLogService {
         throw new BadRequestException(`Cannot find ${exerciseName} and ${bodyPart}`);
       }
 
-      const foundWorkoutLog = await this.workoutLogRepository.findOneBy({ id: workoutLog.id });
+      const foundWorkoutLog = await this.workoutLogRepository.findOne({
+        where: { id: workoutLog.id },
+        relations: ['user', 'exercise'],
+      });
       if (!foundWorkoutLog) {
         throw 'workoutLogs not found';
       }
@@ -135,8 +141,11 @@ export class WorkoutLogService {
         user,
         exercise,
       });
+      return foundWorkoutLog;
     });
-    await Promise.all(promiseUpdateWorkoutLogs);
+
+    const updateWorkoutLogs = await Promise.all(promiseUpdateWorkoutLogs);
+    await this.workoutLogRepository.save(updateWorkoutLogs);
     const foundUpdatedWorkoutLogs = await this.workoutLogRepository.find({
       where: { id: In(updatedWorkoutLogIds) },
       relations: ['user', 'exercise'],
@@ -149,10 +158,13 @@ export class WorkoutLogService {
 
   @Transactional()
   async softDeleteWorkoutLogs(softDeleteRequestDto: SoftDeleteWorkoutLogRequestDto, user: User) {
-    await this.workoutLogRepository
-      .createQueryBuilder()
-      .softDelete()
-      .where({ id: In(softDeleteRequestDto.ids), user: user })
-      .execute();
+    const foundWorkoutLogs = await this.workoutLogRepository.find({
+      where: { id: In(softDeleteRequestDto.ids), user: { id: user.id } },
+      relations: ['user', 'exercise'],
+    });
+    if (foundWorkoutLogs.length === 0) {
+      throw new BadRequestException(`WorkoutLogs are not existed`);
+    }
+    await this.workoutLogRepository.softDelete({ id: In(softDeleteRequestDto.ids), user: { id: user.id } });
   }
 }

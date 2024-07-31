@@ -60,13 +60,16 @@ export class WorkoutLog extends Timestamps {
   }
 
   update(params: { setCount: number; weight: number; repeatCount: number; user: User; exercise: Exercise }) {
-    return new WorkoutLog({
-      id: this.id,
-      setCount: params.setCount,
-      weight: params.weight,
-      repeatCount: params.repeatCount,
-      exercise: params.exercise,
-      user: params.user,
+    this.setCount = params.setCount;
+    this.weight = params.weight;
+    this.repeatCount = params.repeatCount;
+    this.exercise = params.exercise;
+    this.user = params.user;
+
+    validateOrReject(this).catch((errors) => {
+      const logger = new Logger('WorkoutLog Entity Update');
+      logger.error('Validation failed during update.', errors);
+      throw errors;
     });
   }
 }
