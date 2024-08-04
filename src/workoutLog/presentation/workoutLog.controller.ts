@@ -36,4 +36,11 @@ export class WorkoutLogController {
   softDeleteWorkoutLogs(@Body() softDeleteWorkoutLogRequestDto: SoftDeleteWorkoutLogRequestDto, @Request() req: any) {
     return this.workoutLogService.softDeleteWorkoutLogs(softDeleteWorkoutLogRequestDto, req.user);
   }
+
+  @Get('user')
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  getWorkoutLogsByUser(@Request() req: any) {
+    return this.workoutLogService.getWorkoutLogByUser(req.user);
+  }
 }
