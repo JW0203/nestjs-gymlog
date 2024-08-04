@@ -10,6 +10,8 @@ import { User } from '../../user/domain/User.entity';
 import { SaveWorkoutLogsRequestDto } from '../dto/saveWorkoutLogs.request.dto';
 import { UpdateWorkoutLogsRequestDto } from '../dto/updateWorkoutLogs.request.dto';
 import { WorkoutLogResponseDto } from '../dto/workoutLog.response.dto';
+import { AggregatedResultDTO } from '../dto/aggregatedWorkoutLogs.data.dto';
+import { GetWorkoutLogByUserResponseDto } from '../dto/getWorkoutLogByUser.response.dto';
 
 @Injectable()
 export class WorkoutLogService {
@@ -166,5 +168,13 @@ export class WorkoutLogService {
       throw new BadRequestException(`WorkoutLogs are not existed`);
     }
     await this.workoutLogRepository.softDelete({ id: In(softDeleteRequestDto.ids), user: { id: user.id } });
+  }
+
+  async getWorkoutLogByUser(user: User) {
+    const result = await this.workoutLogRepository.find({
+      where: { user: { id: user.id } },
+      relations: ['exercise'],
+    });
+    return GetWorkoutLogByUserResponseDto(result);
   }
 }
