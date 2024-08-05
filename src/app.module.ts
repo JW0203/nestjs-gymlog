@@ -7,6 +7,13 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
+import { UserModule } from './user/user.module';
+import { RoutineModule } from './routine/routine.module';
+import { WorkoutLogModule } from './workoutLog/workoutLog.module';
+import { ExerciseModule } from './excercise/excercise.module';
+import { JwtPassportModule } from './common/jwtPassport.module';
+import { addTransactionalDataSource } from 'typeorm-transactional';
+import { DataSource } from 'typeorm';
 
 @Module({
   imports: [
@@ -28,11 +35,22 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
         autoLoadEntities: true,
-        synchronize: true,
+        synchronize: false,
         logging: true,
         namingStrategy: new SnakeNamingStrategy(),
       }),
+      async dataSourceFactory(options) {
+        if (!options) {
+          throw new Error('Invalid options passed');
+        }
+        return addTransactionalDataSource(new DataSource(options));
+      },
     }),
+    UserModule,
+    RoutineModule,
+    WorkoutLogModule,
+    ExerciseModule,
+    JwtPassportModule,
   ],
   controllers: [AppController],
   providers: [AppService],
