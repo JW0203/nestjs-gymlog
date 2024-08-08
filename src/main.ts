@@ -16,8 +16,7 @@ async function bootstrap() {
   );
   const configService = app.get(ConfigService);
   const port = configService.get<string>('PORT') as string;
-  const hostIP = configService.get<string>('HOST_IP') as string;
-  await app.listen(port, hostIP);
+  await app.listen(port);
   console.log(`Application is running on: ${await app.getUrl()}`);
 }
 bootstrap();
