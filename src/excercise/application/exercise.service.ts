@@ -15,7 +15,7 @@ export class ExerciseService {
     @InjectRepository(Exercise) private exerciseRepository: Repository<Exercise>,
   ) {}
 
-  async findByExerciseNameAndBodyPart(findByExerciseNameAndBodyPart: ExerciseDataFormatDto) {
+  async findOneByExerciseNameAndBodyPart(findByExerciseNameAndBodyPart: ExerciseDataFormatDto) {
     const { exerciseName, bodyPart } = findByExerciseNameAndBodyPart;
     return await this.exerciseRepository.findOne({ where: { exerciseName, bodyPart } });
   }
