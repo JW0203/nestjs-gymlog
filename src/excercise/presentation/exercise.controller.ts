@@ -28,7 +28,7 @@ export class ExerciseController {
 
   @Get('all')
   @HttpCode(200)
-  getAll(@Body() exerciseDataArray: ExerciseDataFormatDto[]) {
-    return this.exerciseService.findAll(exerciseDataArray);
+  getAll() {
+    return this.exerciseService.findAll();
   }
 }
