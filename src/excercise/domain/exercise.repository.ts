@@ -1,6 +1,5 @@
 import { Exercise } from './Exercise.entity';
 import { BodyPart } from '../../common/bodyPart.enum';
-import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
 import { SaveExercisesRequestDto } from '../dto/saveExercises.request.dto';
 import { ExerciseDataResponseDto } from '../../common/dto/exerciseData.response.dto';
 import { DeleteExerciseRequestDto } from '../dto/deleteExercise.request.dto';
