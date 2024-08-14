@@ -19,8 +19,9 @@ export class TypeormRoutineRepository implements RoutineRepository {
   ) {}
 
   async bulkInsertRoutines(user: User, saveRoutines: SaveRoutinesRequestDto): Promise<RoutineResponseDto[]> {
+    const { routineName, exercises, routines } = saveRoutines;
     const isExistRoutine = await this.routineRepository.find({
-      where: { name: saveRoutines.routineName, user: { id: user.id } },
+      where: { name: routineName, user: { id: user.id } },
       relations: ['user'],
       lock: { mode: 'pessimistic_write' },
     });
@@ -31,9 +32,15 @@ export class TypeormRoutineRepository implements RoutineRepository {
     if (newExercises.length > 0) {
       await this.exerciseService.bulkInsertExercises({ exercises: newExercises });
     }
-    const exerciseEntities = await this.exerciseService.findExercisesByExerciseNameAndBodyPart(saveRoutines.exercises);
+    const requestFindExercises = exercises.map((exercise) => {
+      return { exerciseName: exercise.exerciseName, bodyPart: exercise.bodyPart };
+    });
+    const exerciseEntities = await this.exerciseService.findExercisesByExerciseNameAndBodyPart({
+      exercises: requestFindExercises,
+      lock: false,
+    });
     const newRoutines = await Promise.all(
-      saveRoutines.routines.map(async (routine) => {
+      routines.map(async (routine) => {
         const { routineName, exerciseName, bodyPart } = routine;
 
         const exercise = exerciseEntities.find(
@@ -67,26 +74,39 @@ export class TypeormRoutineRepository implements RoutineRepository {
 
   @Transactional()
   async bulkUpdateRoutines(updateRoutineRequest: UpdateRoutinesRequestDto, user: User) {
+    const { routineName, updateData, exercises } = updateRoutineRequest;
     const isExistRoutine = await this.routineRepository.find({
-      where: { name: updateRoutineRequest.routineName, user: { id: user.id } },
+      where: { name: routineName, user: { id: user.id } },
       relations: ['user'],
       lock: { mode: 'pessimistic_write' },
     });
     if (isExistRoutine.length === 0) {
       throw new BadRequestException('Routine is not exists');
     }
-
-    const NewExercises = await this.exerciseService.findNewExercises(updateRoutineRequest);
-    if (NewExercises.length > 0) {
-      await this.exerciseService.bulkInsertExercises({ exercises: NewExercises });
+    const newExercises = await this.exerciseService.findNewExercises(updateRoutineRequest);
+    if (newExercises.length > 0) {
+      await this.exerciseService.bulkInsertExercises({ exercises: newExercises });
     }
-    const exercises = await this.exerciseService.findExercisesByExerciseNameAndBodyPart(updateRoutineRequest.exercises);
+
+    const requestFindExercises = exercises.map((exercise) => {
+      return { exerciseName: exercise.exerciseName, bodyPart: exercise.bodyPart };
+    });
+
+    const foundExercises = await this.exerciseService.findExercisesByExerciseNameAndBodyPart({
+      exercises: requestFindExercises,
+      lock: false,
+    });
+
+    if (foundExercises.length === 0) {
+      throw new BadRequestException('exercises can not found');
+    }
+
     const updatedIds: number[] = [];
     const promiseUpdateRoutine = await Promise.all(
-      updateRoutineRequest.updateData.map(async (updateRoutine) => {
+      updateData.map(async (updateRoutine) => {
         const { routineName, id, exerciseName, bodyPart } = updateRoutine;
         updatedIds.push(id);
-        const exercise = exercises.find(
+        const exercise = foundExercises.find(
           (exercise) => exercise.exerciseName === exerciseName && exercise.bodyPart === bodyPart,
         );
         if (!exercise) {
