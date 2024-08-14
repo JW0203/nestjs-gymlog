@@ -9,6 +9,7 @@ import { SaveExercisesRequestDto } from '../dto/saveExercises.request.dto';
 import { ExerciseDataResponseDto } from '../../common/dto/exerciseData.response.dto';
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { DeleteExerciseRequestDto } from '../dto/deleteExercise.request.dto';
+import { GetExercisesRequestDto } from '../dto/getExercises.request.dto';
 
 export class TypeOrmExerciseRepository implements ExerciseRepository {
   constructor(@InjectRepository(Exercise) private exerciseRepository: Repository<Exercise>) {}
@@ -17,15 +18,13 @@ export class TypeOrmExerciseRepository implements ExerciseRepository {
     return await this.exerciseRepository.findOne({ where: { exerciseName, bodyPart } });
   }
 
-  async findExercisesByExerciseNameAndBodyPart(
-    exercisesData: ExerciseDataFormatDto[],
-    lock?: boolean,
-  ): Promise<Exercise[]> {
+  async findExercisesByExerciseNameAndBodyPart(getExercisesRequest: GetExercisesRequestDto): Promise<any[]> {
+    const { exercises, lock } = getExercisesRequest;
     if (lock) {
       const lockMode = LockConfigManager.setLockConfig('mySQLPessimistic', { mode: 'pessimistic_write' });
-      return await this.exerciseRepository.find({ where: exercisesData, lock: lockMode });
+      return await this.exerciseRepository.find({ where: exercises, lock: lockMode });
     }
-    return await this.exerciseRepository.find({ where: exercisesData });
+    return await this.exerciseRepository.find({ where: exercises });
   }
 
   async findAll(): Promise<Exercise[]> {
@@ -34,13 +33,13 @@ export class TypeOrmExerciseRepository implements ExerciseRepository {
 
   async findNewExercises(exerciseDataArray: SaveExercisesRequestDto): Promise<ExerciseDataResponseDto[]> {
     try {
-      const exerciseData = exerciseDataArray.exercises;
-      const foundExercise = await this.findExercisesByExerciseNameAndBodyPart(exerciseData);
+      const { exercises } = exerciseDataArray;
+      const foundExercise = await this.findExercisesByExerciseNameAndBodyPart({ exercises, lock: false });
       if (foundExercise.length < 1) {
-        return exerciseData;
+        return exercises;
       }
       const existingMap = new Map(foundExercise.map((ex) => [ex.bodyPart + ex.exerciseName, ex]));
-      const newExercises = exerciseData.filter((ex) => !existingMap.has(ex.bodyPart + ex.exerciseName));
+      const newExercises = exercises.filter((ex) => !existingMap.has(ex.bodyPart + ex.exerciseName));
       return newExercises.map((exercise) => new ExerciseDataResponseDto(exercise));
     } catch (error) {
       if (error instanceof Error) {
@@ -51,12 +50,12 @@ export class TypeOrmExerciseRepository implements ExerciseRepository {
   }
 
   async bulkInsertExercises(exerciseDataArray: SaveExercisesRequestDto): Promise<ExerciseDataResponseDto[]> {
-    const exerciseData = exerciseDataArray.exercises;
-    const foundExercises = await this.findExercisesByExerciseNameAndBodyPart(exerciseData, true);
+    const { exercises } = exerciseDataArray;
+    const foundExercises = await this.findExercisesByExerciseNameAndBodyPart({ exercises, lock: true });
     if (foundExercises.length > 0) {
       throw new ConflictException('Some or all exercises already exist. No new data was saved.');
     }
-    const insertedExercises = await this.exerciseRepository.insert(exerciseData);
+    const insertedExercises = await this.exerciseRepository.insert(exercises);
     const exerciseIds = insertedExercises.identifiers.map((data) => data.id);
     const foundInsertedExercises = await this.exerciseRepository.find({ where: { id: In(exerciseIds) } });
     return foundInsertedExercises.map((exercise) => new ExerciseDataResponseDto(exercise));
