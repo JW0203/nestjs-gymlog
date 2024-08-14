@@ -1,7 +1,6 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Exercise } from '../domain/Exercise.entity';
 import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
-import { Transactional } from 'typeorm-transactional';
 import { SaveExercisesRequestDto } from '../dto/saveExercises.request.dto';
 import { ExerciseDataResponseDto } from '../../common/dto/exerciseData.response.dto';
 import { DeleteExerciseRequestDto } from '../dto/deleteExercise.request.dto';
@@ -43,12 +42,10 @@ export class ExerciseService {
     return this.exerciseRepository.findNewExercises(exerciseDataArray);
   }
 
-  @Transactional()
   async bulkInsertExercises(exerciseDataArray: SaveExercisesRequestDto): Promise<ExerciseDataResponseDto[]> {
     return this.exerciseRepository.bulkInsertExercises(exerciseDataArray);
   }
 
-  @Transactional()
   async bulkSoftDelete(deleteExerciseRequestDto: DeleteExerciseRequestDto) {
     await this.exerciseRepository.bulkSoftDelete(deleteExerciseRequestDto);
   }
