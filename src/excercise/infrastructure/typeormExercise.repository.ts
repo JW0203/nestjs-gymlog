@@ -3,7 +3,6 @@ import { Exercise } from '../domain/Exercise.entity';
 import { In, Repository } from 'typeorm';
 import { ExerciseRepository } from '../domain/exercise.repository';
 import { BodyPart } from '../../common/bodyPart.enum';
-import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
 import { LockConfigManager } from '../../common/infrastructure/typeormMysql.lock';
 import { SaveExercisesRequestDto } from '../dto/saveExercises.request.dto';
 import { ExerciseDataResponseDto } from '../../common/dto/exerciseData.response.dto';
