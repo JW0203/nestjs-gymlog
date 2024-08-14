@@ -11,8 +11,6 @@ import { RoutineRepository } from '../domain/routine.repository';
 @Injectable()
 export class RoutineService {
   constructor(
-    readonly exerciseService: ExerciseService,
-
     @Inject(ROUTINE_REPOSITORY)
     private readonly routineRepository: RoutineRepository,
   ) {}
