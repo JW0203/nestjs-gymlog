@@ -1,6 +1,5 @@
-import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Exercise } from '../domain/Exercise.entity';
-import { In } from 'typeorm';
 import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
 import { Transactional } from 'typeorm-transactional';
 import { SaveExercisesRequestDto } from '../dto/saveExercises.request.dto';
@@ -8,7 +7,7 @@ import { ExerciseDataResponseDto } from '../../common/dto/exerciseData.response.
 import { DeleteExerciseRequestDto } from '../dto/deleteExercise.request.dto';
 import { ExerciseRepository } from '../domain/exercise.repository';
 import { EXERCISE_REPOSITORY } from '../../common/const/inject.constant';
-import { LockConfig } from '../../common/type/lock.type';
+import { GetExercisesRequestDto } from '../dto/getExercises.request.dto';
 
 @Injectable()
 export class ExerciseService {
@@ -36,26 +35,20 @@ export class ExerciseService {
     });
   }
 
-  async findExercisesByExerciseNameAndBodyPart(
-    exercisesData: ExerciseDataFormatDto[],
-    lock?: boolean,
-  ): Promise<Exercise[]> {
-    if (lock) {
-      return await this.exerciseRepository.findExercisesByExerciseNameAndBodyPart(exercisesData, lock);
-    }
-    return await this.exerciseRepository.findExercisesByExerciseNameAndBodyPart(exercisesData);
+  async findExercisesByExerciseNameAndBodyPart(getExercisesRequest: GetExercisesRequestDto): Promise<Exercise[]> {
+    return await this.exerciseRepository.findExercisesByExerciseNameAndBodyPart(getExercisesRequest);
   }
 
   async findNewExercises(exerciseDataArray: SaveExercisesRequestDto) {
     return this.exerciseRepository.findNewExercises(exerciseDataArray);
   }
 
-  @Transactional()
+  @Transactional() // Todo: 삭제
   async bulkInsertExercises(exerciseDataArray: SaveExercisesRequestDto): Promise<ExerciseDataResponseDto[]> {
     return this.exerciseRepository.bulkInsertExercises(exerciseDataArray);
   }
 
-  @Transactional()
+  @Transactional() // Todo: 삭제
   async bulkSoftDelete(deleteExerciseRequestDto: DeleteExerciseRequestDto) {
     await this.exerciseRepository.bulkSoftDelete(deleteExerciseRequestDto);
   }
