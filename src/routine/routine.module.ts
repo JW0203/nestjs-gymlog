@@ -6,10 +6,12 @@ import { ExerciseModule } from '../excercise/excercise.module';
 import { UserModule } from '../user/user.module';
 import { RoutineController } from './presentation/routine.controller';
 import { LoggerModule } from '../common/Logger/logger.module';
+import { TypeormRoutineRepository } from './infrastructure/typeormRoutine.repository';
+import { ROUTINE_REPOSITORY } from '../common/const/inject.constant';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Routine]), ExerciseModule, UserModule, LoggerModule],
-  providers: [RoutineService],
+  providers: [RoutineService, { provide: ROUTINE_REPOSITORY, useClass: TypeormRoutineRepository }],
   controllers: [RoutineController],
 })
 export class RoutineModule {}

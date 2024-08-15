@@ -20,11 +20,10 @@ export class UserController {
     return this.userService.signIn(signInRequestDto);
   }
 
-  @Get('me')
+  @Get('my')
   @UseGuards(JwtAuthGuard)
   @HttpCode(200)
   getMyInfo(@Request() req: any) {
-    console.log(req.user.values);
     return this.userService.getMyInfo(req.user.id);
   }
 

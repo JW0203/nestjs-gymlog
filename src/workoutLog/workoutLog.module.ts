@@ -6,10 +6,12 @@ import { WorkoutLogController } from './presentation/workoutLog.controller';
 import { UserModule } from '../user/user.module';
 import { WorkoutLogService } from './application/workoutLog.service';
 import { LoggerModule } from '../common/Logger/logger.module';
+import { WORKOUTLOG_REPOSITORY } from '../common/const/inject.constant';
+import { TypeormWorkoutLogRepository } from './infrastructure/typeormWorkoutLog.repository';
 
 @Module({
   imports: [TypeOrmModule.forFeature([WorkoutLog]), ExerciseModule, UserModule, LoggerModule],
   controllers: [WorkoutLogController],
-  providers: [WorkoutLogService],
+  providers: [WorkoutLogService, { provide: WORKOUTLOG_REPOSITORY, useClass: TypeormWorkoutLogRepository }],
 })
 export class WorkoutLogModule {}

@@ -23,12 +23,12 @@ export class ExerciseController {
   @Get()
   @HttpCode(200)
   get(@Body() exerciseData: ExerciseDataFormatDto) {
-    return this.exerciseService.findByExerciseNameAndBodyPart(exerciseData);
+    return this.exerciseService.findOneByExerciseNameAndBodyPart(exerciseData);
   }
 
   @Get('all')
   @HttpCode(200)
-  getAll(@Body() exerciseDataArray: ExerciseDataFormatDto[]) {
-    return this.exerciseService.findAll(exerciseDataArray);
+  getAll() {
+    return this.exerciseService.findAll();
   }
 }
