@@ -10,7 +10,6 @@ import { User } from '../../user/domain/User.entity';
 import { SaveWorkoutLogsRequestDto } from '../dto/saveWorkoutLogs.request.dto';
 import { UpdateWorkoutLogsRequestDto } from '../dto/updateWorkoutLogs.request.dto';
 import { WorkoutLogResponseDto } from '../dto/workoutLog.response.dto';
-import { AggregatedResultDTO } from '../dto/aggregatedWorkoutLogs.data.dto';
 import { GetWorkoutLogByUserResponseDto } from '../dto/getWorkoutLogByUser.response.dto';
 
 @Injectable()
@@ -25,6 +24,7 @@ export class WorkoutLogService {
 
   @Transactional()
   async bulkInsertWorkoutLogs(userId: number, saveWorkoutLogs: SaveWorkoutLogsRequestDto): Promise<any> {
+    const { exercises, workoutLogs } = saveWorkoutLogs;
     const user = await this.userService.findOneById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
@@ -34,10 +34,13 @@ export class WorkoutLogService {
       await this.exerciseService.bulkInsertExercises({ exercises: newExercises });
     }
 
-    const exerciseEntities = await this.exerciseService.findAll(saveWorkoutLogs.exercises, true);
+    const exerciseEntities = await this.exerciseService.findExercisesByExerciseNameAndBodyPart({
+      exercises,
+      lock: true,
+    });
 
-    const workoutLogs = await Promise.all(
-      saveWorkoutLogs.workoutLogs.map(async (workoutLog) => {
+    const promisedWorkoutLogs = await Promise.all(
+      workoutLogs.map(async (workoutLog) => {
         const { exerciseName, bodyPart, setCount, weight, repeatCount } = workoutLog;
 
         const exercise = exerciseEntities.find(
@@ -57,7 +60,7 @@ export class WorkoutLogService {
       }),
     );
 
-    const insertedResults = await this.workoutLogRepository.insert(workoutLogs);
+    const insertedResults = await this.workoutLogRepository.insert(promisedWorkoutLogs);
     const ids = insertedResults.identifiers.map((result) => result.id);
 
     const savedWorkoutLogs = await this.workoutLogRepository.find({
@@ -89,13 +92,14 @@ export class WorkoutLogService {
 
   @Transactional()
   async bulkUpdateWorkoutLogs(userId: number, updateWorkoutLogsRequest: UpdateWorkoutLogsRequestDto) {
+    const { updateWorkoutLogs, exercises } = updateWorkoutLogsRequest;
     const user = await this.userService.findOneById(userId);
-    console.log(userId);
+
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    const ids = updateWorkoutLogsRequest.updateWorkoutLogs.map((workoutLog) => {
+    const ids = updateWorkoutLogs.map((workoutLog) => {
       return workoutLog.id;
     });
 
@@ -114,15 +118,18 @@ export class WorkoutLogService {
       await this.exerciseService.bulkInsertExercises({ exercises: newExercises });
     }
 
-    const exercises = await this.exerciseService.findAll(updateWorkoutLogsRequest.exercises);
+    const foundExercises = await this.exerciseService.findExercisesByExerciseNameAndBodyPart({
+      exercises,
+      lock: false,
+    });
     if (exercises.length === 0) {
       throw new NotFoundException('Exercises not found');
     }
     const updatedWorkoutLogIds: number[] = [];
-    const promiseUpdateWorkoutLogs = updateWorkoutLogsRequest.updateWorkoutLogs.map(async (workoutLog) => {
+    const promiseUpdateWorkoutLogs = updateWorkoutLogs.map(async (workoutLog) => {
       const { id, setCount, repeatCount, weight, exerciseName, bodyPart } = workoutLog;
       updatedWorkoutLogIds.push(id);
-      const exercise = exercises.find(
+      const exercise = foundExercises.find(
         (exercise) => exercise.exerciseName === exerciseName && exercise.bodyPart === bodyPart,
       );
       if (!exercise) {
@@ -146,8 +153,8 @@ export class WorkoutLogService {
       return foundWorkoutLog;
     });
 
-    const updateWorkoutLogs = await Promise.all(promiseUpdateWorkoutLogs);
-    await this.workoutLogRepository.save(updateWorkoutLogs);
+    const promisedUpdateWorkoutLogs = await Promise.all(promiseUpdateWorkoutLogs);
+    await this.workoutLogRepository.save(promisedUpdateWorkoutLogs);
     const foundUpdatedWorkoutLogs = await this.workoutLogRepository.find({
       where: { id: In(updatedWorkoutLogIds) },
       relations: ['user', 'exercise'],
