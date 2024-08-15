@@ -1,7 +1,7 @@
 import { WorkoutLog } from '../domain/WorkoutLog.entity';
 import { AggregatedResultDTO } from './aggregatedWorkoutLogs.data.dto';
 
-export function GetWorkoutLogByUserResponseDto(workoutLogs: WorkoutLog[]): any {
+export function GetWorkoutLogByUserResponseDto(workoutLogs: WorkoutLog[]): object {
   const aggregatedData = new AggregatedResultDTO();
   workoutLogs.forEach((workoutLog) => {
     const date = new Date(workoutLog.createdAt);
