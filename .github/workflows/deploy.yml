@@ -20,6 +20,6 @@ jobs:
             cd /home/ubuntu/nestjs-gymlog
             git pull origin main
             npm i
-            npm run build
+            sudo npm run build
             pm2 kill
             pm2 start dist/main.js --name "backend-server"
