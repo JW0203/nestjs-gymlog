@@ -18,8 +18,3 @@ jobs:
           script_stop: true
           script: |
             cd /home/ubuntu/nestjs-gymlog
-            git pull origin main
-            npm i
-            sudo npm run build
-            sudo pm2 kill
-            sudo npm run start:prod
