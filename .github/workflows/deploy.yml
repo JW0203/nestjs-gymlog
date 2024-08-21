@@ -22,4 +22,4 @@ jobs:
             npm i
             sudo npm run build
             sudo pm2 kill
-            sudo npm run start:prod --name "backend-server"
+            sudo npm run start:prod
