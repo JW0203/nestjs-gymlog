@@ -9,7 +9,6 @@ import { ExerciseDataResponseDto } from '../../common/dto/exerciseData.response.
 import { BadRequestException, ConflictException } from '@nestjs/common';
 import { DeleteExerciseRequestDto } from '../dto/deleteExercise.request.dto';
 import { GetExercisesRequestDto } from '../dto/getExercises.request.dto';
-import { Transactional } from 'typeorm-transactional';
 
 export class TypeOrmExerciseRepository implements ExerciseRepository {
   constructor(@InjectRepository(Exercise) private exerciseRepository: Repository<Exercise>) {}
@@ -49,7 +48,6 @@ export class TypeOrmExerciseRepository implements ExerciseRepository {
     }
   }
 
-  @Transactional()
   async bulkInsertExercises(exerciseDataArray: SaveExercisesRequestDto): Promise<ExerciseDataResponseDto[]> {
     const { exercises } = exerciseDataArray;
     const foundExercises = await this.findExercisesByExerciseNameAndBodyPart({ exercises, lock: true });
@@ -62,7 +60,6 @@ export class TypeOrmExerciseRepository implements ExerciseRepository {
     return foundInsertedExercises.map((exercise) => new ExerciseDataResponseDto(exercise));
   }
 
-  @Transactional()
   async bulkSoftDelete(deleteExerciseRequestDto: DeleteExerciseRequestDto) {
     const { ids } = deleteExerciseRequestDto;
     const foundExercises = await this.exerciseRepository.find({ where: { id: In(ids) } });
