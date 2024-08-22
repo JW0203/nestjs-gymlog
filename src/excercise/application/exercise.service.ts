@@ -7,6 +7,7 @@ import { DeleteExerciseRequestDto } from '../dto/deleteExercise.request.dto';
 import { ExerciseRepository } from '../domain/exercise.repository';
 import { EXERCISE_REPOSITORY } from '../../common/const/inject.constant';
 import { GetExercisesRequestDto } from '../dto/getExercises.request.dto';
+import { Transactional } from 'typeorm-transactional';
 
 @Injectable()
 export class ExerciseService {
@@ -42,10 +43,12 @@ export class ExerciseService {
     return this.exerciseRepository.findNewExercises(exerciseDataArray);
   }
 
+  @Transactional()
   async bulkInsertExercises(exerciseDataArray: SaveExercisesRequestDto): Promise<ExerciseDataResponseDto[]> {
     return this.exerciseRepository.bulkInsertExercises(exerciseDataArray);
   }
 
+  @Transactional()
   async bulkSoftDelete(deleteExerciseRequestDto: DeleteExerciseRequestDto) {
     await this.exerciseRepository.bulkSoftDelete(deleteExerciseRequestDto);
   }
