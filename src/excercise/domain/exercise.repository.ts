@@ -1,15 +1,17 @@
 import { Exercise } from './Exercise.entity';
 import { BodyPart } from '../../common/bodyPart.enum';
-import { SaveExercisesRequestDto } from '../dto/saveExercises.request.dto';
-import { ExerciseDataResponseDto } from '../../common/dto/exerciseData.response.dto';
-import { DeleteExerciseRequestDto } from '../dto/deleteExercise.request.dto';
-import { GetExercisesRequestDto } from '../dto/getExercises.request.dto';
+import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
+import { MySqlLock } from '../../common/type/typeormLock.type';
 
 export interface ExerciseRepository {
   findOneByExerciseNameAndBodyPart(exerciseName: string, bodyPart: BodyPart): Promise<Exercise | null>;
-  findExercisesByExerciseNameAndBodyPart(getExercisesRequest: GetExercisesRequestDto): Promise<Exercise[]>;
+  findExercisesByExerciseNameAndBodyPart(exercises: ExerciseDataFormatDto[]): Promise<Exercise[]>;
+  findExercisesByExerciseNameAndBodyPartLockMode(
+    exercises: ExerciseDataFormatDto[],
+    lockMode: MySqlLock,
+  ): Promise<Exercise[]>;
   findAll(): Promise<Exercise[]>;
-  findNewExercises(exerciseDataArray: SaveExercisesRequestDto): Promise<ExerciseDataResponseDto[]>;
-  bulkInsertExercises(exerciseDataArray: SaveExercisesRequestDto): Promise<ExerciseDataResponseDto[]>;
-  bulkSoftDelete(deleteExerciseRequestDto: DeleteExerciseRequestDto): any;
+  findExercisesByIds(ids: number[]): Promise<Exercise[]>;
+  bulkInsertExercises(exercises: ExerciseDataFormatDto[]): Promise<Exercise[]>;
+  bulkSoftDelete(ids: number[]): Promise<void>;
 }
