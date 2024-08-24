@@ -1,14 +1,13 @@
-import { Body, Controller, Delete, Get, HttpCode, Logger, Patch, Post, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Patch, Post, Request, UseGuards } from '@nestjs/common';
 import { RoutineService } from '../application/routine.service';
 import { JwtAuthGuard } from '../../common/jwtPassport/jwtAuth.guard';
-import { GetRoutineRequestDto } from '../dto/getRoutine.request.dto';
+import { GetRoutineByNameRequestDto } from '../dto/getRoutineByName.request.dto';
 import { UpdateRoutinesRequestDto } from '../dto/updateRoutines.request.dto';
 import { DeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
 import { SaveRoutinesRequestDto } from '../dto/saveRoutines.request.dto';
 
 @Controller('routines')
 export class RoutineController {
-  private readonly logger = new Logger(RoutineController.name);
   constructor(private readonly routineService: RoutineService) {}
 
   @Post()
@@ -21,9 +20,8 @@ export class RoutineController {
   @Get()
   @UseGuards(JwtAuthGuard)
   @HttpCode(200)
-  getRoutine(@Body() getRoutineRequest: GetRoutineRequestDto, @Request() req: any) {
-    this.logger.log(`start getRoutine DTO : ${getRoutineRequest.name}`);
-    return this.routineService.getRoutineByName(getRoutineRequest, req.user);
+  getRoutine(@Body() getRoutineByName: GetRoutineByNameRequestDto, @Request() req: any) {
+    return this.routineService.getRoutineByName(getRoutineByName, req.user);
   }
 
   @Patch()
