@@ -10,7 +10,6 @@ import { Transactional } from 'typeorm-transactional';
 import { WorkoutLog } from '../domain/WorkoutLog.entity';
 import { ExerciseService } from '../../excercise/application/exercise.service';
 import { UserService } from '../../user/application/user.service';
-import { In } from 'typeorm';
 import { GetWorkoutLogByUserResponseDto } from '../dto/getWorkoutLogByUser.response.dto';
 
 @Injectable()
@@ -34,12 +33,7 @@ export class WorkoutLogService {
       await this.exerciseService.bulkInsertExercises({ exercises: newExercises });
     }
 
-    const requestFindExercises = exercises.map((exercise) => {
-      return { exerciseName: exercise.exerciseName, bodyPart: exercise.bodyPart };
-    });
-
-    const exerciseEntities =
-      await this.exerciseService.findExercisesByExerciseNameAndBodyPartLockMode(requestFindExercises);
+    const exerciseEntities = await this.exerciseService.findExercisesByExerciseNameAndBodyPartLockMode(exercises);
 
     const promisedWorkoutLogs = await Promise.all(
       workoutLogs.map(async (workoutLog) => {
@@ -105,11 +99,8 @@ export class WorkoutLogService {
     if (newExercises.length > 0) {
       await this.exerciseService.bulkInsertExercises({ exercises: newExercises });
     }
-    const requestFindExercises = exercises.map((exercise) => {
-      return { exerciseName: exercise.exerciseName, bodyPart: exercise.bodyPart };
-    });
 
-    const foundExercises = await this.exerciseService.findExercisesByExerciseNameAndBodyPart(requestFindExercises);
+    const foundExercises = await this.exerciseService.findExercisesByExerciseNameAndBodyPart(exercises);
     if (exercises.length === 0) {
       throw new NotFoundException('Exercises not found');
     }
