@@ -1,3 +1,3 @@
-export class GetRoutineRequestDto {
+export class GetRoutineByNameRequestDto {
   name: string;
 }
