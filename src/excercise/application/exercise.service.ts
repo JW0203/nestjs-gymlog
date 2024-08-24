@@ -45,9 +45,9 @@ export class ExerciseService {
     return await this.exerciseRepository.findExercisesByExerciseNameAndBodyPartLockMode(exercises, lockMode);
   }
 
-  async findNewExercises(exerciseDataArray: SaveExercisesRequestDto) {
+  async findNewExercises(getExercisesRequest: GetExercisesRequestDto) {
     try {
-      const { exercises } = exerciseDataArray;
+      const { exercises } = getExercisesRequest;
       const foundExercise = await this.exerciseRepository.findExercisesByExerciseNameAndBodyPart(exercises);
       if (foundExercise.length < 1) {
         return exercises;
