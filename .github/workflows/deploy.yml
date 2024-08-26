@@ -13,7 +13,7 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
+          username: ${{ secrets.EC2_USER_NAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script_stop: true
           script: |
@@ -22,4 +22,4 @@ jobs:
             npm i
             sudo npm run build
             sudo pm2 kill
-            sudo npm run start:prod --name "backend-server"
+            sudo npm run start:prod
