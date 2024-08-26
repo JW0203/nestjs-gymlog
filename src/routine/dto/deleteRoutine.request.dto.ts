@@ -1,3 +1,3 @@
 export class DeleteRoutineRequestDto {
-  routineName: string;
+  ids: number[];
 }
