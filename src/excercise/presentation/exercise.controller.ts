@@ -16,13 +16,13 @@ export class ExerciseController {
 
   @Post()
   @HttpCode(201)
-  saveArray(@Body() exerciseDataArray: SaveExercisesRequestDto) {
+  saveExercises(@Body() exerciseDataArray: SaveExercisesRequestDto) {
     return this.exerciseService.bulkInsertExercises(exerciseDataArray);
   }
 
   @Get()
   @HttpCode(200)
-  get(@Body() exerciseData: ExerciseDataFormatDto) {
+  getExerciseByNameAndBodyPart(@Body() exerciseData: ExerciseDataFormatDto) {
     return this.exerciseService.findOneByExerciseNameAndBodyPart(exerciseData);
   }
 
