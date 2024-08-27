@@ -7,7 +7,7 @@ import { sign } from 'jsonwebtoken';
 import { DataSource } from 'typeorm';
 
 function generateTestToken(): string {
-  const payload = { id: 2 };
+  const payload = { id: 1 };
   return sign(payload, process.env.JWT_SECRET || 'mykey', { expiresIn: '1h' });
 }
 
@@ -46,28 +46,24 @@ describe('e2e test', () => {
         })
         .expect(201);
     });
-  });
 
-  it('user sign in', () => {
-    return request(app.getHttpServer())
-      .get('/users/')
-      .send({
-        email: 'test1@email.com',
-        password: '12345678',
-      })
-      .expect(200);
-  });
+    it('user sign in', () => {
+      return request(app.getHttpServer())
+        .get('/users/')
+        .send({
+          email: 'test1@email.com',
+          password: '12345678',
+        })
+        .expect(200);
+    });
 
-  it('my information', () => {
-    return request(app.getHttpServer()).get('/users/my/').set('Authorization', `Bearer ${token}`).expect(200);
-  });
+    it('my information', () => {
+      return request(app.getHttpServer()).get('/users/my/').set('Authorization', `Bearer ${token}`).expect(200);
+    });
 
-  it('Delete my account', () => {
-    return request(app.getHttpServer()).delete('/users/').set('Authorization', `Bearer ${token}`).expect(204);
-  });
-
-  afterAll(async () => {
-    await app.close();
+    it('Delete my account', () => {
+      return request(app.getHttpServer()).delete('/users/').set('Authorization', `Bearer ${token}`).expect(204);
+    });
   });
 
   describe('Test exercise API', () => {
