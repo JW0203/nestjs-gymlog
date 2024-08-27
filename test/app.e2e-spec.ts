@@ -69,4 +69,43 @@ describe('e2e test', () => {
   afterAll(async () => {
     await app.close();
   });
+
+  describe('Test exercise API', () => {
+    it('save exercises at once', () => {
+      return request(app.getHttpServer())
+        .post('/exercises/')
+        .send({
+          exercises: [
+            { bodyPart: 'Shoulders', exerciseName: '숄더프레스' },
+            { bodyPart: 'Shoulders', exerciseName: '업라이트로우' },
+            { bodyPart: 'Shoulders', exerciseName: '사레레' },
+          ],
+        })
+        .expect(201);
+    });
+
+    it('find One exercise using name and body part', () => {
+      return request(app.getHttpServer())
+        .get('/exercises/')
+        .send({
+          exerciseName: '숄더프레스',
+          bodyPart: 'Shoulders',
+        })
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+    });
+  });
+
+  it('find all exercises', () => {
+    return request(app.getHttpServer()).get('/exercises/all').set('Authorization', `Bearer ${token}`).expect(200);
+  });
+
+  it('delete exercises', () => {
+    return request(app.getHttpServer())
+      .delete('/exercises/')
+      .send({
+        ids: [1],
+      })
+      .expect(204);
+  });
 });
