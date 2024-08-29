@@ -13,6 +13,7 @@ import { ExerciseDataFormatDto } from '../src/common/dto/exerciseData.format.dto
 import { SaveExercisesRequestDto } from '../src/excercise/dto/saveExercises.request.dto';
 import { SaveWorkoutLogsRequestDto } from '../src/workoutLog/dto/saveWorkoutLogs.request.dto';
 import { SaveWorkoutLogFormatDto } from '../src/workoutLog/dto/saveWorkoutLog.format.dto';
+import { UpdateWorkoutLogsRequestDto } from '../src/workoutLog/dto/updateWorkoutLogs.request.dto';
 
 function generateTestToken(id?: number): string {
   if (id) {
@@ -72,6 +73,27 @@ const mockWorkoutLog: SaveWorkoutLogFormatDto[] = [
 const mockWorkoutLogSave: SaveWorkoutLogsRequestDto = {
   exercises: [mockExercise2],
   workoutLogs: mockWorkoutLog,
+};
+const mockWorkoutLogUpdate: UpdateWorkoutLogsRequestDto = {
+  updateWorkoutLogs: [
+    {
+      id: 1,
+      setCount: 1,
+      weight: 20,
+      repeatCount: 15,
+      bodyPart: BodyPart.ABS,
+      exerciseName: '레그레이즈',
+    },
+    {
+      id: 2,
+      setCount: 2,
+      weight: 25,
+      repeatCount: 15,
+      bodyPart: BodyPart.ABS,
+      exerciseName: '레그레이즈',
+    },
+  ],
+  exercises: [{ bodyPart: BodyPart.ABS, exerciseName: '레그레이즈' }],
 };
 
 describe('e2e test', () => {
@@ -135,24 +157,50 @@ describe('e2e test', () => {
 
   describe('WorkoutLogs', () => {
     it('save workoutLogs', () => {
-      token = generateTestToken(1);
+      // token = generateTestToken(1);
       return request(app.getHttpServer())
         .post('/workout-logs/')
         .set('Authorization', `Bearer ${token}`)
         .send(mockWorkoutLogSave)
         .expect(201);
     });
+    it('get workoutLogs', () => {
+      return request(app.getHttpServer())
+        .get('/workout-logs/')
+        .set('Authorization', `Bearer ${token}`)
+        .send('2024-08-29')
+        .expect(200);
+    });
+
+    it('update workoutLogs', () => {
+      return request(app.getHttpServer())
+        .patch('/workout-logs/')
+        .set('Authorization', `Bearer ${token}`)
+        .send(mockWorkoutLogUpdate)
+        .expect(200);
+    });
+
+    it('get workoutLogs of user', () => {
+      return request(app.getHttpServer()).get('/workout-logs/user').set('Authorization', `Bearer ${token}`).expect(200);
+    });
+
+    it('delete workoutLogs of user by ids', () => {
+      return (
+        request(app.getHttpServer())
+          .delete('/workout-logs')
+          .set('Authorization', `Bearer ${token}`)
+          .send({
+            ids: [1],
+          })
+          // .expect((res) => {
+          //   expect(res.body).toHaveProperty('null');
+          // })
+          .expect(204)
+      );
+    });
   });
 
   describe('Routine API', () => {
-    it('test token', () => {
-      return request(app.getHttpServer()).get('/routines/test/').set('Authorization', `Bearer ${token}`).expect(200);
-    });
-
-    // it('save routines with no token', async () => {
-    //   return await request(app.getHttpServer()).post('/routines/test/').send(mockRoutine).expect(201);
-    // });
-
     it('save routines', () => {
       return request(app.getHttpServer())
         .post('/routines/')
