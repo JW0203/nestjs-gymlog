@@ -137,6 +137,7 @@ export class WorkoutLogService {
     });
   }
 
+  @Transactional()
   async softDeleteWorkoutLogs(softDeleteRequestDto: SoftDeleteWorkoutLogRequestDto, user: User): Promise<void> {
     const { ids } = softDeleteRequestDto;
     const foundWorkoutLogs = await this.workoutLogRepository.findWorkoutLogsByIdsLockMode(ids, user.id);
