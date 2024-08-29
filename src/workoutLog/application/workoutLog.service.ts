@@ -28,6 +28,7 @@ export class WorkoutLogService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
+
     const newExercises = await this.exerciseService.findNewExercises({ exercises });
     if (newExercises.length > 0) {
       await this.exerciseService.bulkInsertExercises({ exercises: newExercises });
@@ -96,6 +97,7 @@ export class WorkoutLogService {
     }
 
     const newExercises = await this.exerciseService.findNewExercises({ exercises });
+
     if (newExercises.length > 0) {
       await this.exerciseService.bulkInsertExercises({ exercises: newExercises });
     }
