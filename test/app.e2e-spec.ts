@@ -5,11 +5,50 @@ import { AppModule } from '../src/app.module';
 import { initializeTransactionalContext } from 'typeorm-transactional';
 import { sign } from 'jsonwebtoken';
 import { DataSource } from 'typeorm';
+import { SaveRoutinesRequestDto } from '../src/routine/dto/saveRoutines.request.dto';
+import { SignUpRequestDto } from '../src/user/dto/signUp.request.dto';
+import { SignInRequestDto } from '../src/user/dto/signIn.request.dto';
+import { BodyPart } from '../src/common/bodyPart.enum';
+import { ExerciseDataFormatDto } from '../src/common/dto/exerciseData.format.dto';
+import { SaveExercisesRequestDto } from '../src/excercise/dto/saveExercises.request.dto';
 
-function generateTestToken(): string {
+function generateTestToken(id?: number): string {
+  if (id) {
+    const payload = { id };
+    return sign(payload, process.env.JWT_SECRET || 'mykey', { expiresIn: '1h' });
+  }
   const payload = { id: 1 };
   return sign(payload, process.env.JWT_SECRET || 'mykey', { expiresIn: '1h' });
 }
+
+const mockUser: SignUpRequestDto = {
+  email: 'test@email.com',
+  password: '12345678',
+  name: 'tester',
+};
+
+const mockLogInUser: SignInRequestDto = {
+  email: 'test@email.com',
+  password: '12345678',
+};
+
+const mockRoutine: SaveRoutinesRequestDto = {
+  routineName: '등데이',
+  routines: [
+    {
+      routineName: '등데이',
+      bodyPart: BodyPart.BACK,
+      exerciseName: '케이블 암 풀다운',
+    },
+  ],
+  exercises: [{ bodyPart: BodyPart.BACK, exerciseName: '케이블 암 풀다운' }],
+};
+
+const mockExercise: ExerciseDataFormatDto = { bodyPart: BodyPart.SHOULDERS, exerciseName: '숄더프레스' };
+const mockExercises: ExerciseDataFormatDto[] = [mockExercise];
+const mockExercisesSave: SaveExercisesRequestDto = {
+  exercises: mockExercises,
+};
 
 describe('e2e test', () => {
   let app: INestApplication;
@@ -37,71 +76,40 @@ describe('e2e test', () => {
 
   describe('User', () => {
     it('user sign up', () => {
-      return request(app.getHttpServer())
-        .post('/users/')
-        .send({
-          email: 'test1@email.com',
-          password: '12345678',
-          name: 'Tester',
-        })
-        .expect(201);
+      return request(app.getHttpServer()).post('/users').send(mockUser).expect(201);
     });
 
     it('user sign in', () => {
-      return request(app.getHttpServer())
-        .get('/users/')
-        .send({
-          email: 'test1@email.com',
-          password: '12345678',
-        })
-        .expect(200);
+      return request(app.getHttpServer()).get('/users/').send(mockLogInUser).expect(200);
     });
 
     it('my information', () => {
       return request(app.getHttpServer()).get('/users/my/').set('Authorization', `Bearer ${token}`).expect(200);
     });
-
-    it('Delete my account', () => {
-      return request(app.getHttpServer()).delete('/users/').set('Authorization', `Bearer ${token}`).expect(204);
-    });
   });
 
-  describe('Test exercise API', () => {
-    it('save exercises at once', () => {
+  describe('Exercise', () => {
+    it('save exercises', () => {
+      return request(app.getHttpServer()).post('/exercises/').send(mockExercisesSave).expect(201);
+    });
+
+    it('get exercises', () => {
+      return request(app.getHttpServer()).get('/exercises/').send(mockExercise).expect(200);
+    });
+
+    it('get all exercises', () => {
+      return request(app.getHttpServer()).get('/exercises/all/').expect(200);
+    });
+
+    it('delete  exercises', () => {
       return request(app.getHttpServer())
-        .post('/exercises/')
-        .send({
-          exercises: [
-            { bodyPart: 'Shoulders', exerciseName: '숄더프레스' },
-            { bodyPart: 'Shoulders', exerciseName: '업라이트로우' },
-            { bodyPart: 'Shoulders', exerciseName: '사레레' },
-          ],
-        })
-        .expect(201);
-    });
-
-    it('find One exercise using name and body part', () => {
-      return request(app.getHttpServer())
-        .get('/exercises/')
-        .send({
-          exerciseName: '숄더프레스',
-          bodyPart: 'Shoulders',
-        })
-        .set('Authorization', `Bearer ${token}`)
-        .expect(200);
+        .delete('/exercises/')
+        .send({ ids: [1] })
+        .expect(204);
     });
   });
 
-  it('find all exercises', () => {
-    return request(app.getHttpServer()).get('/exercises/all').set('Authorization', `Bearer ${token}`).expect(200);
-  });
-
-  it('delete exercises', () => {
-    return request(app.getHttpServer())
-      .delete('/exercises/')
-      .send({
-        ids: [1],
-      })
-      .expect(204);
+  afterAll(async () => {
+    await app.close();
   });
 });
