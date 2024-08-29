@@ -14,6 +14,7 @@ import { SaveExercisesRequestDto } from '../src/excercise/dto/saveExercises.requ
 import { SaveWorkoutLogsRequestDto } from '../src/workoutLog/dto/saveWorkoutLogs.request.dto';
 import { SaveWorkoutLogFormatDto } from '../src/workoutLog/dto/saveWorkoutLog.format.dto';
 import { UpdateWorkoutLogsRequestDto } from '../src/workoutLog/dto/updateWorkoutLogs.request.dto';
+import { UpdateRoutinesRequestDto } from '../src/routine/dto/updateRoutines.request.dto';
 
 function generateTestToken(id?: number): string {
   if (id) {
@@ -35,16 +36,30 @@ const mockLogInUser: SignInRequestDto = {
   password: '12345678',
 };
 
+const mockRoutineName: string = '등데이';
 const mockRoutine: SaveRoutinesRequestDto = {
-  routineName: '등데이',
+  routineName: mockRoutineName,
   routines: [
     {
-      routineName: '등데이',
+      routineName: mockRoutineName,
       bodyPart: BodyPart.BACK,
       exerciseName: '케이블 암 풀다운',
     },
   ],
   exercises: [{ bodyPart: BodyPart.BACK, exerciseName: '케이블 암 풀다운' }],
+};
+
+const mockRoutineUpdate: UpdateRoutinesRequestDto = {
+  routineName: mockRoutineName,
+  updateData: [
+    {
+      id: 1,
+      routineName: '다리 데이',
+      bodyPart: BodyPart.LEGS,
+      exerciseName: '스모데드리프트',
+    },
+  ],
+  exercises: [{ bodyPart: BodyPart.LEGS, exerciseName: '스모데드리프트' }],
 };
 
 const mockExercise: ExerciseDataFormatDto = { bodyPart: BodyPart.SHOULDERS, exerciseName: '숄더프레스' };
@@ -185,18 +200,13 @@ describe('e2e test', () => {
     });
 
     it('delete workoutLogs of user by ids', () => {
-      return (
-        request(app.getHttpServer())
-          .delete('/workout-logs')
-          .set('Authorization', `Bearer ${token}`)
-          .send({
-            ids: [1],
-          })
-          // .expect((res) => {
-          //   expect(res.body).toHaveProperty('null');
-          // })
-          .expect(204)
-      );
+      return request(app.getHttpServer())
+        .delete('/workout-logs')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          ids: [1],
+        })
+        .expect(204);
     });
   });
 
@@ -207,6 +217,30 @@ describe('e2e test', () => {
         .set('Authorization', `Bearer ${token}`)
         .send(mockRoutine)
         .expect(201);
+    });
+
+    it('get routines by name', () => {
+      return request(app.getHttpServer())
+        .get('/routines/')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ name: mockRoutineName })
+        .expect(200);
+    });
+
+    it('update routines', () => {
+      return request(app.getHttpServer())
+        .patch('/routines/')
+        .set('Authorization', `Bearer ${token}`)
+        .send(mockRoutineUpdate)
+        .expect(200);
+    });
+
+    it('delete routines', () => {
+      return request(app.getHttpServer())
+        .delete('/routines/')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ ids: [1] })
+        .expect(204);
     });
   });
 
