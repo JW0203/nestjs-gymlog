@@ -11,6 +11,8 @@ import { SignInRequestDto } from '../src/user/dto/signIn.request.dto';
 import { BodyPart } from '../src/common/bodyPart.enum';
 import { ExerciseDataFormatDto } from '../src/common/dto/exerciseData.format.dto';
 import { SaveExercisesRequestDto } from '../src/excercise/dto/saveExercises.request.dto';
+import { SaveWorkoutLogsRequestDto } from '../src/workoutLog/dto/saveWorkoutLogs.request.dto';
+import { SaveWorkoutLogFormatDto } from '../src/workoutLog/dto/saveWorkoutLog.format.dto';
 
 function generateTestToken(id?: number): string {
   if (id) {
@@ -45,9 +47,31 @@ const mockRoutine: SaveRoutinesRequestDto = {
 };
 
 const mockExercise: ExerciseDataFormatDto = { bodyPart: BodyPart.SHOULDERS, exerciseName: '숄더프레스' };
-const mockExercises: ExerciseDataFormatDto[] = [mockExercise];
+const mockExercise2: ExerciseDataFormatDto = { bodyPart: BodyPart.BACK, exerciseName: '시티드 로우' };
+
 const mockExercisesSave: SaveExercisesRequestDto = {
-  exercises: mockExercises,
+  exercises: [mockExercise, mockExercise2],
+};
+
+const mockWorkoutLog: SaveWorkoutLogFormatDto[] = [
+  {
+    setCount: 1,
+    weight: 30,
+    repeatCount: 15,
+    bodyPart: BodyPart.BACK,
+    exerciseName: '시티드 로우',
+  },
+  {
+    setCount: 2,
+    weight: 35,
+    repeatCount: 15,
+    bodyPart: BodyPart.BACK,
+    exerciseName: '시티드 로우',
+  },
+];
+const mockWorkoutLogSave: SaveWorkoutLogsRequestDto = {
+  exercises: [mockExercise2],
+  workoutLogs: mockWorkoutLog,
 };
 
 describe('e2e test', () => {
@@ -106,6 +130,35 @@ describe('e2e test', () => {
         .delete('/exercises/')
         .send({ ids: [1] })
         .expect(204);
+    });
+  });
+
+  describe('WorkoutLogs', () => {
+    it('save workoutLogs', () => {
+      token = generateTestToken(1);
+      return request(app.getHttpServer())
+        .post('/workout-logs/')
+        .set('Authorization', `Bearer ${token}`)
+        .send(mockWorkoutLogSave)
+        .expect(201);
+    });
+  });
+
+  describe('Routine API', () => {
+    it('test token', () => {
+      return request(app.getHttpServer()).get('/routines/test/').set('Authorization', `Bearer ${token}`).expect(200);
+    });
+
+    // it('save routines with no token', async () => {
+    //   return await request(app.getHttpServer()).post('/routines/test/').send(mockRoutine).expect(201);
+    // });
+
+    it('save routines', () => {
+      return request(app.getHttpServer())
+        .post('/routines/')
+        .set('Authorization', `Bearer ${token}`)
+        .send(mockRoutine)
+        .expect(201);
     });
   });
 
