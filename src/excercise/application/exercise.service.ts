@@ -37,12 +37,18 @@ export class ExerciseService {
   }
 
   async findExercisesByExerciseNameAndBodyPart(exercises: ExerciseDataFormatDto[]): Promise<Exercise[]> {
-    return await this.exerciseRepository.findExercisesByExerciseNameAndBodyPart(exercises);
+    const exercisesRequest: ExerciseDataFormatDto[] = exercises.map((exercise) => {
+      return { exerciseName: exercise.exerciseName, bodyPart: exercise.bodyPart };
+    });
+    return await this.exerciseRepository.findExercisesByExerciseNameAndBodyPart(exercisesRequest);
   }
 
   async findExercisesByExerciseNameAndBodyPartLockMode(exercises: ExerciseDataFormatDto[]): Promise<Exercise[]> {
     const lockMode = LockConfigManager.setLockConfig('mySQLPessimistic', { mode: 'pessimistic_write' });
-    return await this.exerciseRepository.findExercisesByExerciseNameAndBodyPartLockMode(exercises, lockMode);
+    const exercisesRequest: ExerciseDataFormatDto[] = exercises.map((exercise) => {
+      return { exerciseName: exercise.exerciseName, bodyPart: exercise.bodyPart };
+    });
+    return await this.exerciseRepository.findExercisesByExerciseNameAndBodyPartLockMode(exercisesRequest, lockMode);
   }
 
   async findNewExercises(getExercisesRequest: GetExercisesRequestDto) {

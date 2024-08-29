@@ -19,7 +19,7 @@ import { DataSource } from 'typeorm';
   imports: [
     ConfigModule.forRoot({
       validationSchema: Joi.object({
-        NODE_ENV: Joi.string().valid('dev', 'prod', 'local', 'debug').default('local'),
+        NODE_ENV: Joi.string().valid('dev', 'prod', 'local', 'debug', 'e2e').default('local'),
       }),
       isGlobal: true,
       envFilePath: `.env.${process.env.NODE_ENV}`,

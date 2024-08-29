@@ -28,7 +28,7 @@ export class WorkoutLogService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    const newExercises = await this.exerciseService.findNewExercises(saveWorkoutLogs);
+    const newExercises = await this.exerciseService.findNewExercises({ exercises });
     if (newExercises.length > 0) {
       await this.exerciseService.bulkInsertExercises({ exercises: newExercises });
     }
@@ -95,7 +95,7 @@ export class WorkoutLogService {
       throw new BadRequestException('WorkoutLogs not found');
     }
 
-    const newExercises = await this.exerciseService.findNewExercises(updateWorkoutLogsRequest);
+    const newExercises = await this.exerciseService.findNewExercises({ exercises });
     if (newExercises.length > 0) {
       await this.exerciseService.bulkInsertExercises({ exercises: newExercises });
     }
@@ -137,6 +137,7 @@ export class WorkoutLogService {
     });
   }
 
+  @Transactional()
   async softDeleteWorkoutLogs(softDeleteRequestDto: SoftDeleteWorkoutLogRequestDto, user: User): Promise<void> {
     const { ids } = softDeleteRequestDto;
     const foundWorkoutLogs = await this.workoutLogRepository.findWorkoutLogsByIdsLockMode(ids, user.id);
