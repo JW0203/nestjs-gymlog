@@ -45,3 +45,11 @@ jobs:
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script_stop: true
           script: |
+            rm -rf /home/ubuntu/nestjs-gymlog/current
+            mkdir /home/ubuntu/nestjs-gymlog/current
+            mv /home/ubuntu/nestjs-gymlog/tobe/project.tar.gz /home/ubuntu/nestjs-gymlog/current/project.tar.gz
+            cd /home/ubuntu/nestjs-gymlog/current
+            tar -xvf project.tar.gz
+            npm i
+            sudo pm2 kill
+            sudo npm run start:prod
