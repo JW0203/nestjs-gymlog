@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: SSH로 EC2에 접속하기
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          ENV: ${{secrets.ENV}}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER_NAME }}
@@ -18,7 +20,9 @@ jobs:
           script_stop: true
           script: |
             cd /home/ubuntu/nestjs-gymlog
+            rm -rf .env.prod
             git pull origin main
+            echo "$ENV" > .env.prod
             npm i
             sudo npm run build
             sudo pm2 kill
