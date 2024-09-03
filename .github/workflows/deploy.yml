@@ -39,6 +39,8 @@ jobs:
 
       - name: SSH로 EC2에 접속하기
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          ENV: ${{secrets.ENV}}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER_NAME }}
