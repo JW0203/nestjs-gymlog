@@ -9,6 +9,19 @@ jobs:
   Deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Github Repository 파일 불러오기
+        uses: actions/checkout@v4
+
+      - name: Node 설치
+        uses: actions/setup-node@v4
+
+      - name: 의존성(라이브러리) 설치
+        run: run npm ci
+
+      - name: .env.prod 파일 만들기
+        run: |
+          echo '${{secrets.ENV}}' > .env.prod
+
       - name: SSH로 EC2에 접속하기
         uses: appleboy/ssh-action@v1.0.3
         env:
