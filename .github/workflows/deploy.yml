@@ -22,34 +22,35 @@ jobs:
         run: |
           echo '${{secrets.ENV}}' > .env.prod
 
-      - name: 빌드
-        run: npm run build
-
-      - name: 압축하기
-        run: tar -czvf project.tar.gz dist .env.prod package.json package-lock.json
-
-      - name: SCP로 EC2에 빌드된 파일 전송하기
-        uses: appleboy/scp-action@v0.1.7
+      - name: AWS Resource에 접근할 수 있게 AWS credentials 설정
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-            host: ${{ secrets.EC2_HOST }}
-            username: ${{ secrets.EC2_USER_NAME }}
-            key: ${{ secrets.EC2_PRIVATE_KEY }}
-            source: project.tar.gz
-            target: /home/ubuntu/nestjs-gymlog/tobe
+            aws-region: ap-northeast-2
+            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: ECR에 로그인하기
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Docker 이미지 생성
+        run: docker build -t gym-logs .
+
+      - name: Docker 이미지에 Tag 붙이기
+        run: docker tag gym-logs ${{ steps.login-ecr.outputs.registry }}/gym-logs:latest
+
+      - name: ECR에 Docker 이미지 Push하기
+        run: docker push ${{ steps.login-ecr.outputs.registry }}/gym-logs:latest
 
       - name: SSH로 EC2에 접속하기
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER_NAME }}
-          key: ${{ secrets.EC2_PRIVATE_KEY }}
-          script_stop: true
-          script: |
-            rm -rf /home/ubuntu/nestjs-gymlog/current
-            mkdir /home/ubuntu/nestjs-gymlog/current
-            mv /home/ubuntu/nestjs-gymlog/tobe/project.tar.gz /home/ubuntu/nestjs-gymlog/current/project.tar.gz
-            cd /home/ubuntu/nestjs-gymlog/current
-            tar -xvf project.tar.gz
-            npm i
-            sudo pm2 kill
-            sudo npm run start:prod
+            host: ${{ secrets.EC2_HOST }}
+            username: ${{ secrets.EC2_USERNAME }}
+            key: ${{ secrets.EC2_PRIVATE_KEY }}
+            script_stop: true
+            script: |
+              docker stop gym-logs || true
+              docker rm gym-logs || true
+              docker pull ${{ steps.login-ecr.outputs.registry }}/gym-logs:latest
+              docker run -d --name gym-logs-p 3000:3000 ${{ steps.login-ecr.outputs.registry }}/gym-logs:latest
