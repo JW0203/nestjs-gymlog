@@ -48,7 +48,7 @@ jobs:
           ENV: ${{secrets.ENV}}
         with:
             host: ${{ secrets.EC2_HOST }}
-            username: ${{ secrets.EC2_USERNAME }}
+            username: ${{ secrets.EC2_USER_NAME }}
             key: ${{ secrets.EC2_PRIVATE_KEY }}
             script_stop: true
             script: |
