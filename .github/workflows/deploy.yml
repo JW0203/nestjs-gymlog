@@ -16,7 +16,7 @@ jobs:
         uses: actions/setup-node@v4
 
       - name: 의존성(라이브러리) 설치
-        run: run npm ci
+        run: npm ci
 
       - name: .env.prod 파일 만들기
         run: |
