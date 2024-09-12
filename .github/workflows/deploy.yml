@@ -37,10 +37,10 @@ jobs:
         run: docker build -t gym-logs .
 
       - name: Docker 이미지에 Tag 붙이기
-        run: docker tag gym-logs ${{ steps.login-ecr.outputs.registry }}/gym-logs:latest
+        run: docker tag gym-logs ${{ steps.login-ecr.outputs.registry }}/gymlog-server:latest
 
       - name: ECR에 Docker 이미지 Push하기
-        run: docker push ${{ steps.login-ecr.outputs.registry }}/gym-logs:latest
+        run: docker push ${{ steps.login-ecr.outputs.registry }}/gymlog-server:latest
 
       - name: SSH로 EC2에 접속하기
         uses: appleboy/ssh-action@v1.0.3
@@ -48,11 +48,11 @@ jobs:
           ENV: ${{secrets.ENV}}
         with:
             host: ${{ secrets.EC2_HOST }}
-            username: ${{ secrets.EC2_USER_NAME }}
+            username: ${{ secrets.EC2_USERNAME }}
             key: ${{ secrets.EC2_PRIVATE_KEY }}
             script_stop: true
             script: |
               docker stop gym-logs || true
               docker rm gym-logs || true
-              docker pull ${{ steps.login-ecr.outputs.registry }}/gym-logs:latest
-              docker run -d --name gym-logs-p 3000:3000 ${{ steps.login-ecr.outputs.registry }}/gym-logs:latest
+              docker pull ${{ steps.login-ecr.outputs.registry }}/gymlog-server:latest
+              docker run -d --name gym-logs -p 3000:3000 ${{ steps.login-ecr.outputs.registry }}/gymlog-server:latest
