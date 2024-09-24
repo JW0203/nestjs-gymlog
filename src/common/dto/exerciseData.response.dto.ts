@@ -1,10 +1,13 @@
-import { IsEnum, IsNotEmpty } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsNumber } from 'class-validator';
 import { BodyPart } from '../bodyPart.enum';
 import { IsExerciseName } from '../validation/isExerciseName.validation';
 import { Exercise } from '../../excercise/domain/Exercise.entity';
-import { ExerciseDataFormatDto } from './exerciseData.format.dto';
 
 export class ExerciseDataResponseDto {
+  @IsNotEmpty()
+  @IsNumber()
+  id: number;
+
   @IsNotEmpty()
   @IsEnum(BodyPart)
   bodyPart: BodyPart;
@@ -13,7 +16,8 @@ export class ExerciseDataResponseDto {
   @IsExerciseName()
   exerciseName: string;
 
-  constructor(exercise: Exercise | ExerciseDataFormatDto) {
+  constructor(exercise: Exercise) {
+    this.id = exercise.id;
     this.exerciseName = exercise.exerciseName;
     this.bodyPart = exercise.bodyPart;
   }

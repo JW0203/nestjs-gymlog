@@ -9,6 +9,7 @@ import { EXERCISE_REPOSITORY } from '../../common/const/inject.constant';
 import { GetExercisesRequestDto } from '../dto/getExercises.request.dto';
 import { Transactional } from 'typeorm-transactional';
 import { LockConfigManager } from '../../common/infrastructure/typeormMysql.lock';
+import { FilteredExerciseDto } from '../dto/filteredExercise.dto';
 
 @Injectable()
 export class ExerciseService {
@@ -60,7 +61,7 @@ export class ExerciseService {
       }
       const existingMap = new Map(foundExercise.map((ex) => [ex.bodyPart + ex.exerciseName, ex]));
       const newExercises = exercises.filter((ex) => !existingMap.has(ex.bodyPart + ex.exerciseName));
-      return newExercises.map((exercise) => new ExerciseDataResponseDto(exercise));
+      return newExercises.map((exercise) => new FilteredExerciseDto(exercise));
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(`Error while finding new exercises: ${error.message}`);
