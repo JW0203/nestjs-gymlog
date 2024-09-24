@@ -17,6 +17,25 @@ import gymLogService from './e2e.requestObject';
 import { WorkoutLog } from '../src/workoutLog/domain/WorkoutLog.entity';
 import { Routine } from '../src/routine/domain/Routine.entity';
 
+function createRoutine(routineName: string, routineData: ExerciseDataFormatDto[]): SaveRoutinesRequestDto {
+  const routines = routineData.map((exercise) => ({
+    routineName: routineName,
+    bodyPart: exercise.bodyPart,
+    exerciseName: exercise.exerciseName,
+  }));
+
+  const exercises = routineData.map((exercise) => ({
+    bodyPart: exercise.bodyPart,
+    exerciseName: exercise.exerciseName,
+  }));
+
+  return {
+    routineName: routineName,
+    routines: routines,
+    exercises: exercises,
+  };
+}
+
 function createTestUser(email: string, password: string, name: string): SignUpRequestDto {
   return { email, password, name };
 }
@@ -102,7 +121,7 @@ describe('e2e test', () => {
       // Then: 400 Bad Request 코드를 받아야 한다.
       expect(response.status).toBe(400);
     });
-    // Todo:  수정중
+
     it('가입한 유저가 자신의 정보 검색 테스트', async () => {
       // Given: 가입한 유저의 토큰
       const token = await signUpAndSignIn(app, 'signeduser@email.com', '12345678', 'tester');
@@ -128,10 +147,13 @@ describe('e2e test', () => {
   describe('Exercise API 테스트', () => {
     it('새로운 운동 부위와 이름 저장', async () => {
       // Given: 한가지 이상의 새로운 운동 이름과 운동부위
-      const newExercise1: ExerciseDataFormatDto = { bodyPart: BodyPart.SHOULDERS, exerciseName: '숄더프레스' };
-      const newExercise2: ExerciseDataFormatDto = { bodyPart: BodyPart.BACK, exerciseName: '시티드 로우' };
+      const exerciseData: ExerciseDataFormatDto[] = [
+        { bodyPart: BodyPart.SHOULDERS, exerciseName: '숄더프레스' },
+        { bodyPart: BodyPart.BACK, exerciseName: '시티드 로우' },
+      ];
+
       const newExercises: SaveExercisesRequestDto = {
-        exercises: [newExercise1, newExercise2],
+        exercises: exerciseData,
       };
 
       // When: 저장하려고 시도한다.
@@ -143,22 +165,33 @@ describe('e2e test', () => {
 
     it('저장된 exercise 중 하나를 검색', async () => {
       // Given: 저장된 운동들 중 하나
-      const exercise1: ExerciseDataFormatDto = { bodyPart: BodyPart.SHOULDERS, exerciseName: '밀리터리프레스' };
-
-      const newExercises: SaveExercisesRequestDto = {
-        exercises: [exercise1],
+      const exerciseData: ExerciseDataFormatDto[] = [{ bodyPart: BodyPart.SHOULDERS, exerciseName: '밀리터리프레스' }];
+      const saveExercises: SaveExercisesRequestDto = {
+        exercises: exerciseData,
       };
-      await gymLogService.postExercises(app, newExercises);
+      await gymLogService.postExercises(app, saveExercises);
 
       // When: 찾으려고 시도한다.
-      const response = await gymLogService.getExercise(app, exercise1);
+      const response = await gymLogService.getExercise(app, exerciseData[0]);
 
       // Then: 200 Ok 코드를 받아야 한다.
       expect(response.status).toBe(200);
     });
 
     it('저장된 모든 exercises 를 검색', async () => {
-      // Given : 없음
+      // Given : 저장된 운동들
+      const exerciseData: ExerciseDataFormatDto[] = [
+        { bodyPart: BodyPart.SHOULDERS, exerciseName: '어깨' },
+        { bodyPart: BodyPart.BACK, exerciseName: '등' },
+        { bodyPart: BodyPart.ABS, exerciseName: '복근' },
+        { bodyPart: BodyPart.LEGS, exerciseName: '다리' },
+        { bodyPart: BodyPart.ARM, exerciseName: '팔' },
+      ];
+      const newExercises: SaveExercisesRequestDto = {
+        exercises: exerciseData,
+      };
+      await gymLogService.postExercises(app, newExercises);
+
       // When : 저장된 모둔 운동이름과 부위를 찾으려고 시도한다.
       const response = await request(app.getHttpServer()).get('/exercises/all/');
       // Then : 200 Ok 코드를 받아야 한다.
@@ -167,15 +200,18 @@ describe('e2e test', () => {
 
     it('저장된 exercises 의 id 를 이용하여 해당 exercises 삭제', async () => {
       // Given: 저장된 운동들의 ids
-      const newExercise1: ExerciseDataFormatDto = { bodyPart: BodyPart.LEGS, exerciseName: '고블린스퀏트' };
-      const newExercise2: ExerciseDataFormatDto = { bodyPart: BodyPart.LEGS, exerciseName: '런지' };
+      const exerciseData: ExerciseDataFormatDto[] = [
+        { bodyPart: BodyPart.LEGS, exerciseName: '고블린스퀏트' },
+        { bodyPart: BodyPart.LEGS, exerciseName: '런지' },
+      ];
       const newExercises: SaveExercisesRequestDto = {
-        exercises: [newExercise1, newExercise2],
+        exercises: exerciseData,
       };
+
       await gymLogService.postExercises(app, newExercises);
 
       const ids: number[] = [];
-      for (const exercise of [newExercise1, newExercise2]) {
+      for (const exercise of exerciseData) {
         const savedExercise = await gymLogService.getExercise(app, exercise);
         const exerciseId = savedExercise.body.id;
         ids.push(exerciseId);
@@ -190,29 +226,9 @@ describe('e2e test', () => {
   });
 
   describe('WorkoutLogs API 테스트', () => {
-    let token: string;
-
-    beforeEach(async () => {
-      // 새로운 유저
-      const newUser: SignUpRequestDto = {
-        email: 'testuser@email.com',
-        password: '12345678',
-        name: 'tester',
-      };
-
-      // 유저 회원가입
-      await gymLogService.signUp(app, newUser);
-
-      // 유저 로그인
-      const loginResponse = await gymLogService.signIn(app, newUser);
-
-      // 로그인 후 토큰 발급
-      token = loginResponse.body.accessToken;
-    });
-
     it('로그인한 유저가 운동한 기록을 저장', async () => {
       // Given : 로그인 한 유저와 유저가 운동한 기록
-
+      const token = await signUpAndSignIn(app, 'workout@email.com', '12345678', 'save');
       const workoutLogs: SaveWorkoutLogFormatDto[] = [
         {
           setCount: 1,
@@ -230,10 +246,10 @@ describe('e2e test', () => {
         },
       ];
       // 운동 부위 정보
-      const exercise: ExerciseDataFormatDto = { bodyPart: BodyPart.SHOULDERS, exerciseName: '밀리터리프레스' };
+      const exerciseData: ExerciseDataFormatDto[] = [{ bodyPart: BodyPart.SHOULDERS, exerciseName: '밀리터리프레스' }];
 
       const newWorkoutLogs: SaveWorkoutLogsRequestDto = {
-        exercises: [exercise],
+        exercises: exerciseData,
         workoutLogs: workoutLogs,
       };
 
@@ -246,20 +262,7 @@ describe('e2e test', () => {
 
     it('로그인한 유저가 특정한 날의 운동기록을 검색', async () => {
       // Given : 로그인 한 유저 와 운동한 날짜(date)
-      const newUser: SignUpRequestDto = {
-        email: 'testuser1@email.com',
-        password: '12345678',
-        name: 'tester',
-      };
-
-      // 유저 회원가입 (실제 메서드 호출)
-      await gymLogService.signUp(app, newUser);
-
-      // 유저 로그인 (실제 메서드 호출)
-      const loginResponse = await gymLogService.signIn(app, newUser);
-
-      // 로그인 후 토큰 발급
-      const newToken = loginResponse.body.accessToken;
+      const token = await signUpAndSignIn(app, 'searchdate_workoutlogs@gmail.com', '1234567', 'searchdate');
       const date = getTodayDate();
 
       const workoutLogs: SaveWorkoutLogFormatDto[] = [
@@ -284,10 +287,10 @@ describe('e2e test', () => {
         workoutLogs: workoutLogs,
       };
 
-      await gymLogService.postWorkoutLogs(app, newWorkoutLogs, newToken);
+      await gymLogService.postWorkoutLogs(app, newWorkoutLogs, token);
 
       // When: 특정한 날에 자신이 운동한 기록을 검색한다.
-      const response = await gymLogService.getWorkoutLogsOnDate(app, date, newToken);
+      const response = await gymLogService.getWorkoutLogsOnDate(app, date, token);
 
       // Then:
       expect(response.status).toBe(200);
@@ -296,14 +299,7 @@ describe('e2e test', () => {
 
     it(' workoutLogs 를 업데이트', async () => {
       // Given : 로그인 한 유저 와 업데이트할 운동 기록
-      const newUser: SignUpRequestDto = {
-        email: 'testuser123@email.com',
-        password: '12345678',
-        name: 'tester9',
-      };
-      await gymLogService.signUp(app, newUser);
-      const loginResponse = await gymLogService.signIn(app, newUser);
-      const newToken = loginResponse.body.accessToken;
+      const newToken = await signUpAndSignIn(app, 'update_workoutlogs@email.com', '12345678,', 'update');
       const workoutLogs: SaveWorkoutLogFormatDto[] = [
         {
           setCount: 1,
@@ -356,14 +352,7 @@ describe('e2e test', () => {
 
     it('로그인 한 유저의 모든 운동기록을 조회', async () => {
       // Given : 로그인 한 유저, 저장된 운동 기록
-      const signedUpUser: SignUpRequestDto = {
-        email: 'testuser10@test.com',
-        password: '123456',
-        name: 'newuser',
-      };
-      await gymLogService.signUp(app, signedUpUser);
-      const singInUser = await gymLogService.signIn(app, signedUpUser);
-      const newToken = singInUser.body.accessToken;
+      const token = await signUpAndSignIn(app, 'search_workoutlogs@test.com', '12345678', 'search');
 
       const newWorkoutLogs: SaveWorkoutLogsRequestDto = {
         workoutLogs: [
@@ -384,12 +373,12 @@ describe('e2e test', () => {
         ],
         exercises: [{ bodyPart: BodyPart.ABS, exerciseName: '레그레이즈' }],
       };
-      await gymLogService.postWorkoutLogs(app, newWorkoutLogs, newToken);
+      await gymLogService.postWorkoutLogs(app, newWorkoutLogs, token);
 
       // When : 자신이 기록한 모든 운동기록을 조회하려고 시도한다.
       const response = await request(app.getHttpServer())
         .get('/workout-logs/user')
-        .set('Authorization', `Bearer ${newToken}`);
+        .set('Authorization', `Bearer ${token}`);
 
       // Then : 200 Ok 코드를 받아야 한다.
       expect(response.status).toBe(200);
@@ -397,15 +386,7 @@ describe('e2e test', () => {
 
     it('로그인한 유저의 workoutLogs 의 id 들을 이용하여 해당 workoutLogs 를 삭제', async () => {
       // Given : 로그인 한 유저, 자신의 workoutLogs
-      const signedUpUser: SignUpRequestDto = {
-        email: 'testuser10@test.com',
-        password: '123456',
-        name: 'newuser',
-      };
-      await gymLogService.signUp(app, signedUpUser);
-      const singInUser = await gymLogService.signIn(app, signedUpUser);
-      const newToken = singInUser.body.accessToken;
-
+      const token = await signUpAndSignIn(app, 'deletelogs@email.com', '12345678', 'delete');
       const newWorkoutLogs: SaveWorkoutLogsRequestDto = {
         workoutLogs: [
           {
@@ -425,7 +406,7 @@ describe('e2e test', () => {
         ],
         exercises: [{ bodyPart: BodyPart.ABS, exerciseName: '레그레이즈' }],
       };
-      await gymLogService.postWorkoutLogs(app, newWorkoutLogs, newToken);
+      await gymLogService.postWorkoutLogs(app, newWorkoutLogs, token);
       const date = getTodayDate();
 
       const workoutLogs = await request(app.getHttpServer())
@@ -461,18 +442,12 @@ describe('e2e test', () => {
     };
     let token: string;
 
-    // beforeAll(async () => {
-    //   await request(app.getHttpServer()).post('/users').send(signedUpUser);
-    //   const singedUpUser = await request(app.getHttpServer()).get('/users').send(signedUpUser);
-    //   token = singedUpUser.body.accessToken;
-    // });
-
     beforeEach(async () => {
       await gymLogService.signUp(app, signedUpUser);
       const singInResponse = await gymLogService.signIn(app, signedUpUser);
       token = singInResponse.body.accessToken;
     });
-
+    // Todo: 함수 생성
     it('로그인한 유저가 routines 저장 ', async () => {
       // Given: 로그인한 유저, 새로운 루틴 데이터
       const routineName: string = '등데이';
@@ -503,18 +478,12 @@ describe('e2e test', () => {
     it('로그인한 유저가 자신의 routines 을 루틴의 이름으로 검색', async () => {
       // Given: 로그인한 유저, 루틴 이름
       const routineName: string = '레그데이';
-      const legsRoutine: SaveRoutinesRequestDto = {
-        routineName: routineName,
-        routines: [
-          {
-            routineName: routineName,
-            bodyPart: BodyPart.LEGS,
-            exerciseName: '스모 스쿼트',
-          },
-        ],
-        exercises: [{ bodyPart: BodyPart.LEGS, exerciseName: '스모 스쿼트' }],
-      };
-      await request(app.getHttpServer()).post('/routines/').set('Authorization', `Bearer ${token}`).send(legsRoutine);
+      const createdRoutine = createRoutine(routineName, [{ bodyPart: BodyPart.LEGS, exerciseName: '스모 스쿼트' }]);
+
+      await request(app.getHttpServer())
+        .post('/routines/')
+        .set('Authorization', `Bearer ${token}`)
+        .send(createdRoutine);
 
       // When: 루틴이름으로 자신의 루틴을 검색하려고 한다.
 
@@ -532,29 +501,14 @@ describe('e2e test', () => {
       // Given: 로그인한 유저 , 업데이트할 루틴 정보
 
       const routineName: string = '등데이2';
-      const routineOrigin: SaveRoutinesRequestDto = {
-        routineName: routineName,
-        routines: [
-          {
-            routineName: routineName,
-            bodyPart: BodyPart.BACK,
-            exerciseName: '풀업',
-          },
+      const routineData = [
+        { bodyPart: BodyPart.BACK, exerciseName: '풀업' },
+        { bodyPart: BodyPart.BACK, exerciseName: '사레레' },
+      ];
+      const createdRoutine = createRoutine(routineName, routineData);
+      const savedRoutines = await gymLogService.postRoutine(app, token, createdRoutine);
 
-          {
-            routineName: routineName,
-            bodyPart: BodyPart.BACK,
-            exerciseName: '사레레',
-          },
-        ],
-        exercises: [
-          { bodyPart: BodyPart.BACK, exerciseName: '풀업' },
-          { bodyPart: BodyPart.BACK, exerciseName: '사레레' },
-        ],
-      };
-
-      const routines = await gymLogService.postRoutine(app, token, routineOrigin);
-      const routineInfo = routines.body;
+      const routineInfo = savedRoutines.body;
       const newExerciseNames: string[] = ['어깨 후면', '어깨 전면'];
       const updateInfo = routineInfo.map((routine: Routine, i: number) => {
         return {
@@ -588,21 +542,12 @@ describe('e2e test', () => {
     it('delete routines', async () => {
       // Given: 로그인 한 유저, 저장된
       const routineName: string = '등데이3';
-      const routine: SaveRoutinesRequestDto = {
-        routineName: routineName,
-        routines: [
-          {
-            routineName: routineName,
-            bodyPart: BodyPart.BACK,
-            exerciseName: '어시스트 풀업',
-          },
-        ],
-        exercises: [{ bodyPart: BodyPart.BACK, exerciseName: '어시스트 풀업' }],
-      };
-      const savedRoutine = await gymLogService.postRoutine(app, token, routine);
-      const routineInfo = savedRoutine.body;
+      const routineData = [{ bodyPart: BodyPart.BACK, exerciseName: '어시스트 풀업' }];
+      const createdRoutine = createRoutine(routineName, routineData);
+      const savedRoutine = await gymLogService.postRoutine(app, token, createdRoutine);
 
-      const ids = routineInfo.map((routine: Routine) => {
+      const savedRoutineInfo = savedRoutine.body;
+      const ids = savedRoutineInfo.map((routine: Routine) => {
         return routine.id;
       });
 
