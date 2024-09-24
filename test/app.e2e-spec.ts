@@ -13,21 +13,56 @@ import { SaveWorkoutLogsRequestDto } from '../src/workoutLog/dto/saveWorkoutLogs
 import { SaveWorkoutLogFormatDto } from '../src/workoutLog/dto/saveWorkoutLog.format.dto';
 import { UpdateWorkoutLogsRequestDto } from '../src/workoutLog/dto/updateWorkoutLogs.request.dto';
 import { UpdateRoutinesRequestDto } from '../src/routine/dto/updateRoutines.request.dto';
+import gymLogService from './e2e.requestObject';
+import { WorkoutLog } from '../src/workoutLog/domain/WorkoutLog.entity';
+import { Routine } from '../src/routine/domain/Routine.entity';
+
+function createTestUser(email: string, password: string, name: string): SignUpRequestDto {
+  return { email, password, name };
+}
+
+async function signUpAndSignIn(app: INestApplication, email: string, password: string, name: string): Promise<string> {
+  // 유저
+  const user = createTestUser(email, password, name);
+
+  // 회원가입
+  await gymLogService.signUp(app, user);
+
+  // 로그인 후 accessToken 반환
+  const signedUpUser = await gymLogService.signIn(app, user);
+  return signedUpUser.body.accessToken;
+}
+
+function getTodayDate() {
+  const today = new Date();
+
+  // 날짜를 지정한 시간대로 변환
+  const options: Intl.DateTimeFormatOptions = {
+    // timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  };
+
+  const formattedDate = new Intl.DateTimeFormat('en-CA', options).format(today); // 'YYYY-MM-DD' 형식으로 반환
+  return formattedDate.replace(/\//g, '-');
+}
 
 describe('e2e test', () => {
   let app: INestApplication;
-  // let token: string;
   let dataSource: DataSource;
 
   beforeAll(async () => {
     initializeTransactionalContext();
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
+
     dataSource = moduleFixture.get<DataSource>(DataSource);
     await dataSource.dropDatabase();
     await dataSource.synchronize();
-    // token = generateTestToken();
+
     app = moduleFixture.createNestApplication();
     await app.init();
   });
@@ -40,29 +75,20 @@ describe('e2e test', () => {
 
   describe('User API 테스트', () => {
     it('유저 가입 테스트', async () => {
-      // Given : 새로운 유저가
-      const newUser: SignUpRequestDto = {
-        email: 'test@email.com',
-        password: '12345678',
-        name: 'tester',
-      };
+      // Given : 새로운 유저
+      const newUser = createTestUser('newuser@email.com', '12345678', 'tester');
       // When : 가입을 시도한다.
-      const response = await request(app.getHttpServer()).post('/users').send(newUser);
+      const response = await gymLogService.signUp(app, newUser);
       // Then : 201 Created 코드를 받아야한다.
       expect(response.status).toBe(201);
     });
 
     it('가입한 유저 로그인 테스트', async () => {
-      // Given: 가입한 유저
-      const signedUpUser: SignUpRequestDto = {
-        email: 'test1@email.com',
-        password: '12345678',
-        name: 'tester',
-      };
-      await request(app.getHttpServer()).post('/users').send(signedUpUser);
-
+      // Given: 가입한 유저  signedUpUser
+      const user = createTestUser('user@email.com', '12345678', 'user');
+      await gymLogService.signUp(app, user);
       // When : 가입한 유저가 로그인을 시도한다.
-      const response = await request(app.getHttpServer()).get('/users/').send(signedUpUser);
+      const response = await request(app.getHttpServer()).get('/users/').send(user);
 
       // Then: 200 Ok 코드를 받아야 한다.
       expect(response.status).toBe(200);
@@ -70,29 +96,19 @@ describe('e2e test', () => {
 
     it('가입하지 않은 유저 로그인 테스트', async () => {
       // Given: 가입하지 않은 유저
-      const unSignedUpUser: SignUpRequestDto = {
-        email: 'unsignedup@email.com',
-        password: '12345678',
-        name: 'tester',
-      };
+      const unSignedUpUser = createTestUser('unsignedup@email.com', '12345678', 'unknown');
       // When : 가입한 유저가 로그인을 시도한다.
-      const response = await request(app.getHttpServer()).get('/users/').send(unSignedUpUser);
+      const response = await gymLogService.signIn(app, unSignedUpUser);
       // Then: 400 Bad Request 코드를 받아야 한다.
       expect(response.status).toBe(400);
     });
-
+    // Todo:  수정중
     it('가입한 유저가 자신의 정보 검색 테스트', async () => {
-      // Given: 가입한 유저가
-      const user: SignUpRequestDto = {
-        email: 'test2@email.com',
-        password: '12345678',
-        name: 'tester',
-      };
-      await request(app.getHttpServer()).post('/users').send(user);
-      const singedUpUser = await request(app.getHttpServer()).get('/users/').send(user);
+      // Given: 가입한 유저의 토큰
+      const token = await signUpAndSignIn(app, 'signeduser@email.com', '12345678', 'tester');
 
       // When : 자신의 정보 검색을 시도한다.
-      const token = singedUpUser.body.accessToken;
+      // const token = singedUpUser.body.accessToken;
       const response = await request(app.getHttpServer()).get('/users/my/').set('Authorization', `Bearer ${token}`);
 
       // Then : 200 Ok 코드를 받아야 한다.
@@ -101,13 +117,7 @@ describe('e2e test', () => {
 
     it('가입한 유저 삭제 테스트', async () => {
       // Given: 가입한 유저
-      const signedUpUser: SignUpRequestDto = {
-        email: 'test2@email.com',
-        password: '12345678',
-        name: 'tester',
-      };
-      const singedUpUser = await request(app.getHttpServer()).get('/users').send(signedUpUser);
-      const token = singedUpUser.body.accessToken;
+      const token = await signUpAndSignIn(app, 'deleteuser@email.com', '12345678', 'delete');
       // When : 가입한 유저 삭제를 시도한다.
       const response = await request(app.getHttpServer()).delete('/users/').set('Authorization', `Bearer ${token}`);
       // Then: 204 No Content 코드를 받아야 한다.
@@ -117,7 +127,7 @@ describe('e2e test', () => {
 
   describe('Exercise API 테스트', () => {
     it('새로운 운동 부위와 이름 저장', async () => {
-      // Given: 한가지 이상의 새로운 운동 이름과 부위를
+      // Given: 한가지 이상의 새로운 운동 이름과 운동부위
       const newExercise1: ExerciseDataFormatDto = { bodyPart: BodyPart.SHOULDERS, exerciseName: '숄더프레스' };
       const newExercise2: ExerciseDataFormatDto = { bodyPart: BodyPart.BACK, exerciseName: '시티드 로우' };
       const newExercises: SaveExercisesRequestDto = {
@@ -125,18 +135,23 @@ describe('e2e test', () => {
       };
 
       // When: 저장하려고 시도한다.
-      const response = await request(app.getHttpServer()).post('/exercises/').send(newExercises);
+      const response = await gymLogService.postExercises(app, newExercises);
 
       // Then:  201 Created 코드를 받아야 한다.
       expect(response.status).toBe(201);
     });
 
     it('저장된 exercise 중 하나를 검색', async () => {
-      // Given: 저장된 운동들 중 하나를
-      const exercise1: ExerciseDataFormatDto = { bodyPart: BodyPart.SHOULDERS, exerciseName: '숄더프레스' };
+      // Given: 저장된 운동들 중 하나
+      const exercise1: ExerciseDataFormatDto = { bodyPart: BodyPart.SHOULDERS, exerciseName: '밀리터리프레스' };
+
+      const newExercises: SaveExercisesRequestDto = {
+        exercises: [exercise1],
+      };
+      await gymLogService.postExercises(app, newExercises);
 
       // When: 찾으려고 시도한다.
-      const response = await request(app.getHttpServer()).get('/exercises/').send(exercise1);
+      const response = await gymLogService.getExercise(app, exercise1);
 
       // Then: 200 Ok 코드를 받아야 한다.
       expect(response.status).toBe(200);
@@ -151,16 +166,17 @@ describe('e2e test', () => {
     });
 
     it('저장된 exercises 의 id 를 이용하여 해당 exercises 삭제', async () => {
-      // Given: 저장된 운동 중에 한가지 이상의 운동의 아이디를 찾아서
-      const newExercise1: ExerciseDataFormatDto = { bodyPart: BodyPart.SHOULDERS, exerciseName: '숄더프레스' };
-      const newExercise2: ExerciseDataFormatDto = { bodyPart: BodyPart.BACK, exerciseName: '시티드 로우' };
+      // Given: 저장된 운동들의 ids
+      const newExercise1: ExerciseDataFormatDto = { bodyPart: BodyPart.LEGS, exerciseName: '고블린스퀏트' };
+      const newExercise2: ExerciseDataFormatDto = { bodyPart: BodyPart.LEGS, exerciseName: '런지' };
       const newExercises: SaveExercisesRequestDto = {
         exercises: [newExercise1, newExercise2],
       };
-      await request(app.getHttpServer()).post('/exercises/').send(newExercises);
+      await gymLogService.postExercises(app, newExercises);
+
       const ids: number[] = [];
       for (const exercise of [newExercise1, newExercise2]) {
-        const savedExercise = await request(app.getHttpServer()).get('/exercises/').send(exercise);
+        const savedExercise = await gymLogService.getExercise(app, exercise);
         const exerciseId = savedExercise.body.id;
         ids.push(exerciseId);
       }
@@ -174,19 +190,77 @@ describe('e2e test', () => {
   });
 
   describe('WorkoutLogs API 테스트', () => {
-    const signedUpUser = {
-      email: 'test3@email.com',
-      password: '12345678',
-      name: 'tester',
-    };
-    beforeAll(async () => {
-      await request(app.getHttpServer()).post('/users').send(signedUpUser);
+    let token: string;
+
+    beforeEach(async () => {
+      // 새로운 유저
+      const newUser: SignUpRequestDto = {
+        email: 'testuser@email.com',
+        password: '12345678',
+        name: 'tester',
+      };
+
+      // 유저 회원가입
+      await gymLogService.signUp(app, newUser);
+
+      // 유저 로그인
+      const loginResponse = await gymLogService.signIn(app, newUser);
+
+      // 로그인 후 토큰 발급
+      token = loginResponse.body.accessToken;
     });
 
     it('로그인한 유저가 운동한 기록을 저장', async () => {
-      // Given : 로그인 한 유저가
-      const singedUpUser = await request(app.getHttpServer()).get('/users').send(signedUpUser);
-      const token = singedUpUser.body.accessToken;
+      // Given : 로그인 한 유저와 유저가 운동한 기록
+
+      const workoutLogs: SaveWorkoutLogFormatDto[] = [
+        {
+          setCount: 1,
+          weight: 30,
+          repeatCount: 15,
+          bodyPart: BodyPart.SHOULDERS,
+          exerciseName: '밀리터리프레스',
+        },
+        {
+          setCount: 2,
+          weight: 35,
+          repeatCount: 15,
+          bodyPart: BodyPart.SHOULDERS,
+          exerciseName: '밀리터리프레스',
+        },
+      ];
+      // 운동 부위 정보
+      const exercise: ExerciseDataFormatDto = { bodyPart: BodyPart.SHOULDERS, exerciseName: '밀리터리프레스' };
+
+      const newWorkoutLogs: SaveWorkoutLogsRequestDto = {
+        exercises: [exercise],
+        workoutLogs: workoutLogs,
+      };
+
+      // When : 운동한 기록을 저장하려고 한다.
+      const response = await gymLogService.postWorkoutLogs(app, newWorkoutLogs, token);
+
+      // Then : 201 Created 코드를 받아야 한다.
+      expect(response.status).toBe(201);
+    });
+
+    it('로그인한 유저가 특정한 날의 운동기록을 검색', async () => {
+      // Given : 로그인 한 유저 와 운동한 날짜(date)
+      const newUser: SignUpRequestDto = {
+        email: 'testuser1@email.com',
+        password: '12345678',
+        name: 'tester',
+      };
+
+      // 유저 회원가입 (실제 메서드 호출)
+      await gymLogService.signUp(app, newUser);
+
+      // 유저 로그인 (실제 메서드 호출)
+      const loginResponse = await gymLogService.signIn(app, newUser);
+
+      // 로그인 후 토큰 발급
+      const newToken = loginResponse.body.accessToken;
+      const date = getTodayDate();
 
       const workoutLogs: SaveWorkoutLogFormatDto[] = [
         {
@@ -210,26 +284,10 @@ describe('e2e test', () => {
         workoutLogs: workoutLogs,
       };
 
-      // When : 운동을 저장하려고 한다.
-      const response = await request(app.getHttpServer())
-        .post('/workout-logs/')
-        .set('Authorization', `Bearer ${token}`)
-        .send(newWorkoutLogs);
-
-      // Then : 201 Created 코드를 받아야 한다.
-      expect(response.status).toBe(201);
-    });
-
-    it('로그인한 유저가 특정한 날의 운동기록을 검색', async () => {
-      // Given : 로그인 한 유저가
-      const singedUpUser = await request(app.getHttpServer()).get('/users').send(signedUpUser);
-      const token = singedUpUser.body.accessToken;
+      await gymLogService.postWorkoutLogs(app, newWorkoutLogs, newToken);
 
       // When: 특정한 날에 자신이 운동한 기록을 검색한다.
-      const response = await request(app.getHttpServer())
-        .get('/workout-logs/')
-        .query({ data: '2024-09-17' })
-        .set('Authorization', `Bearer ${token}`);
+      const response = await gymLogService.getWorkoutLogsOnDate(app, date, newToken);
 
       // Then:
       expect(response.status).toBe(200);
@@ -237,13 +295,79 @@ describe('e2e test', () => {
     });
 
     it(' workoutLogs 를 업데이트', async () => {
-      // Given : 로그인 한 유저 가
-      const singedUpUser = await request(app.getHttpServer()).get('/users').send(signedUpUser);
-      const token = singedUpUser.body.accessToken;
+      // Given : 로그인 한 유저 와 업데이트할 운동 기록
+      const newUser: SignUpRequestDto = {
+        email: 'testuser123@email.com',
+        password: '12345678',
+        name: 'tester9',
+      };
+      await gymLogService.signUp(app, newUser);
+      const loginResponse = await gymLogService.signIn(app, newUser);
+      const newToken = loginResponse.body.accessToken;
+      const workoutLogs: SaveWorkoutLogFormatDto[] = [
+        {
+          setCount: 1,
+          weight: 30,
+          repeatCount: 15,
+          bodyPart: BodyPart.SHOULDERS,
+          exerciseName: '밀리터리프레스',
+        },
+        {
+          setCount: 2,
+          weight: 35,
+          repeatCount: 15,
+          bodyPart: BodyPart.SHOULDERS,
+          exerciseName: '밀리터리프레스',
+        },
+      ];
+      const exercise: ExerciseDataFormatDto = { bodyPart: BodyPart.SHOULDERS, exerciseName: '밀리터리프레스' };
+      const newWorkoutLogs: SaveWorkoutLogsRequestDto = {
+        exercises: [exercise],
+        workoutLogs: workoutLogs,
+      };
+      const saved = await gymLogService.postWorkoutLogs(app, newWorkoutLogs, newToken);
+      const workoutLogData = saved.body;
+      const updateData = workoutLogData.map((workoutLog: WorkoutLog) => {
+        return {
+          id: workoutLog.id,
+          setCount: workoutLog.setCount,
+          weight: workoutLog.weight + 10,
+          repeatCount: workoutLog.repeatCount - 5,
+          bodyPart: workoutLog.exercise.bodyPart,
+          exerciseName: workoutLog.exercise.exerciseName,
+        };
+      });
+
       const workoutLogUpdate: UpdateWorkoutLogsRequestDto = {
-        updateWorkoutLogs: [
+        updateWorkoutLogs: updateData,
+        exercises: [{ bodyPart: BodyPart.SHOULDERS, exerciseName: '밀리터리프레스' }],
+      };
+
+      // When : 운동한 기록을 업데이트/수정 하려고 시도한다.
+      const response = await request(app.getHttpServer())
+        .patch('/workout-logs/')
+        .set('Authorization', `Bearer ${newToken}`)
+        .send(workoutLogUpdate);
+
+      // Then:
+      expect(response.status).toBe(200);
+      expect(response.body).not.toHaveLength(0);
+    });
+
+    it('로그인 한 유저의 모든 운동기록을 조회', async () => {
+      // Given : 로그인 한 유저, 저장된 운동 기록
+      const signedUpUser: SignUpRequestDto = {
+        email: 'testuser10@test.com',
+        password: '123456',
+        name: 'newuser',
+      };
+      await gymLogService.signUp(app, signedUpUser);
+      const singInUser = await gymLogService.signIn(app, signedUpUser);
+      const newToken = singInUser.body.accessToken;
+
+      const newWorkoutLogs: SaveWorkoutLogsRequestDto = {
+        workoutLogs: [
           {
-            id: 1,
             setCount: 1,
             weight: 20,
             repeatCount: 15,
@@ -251,7 +375,6 @@ describe('e2e test', () => {
             exerciseName: '레그레이즈',
           },
           {
-            id: 2,
             setCount: 2,
             weight: 25,
             repeatCount: 15,
@@ -261,40 +384,55 @@ describe('e2e test', () => {
         ],
         exercises: [{ bodyPart: BodyPart.ABS, exerciseName: '레그레이즈' }],
       };
-
-      // When : 운동한 기록을 업데이트/수정 하려고 시도한다.
-      const response = await request(app.getHttpServer())
-        .patch('/workout-logs/')
-        .set('Authorization', `Bearer ${token}`)
-        .send(workoutLogUpdate);
-
-      // Then:
-      expect(response.status).toBe(200);
-      expect(response.body).not.toHaveLength(0);
-    });
-
-    it('get workoutLogs of user', async () => {
-      // Given : 로그인 한 유저 4 가
-      const singedUpUser = await request(app.getHttpServer()).get('/users').send(signedUpUser);
-      const token = singedUpUser.body.accessToken;
+      await gymLogService.postWorkoutLogs(app, newWorkoutLogs, newToken);
 
       // When : 자신이 기록한 모든 운동기록을 조회하려고 시도한다.
       const response = await request(app.getHttpServer())
         .get('/workout-logs/user')
-        .set('Authorization', `Bearer ${token}`);
-      // Then :
+        .set('Authorization', `Bearer ${newToken}`);
+
+      // Then : 200 Ok 코드를 받아야 한다.
       expect(response.status).toBe(200);
     });
 
     it('로그인한 유저의 workoutLogs 의 id 들을 이용하여 해당 workoutLogs 를 삭제', async () => {
-      // Given : 로그인 한 유저 가 자신의 workoutLogs 을
-      const singedUpUser = await request(app.getHttpServer()).get('/users').send(signedUpUser);
-      const token = singedUpUser.body.accessToken;
+      // Given : 로그인 한 유저, 자신의 workoutLogs
+      const signedUpUser: SignUpRequestDto = {
+        email: 'testuser10@test.com',
+        password: '123456',
+        name: 'newuser',
+      };
+      await gymLogService.signUp(app, signedUpUser);
+      const singInUser = await gymLogService.signIn(app, signedUpUser);
+      const newToken = singInUser.body.accessToken;
+
+      const newWorkoutLogs: SaveWorkoutLogsRequestDto = {
+        workoutLogs: [
+          {
+            setCount: 1,
+            weight: 20,
+            repeatCount: 15,
+            bodyPart: BodyPart.ABS,
+            exerciseName: '레그레이즈',
+          },
+          {
+            setCount: 2,
+            weight: 25,
+            repeatCount: 15,
+            bodyPart: BodyPart.ABS,
+            exerciseName: '레그레이즈',
+          },
+        ],
+        exercises: [{ bodyPart: BodyPart.ABS, exerciseName: '레그레이즈' }],
+      };
+      await gymLogService.postWorkoutLogs(app, newWorkoutLogs, newToken);
+      const date = getTodayDate();
+
       const workoutLogs = await request(app.getHttpServer())
         .get('/workout-logs/')
-        .query({ data: '2024-09-17' })
+        .query({ date })
         .set('Authorization', `Bearer ${token}`);
-      console.log(workoutLogs.body);
+
       expect(workoutLogs.body).not.toHaveLength(0);
       const info = workoutLogs.body;
       const ids: number[] = [];
@@ -307,8 +445,7 @@ describe('e2e test', () => {
         .delete('/workout-logs')
         .set('Authorization', `Bearer ${token}`)
         .send({
-          // ids
-          ids: [1, 2],
+          ids,
         });
 
       // Then: 204 No Content 코드를 받아야한다.
@@ -318,24 +455,26 @@ describe('e2e test', () => {
 
   describe('Routine API 테스트', () => {
     const signedUpUser = {
-      email: 'test4@email.com',
+      email: 'routine@email.com',
       password: '12345678',
-      name: 'tester',
+      name: 'routine',
     };
     let token: string;
 
-    beforeAll(async () => {
-      await request(app.getHttpServer()).post('/users').send(signedUpUser);
-      const singedUpUser = await request(app.getHttpServer()).get('/users').send(signedUpUser);
-      token = singedUpUser.body.accessToken;
+    // beforeAll(async () => {
+    //   await request(app.getHttpServer()).post('/users').send(signedUpUser);
+    //   const singedUpUser = await request(app.getHttpServer()).get('/users').send(signedUpUser);
+    //   token = singedUpUser.body.accessToken;
+    // });
+
+    beforeEach(async () => {
+      await gymLogService.signUp(app, signedUpUser);
+      const singInResponse = await gymLogService.signIn(app, signedUpUser);
+      token = singInResponse.body.accessToken;
     });
 
     it('로그인한 유저가 routines 저장 ', async () => {
-      // Given: 유저 test4@email.com
-      // const singedUpUser = await request(app.getHttpServer()).get('/users').send(signedUpUser);
-      // const token = singedUpUser.body.accessToken;
-
-      // When: 루틴을 저장하려고 시도한다.
+      // Given: 로그인한 유저, 새로운 루틴 데이터
       const routineName: string = '등데이';
       const routine: SaveRoutinesRequestDto = {
         routineName: routineName,
@@ -348,10 +487,13 @@ describe('e2e test', () => {
         ],
         exercises: [{ bodyPart: BodyPart.BACK, exerciseName: '케이블 암 풀다운' }],
       };
+
+      // When: 루틴을 저장하려고 시도한다.
       const response = await request(app.getHttpServer())
         .post('/routines/')
         .set('Authorization', `Bearer ${token}`)
         .send(routine);
+      // const response = await gymLogService.postRoutine(app, routineName, routine);
 
       // Then: 201 Created 코드를 받아야한다.
       expect(response.status).toBe(201);
@@ -359,10 +501,23 @@ describe('e2e test', () => {
     });
 
     it('로그인한 유저가 자신의 routines 을 루틴의 이름으로 검색', async () => {
-      // Given: 유저 test4@email.com
+      // Given: 로그인한 유저, 루틴 이름
+      const routineName: string = '레그데이';
+      const legsRoutine: SaveRoutinesRequestDto = {
+        routineName: routineName,
+        routines: [
+          {
+            routineName: routineName,
+            bodyPart: BodyPart.LEGS,
+            exerciseName: '스모 스쿼트',
+          },
+        ],
+        exercises: [{ bodyPart: BodyPart.LEGS, exerciseName: '스모 스쿼트' }],
+      };
+      await request(app.getHttpServer()).post('/routines/').set('Authorization', `Bearer ${token}`).send(legsRoutine);
 
       // When: 루틴이름으로 자신의 루틴을 검색하려고 한다.
-      const routineName: string = '등데이';
+
       const response = await request(app.getHttpServer())
         .get('/routines/')
         .set('Authorization', `Bearer ${token}`)
@@ -374,20 +529,49 @@ describe('e2e test', () => {
     });
 
     it('로그인한 유저가 자신의 routine 을 업데이트/수정', async () => {
-      // Given:유저 test4@email.com , 업데이트할 루틴 정보
+      // Given: 로그인한 유저 , 업데이트할 루틴 정보
 
-      const routineName: string = '등데이';
-      const routineUpdate: UpdateRoutinesRequestDto = {
+      const routineName: string = '등데이2';
+      const routineOrigin: SaveRoutinesRequestDto = {
         routineName: routineName,
-        updateData: [
+        routines: [
           {
-            id: 1,
-            routineName: '다리 데이',
-            bodyPart: BodyPart.LEGS,
-            exerciseName: '스모데드리프트',
+            routineName: routineName,
+            bodyPart: BodyPart.BACK,
+            exerciseName: '풀업',
+          },
+
+          {
+            routineName: routineName,
+            bodyPart: BodyPart.BACK,
+            exerciseName: '사레레',
           },
         ],
-        exercises: [{ bodyPart: BodyPart.LEGS, exerciseName: '스모데드리프트' }],
+        exercises: [
+          { bodyPart: BodyPart.BACK, exerciseName: '풀업' },
+          { bodyPart: BodyPart.BACK, exerciseName: '사레레' },
+        ],
+      };
+
+      const routines = await gymLogService.postRoutine(app, token, routineOrigin);
+      const routineInfo = routines.body;
+      const newExerciseNames: string[] = ['어깨 후면', '어깨 전면'];
+      const updateInfo = routineInfo.map((routine: Routine, i: number) => {
+        return {
+          id: routine.id,
+          name: routine.name,
+          exerciseName: newExerciseNames[i],
+          bodyPart: routine.exercise.bodyPart,
+        };
+      });
+
+      const routineUpdate: UpdateRoutinesRequestDto = {
+        routineName: routineName,
+        updateData: updateInfo,
+        exercises: [
+          { bodyPart: BodyPart.BACK, exerciseName: newExerciseNames[0] },
+          { bodyPart: BodyPart.BACK, exerciseName: newExerciseNames[1] },
+        ],
       };
 
       // When: 자신의 루틴을 업데이트하려고 시도한다.
@@ -402,15 +586,31 @@ describe('e2e test', () => {
     });
 
     it('delete routines', async () => {
-      // Given: 유저 test4@email.com
-      const singedUpUser = await request(app.getHttpServer()).get('/users').send(signedUpUser);
-      const token = singedUpUser.body.accessToken;
+      // Given: 로그인 한 유저, 저장된
+      const routineName: string = '등데이3';
+      const routine: SaveRoutinesRequestDto = {
+        routineName: routineName,
+        routines: [
+          {
+            routineName: routineName,
+            bodyPart: BodyPart.BACK,
+            exerciseName: '어시스트 풀업',
+          },
+        ],
+        exercises: [{ bodyPart: BodyPart.BACK, exerciseName: '어시스트 풀업' }],
+      };
+      const savedRoutine = await gymLogService.postRoutine(app, token, routine);
+      const routineInfo = savedRoutine.body;
+
+      const ids = routineInfo.map((routine: Routine) => {
+        return routine.id;
+      });
 
       // When: 루틴을 지우려고 시도한다.
       const response = await request(app.getHttpServer())
         .delete('/routines/')
         .set('Authorization', `Bearer ${token}`)
-        .send({ ids: [1] });
+        .send({ ids });
 
       // Then: 204 No content 코드를 받아야한다.
       expect(response.status).toBe(204);
