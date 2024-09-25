@@ -1,6 +1,9 @@
 # 경량화된 Node.js alpine 이미지 사용
 FROM node:alpine
 
+# pm2 글로벌로 설치
+RUN npm install -g pm2
+
 # 작업 디렉토리 설정
 WORKDIR /usr/src/app
 
