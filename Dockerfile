@@ -1,7 +1,6 @@
 # 경량화된 Node.js alpine 이미지 사용
 FROM node:alpine
 
-
 # 작업 디렉토리 설정
 WORKDIR /usr/src/app
 
@@ -16,5 +15,4 @@ RUN npm run build
 EXPOSE 80
 
 # 프로덕션 모드로 애플리케이션 실행
-
 CMD [ "node", "dist/main.js" ]
