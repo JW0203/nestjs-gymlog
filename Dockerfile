@@ -13,7 +13,7 @@ RUN npm install
 RUN npm run build
 
 # 애플리케이션을 외부로 노출할 포트 설정
-EXPOSE 3000
+EXPOSE 80
 
 # 프로덕션 모드로 애플리케이션 실행
 
