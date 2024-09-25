@@ -51,11 +51,12 @@ jobs:
           envs: ENV
           script_stop: true # 아래 script 중 실패하는 명령어 하나라도 있으면 실패로 처리
           script: |
-            cd /home/ubuntu/nestjs-gymlog
-            rm -rf .env.prod
-            git pull origin main
-            echo "$ENV" > .env.prod
+            rm -rf /home/ubuntu/nestjs-gymlog/current
+            mkdir /home/ubuntu/nestjs-gymlog/current
+            mv /home/ubuntu/nestjs-gymlog/tobe/project.tar.gz /home/ubuntu/nestjs-gymlog/current/project.tar.gz
+            cd /home/ubuntu/nestjs-gymlog/current
+            tar -xvf project.tar.gz
             npm i
-            npm run build
             sudo pm2 kill
-            sudo pm2 start dist/main.js --name "backend-server"
+            pm2 kill
+            sudo npm run start:prod
