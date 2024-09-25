@@ -53,7 +53,7 @@ jobs:
             key: ${{ secrets.EC2_PRIVATE_KEY }}
             script_stop: true
             script: |
-              docker stop gym-logs || true
-              docker rm gym-logs || true
-              docker pull ${{ steps.login-ecr.outputs.registry }}/gym-logs:latest
+              docker stop gymlog-server || true
+              docker rm gymlog-server || true
+              docker pull ${{ steps.login-ecr.outputs.registry }}/gymlog-server:latest
               docker run -d --name gymlog-server -p 3000:3000 ${{ steps.login-ecr.outputs.registry }}/gymlog-server:latest
