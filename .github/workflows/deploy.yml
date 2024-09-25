@@ -39,7 +39,6 @@ jobs:
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           source: project.tar.gz
           target: /home/ubuntu/nestjs-gymlog/tobe
-
       - name: SSH로 EC2에 접속하기
         uses: appleboy/ssh-action@v1.0.3
         env:
