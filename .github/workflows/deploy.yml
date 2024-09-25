@@ -23,7 +23,7 @@ jobs:
 
       - name: env 파일 만들기
         run: |
-          echo ${{secrets.ENV}} > .env.e2e
+          echo '${{secrets.ENV}}' > .env.e2e
 
       - name: 테스트 코드 실행
         run: npm run test:e2e
