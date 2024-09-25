@@ -56,4 +56,4 @@ jobs:
               docker stop gymlog-server || true
               docker rm gymlog-server || true
               docker pull ${{ steps.login-ecr.outputs.registry }}/gymlog-server:latest
-              docker run -d --name gymlog-server -p 3000:3000 ${{ steps.login-ecr.outputs.registry }}/gymlog-server:latest
+              docker run -d --name gymlog-server -p 80:80 ${{ steps.login-ecr.outputs.registry }}/gymlog-server:latest
