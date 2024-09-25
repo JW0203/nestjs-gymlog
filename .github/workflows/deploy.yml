@@ -40,6 +40,17 @@ jobs:
           source: project.tar.gz
           target: /home/ubuntu/nestjs-gymlog/tobe
 
+      - name: 압축하기
+        run: tar -czvf project.tar.gz dist .env.prod package.json package-lock.json
+
+      - name: SCP로 EC2에 빌드된 파일 전송하기
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          source: project.tar.gz
+          target: /home/ubuntu/nestjs-gymlog/tobe
       - name: SSH로 EC2에 접속하기
         uses: appleboy/ssh-action@v1.0.3
         env:
