@@ -35,8 +35,6 @@ jobs:
       - name: ECR에 로그인하기
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
-        with:
-          aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin 302263069712.dkr.ecr.ap-northeast-2.amazonaws.com
 
       - name: Docker 이미지 생성
         run: docker build -t gymlog-server .
@@ -44,9 +42,8 @@ jobs:
       - name: Docker 이미지에 Tag 붙이기
         run: docker tag gymlog-server ${{ steps.login-ecr.outputs.registry }}/gymlog-server:latest
 
-      - name: ECR 에 이미지 푸쉬
-        run: |
-          docker push ${{ steps.login-ecr.outputs.registry }}/gymlog-server:latest
+      - name: ECR 에 Docker 이미지 Push
+        run: docker push ${{ steps.login-ecr.outputs.registry }}/gymlog-server:latest
 
       - name: SSH로 EC2에 접속하기
         uses: appleboy/ssh-action@v1.0.3
