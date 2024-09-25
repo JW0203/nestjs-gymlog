@@ -23,7 +23,7 @@ jobs:
 
       - name: .env 파일 만들기
         run: |
-          echo '${{ secrets.ENV }}' > .env.prod
+          echo '${{ secrets.ENV }}' > .env
 
       - name: AWS Resource에 접근할 수 있게 AWS credentials 설정
         uses: aws-actions/configure-aws-credentials@v4
