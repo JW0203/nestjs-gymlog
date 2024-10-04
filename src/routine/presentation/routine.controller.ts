@@ -24,6 +24,13 @@ export class RoutineController {
     return this.routineService.getRoutineByName(getRoutineByName, req.user);
   }
 
+  @Get('all')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(200)
+  getAllRoutineByUser(@Request() req: any) {
+    return this.routineService.getAllRoutinesByUser(req.user);
+  }
+
   @Patch()
   @UseGuards(JwtAuthGuard)
   @HttpCode(200)
