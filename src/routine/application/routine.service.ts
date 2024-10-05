@@ -10,6 +10,8 @@ import { Routine } from '../domain/Routine.entity';
 import { ExerciseService } from '../../excercise/application/exercise.service';
 import { RoutineResponseDto } from '../dto/routine.response.dto';
 import { Transactional } from 'typeorm-transactional';
+import { GetAllRoutineByUserResponseDto } from '../dto/getAllRoutineByUser.response.dto';
+import { GroupedRoutine, routineGroupByName } from '../functions/routineGroupByName';
 
 @Injectable()
 export class RoutineService {
@@ -21,6 +23,8 @@ export class RoutineService {
 
   @Transactional()
   async bulkInsertRoutines(user: User, saveRoutines: SaveRoutinesRequestDto) {
+    console.log(saveRoutines);
+    console.log(user.id);
     const { routineName, exercises, routines } = saveRoutines;
     const isExistRoutine = await this.routineRepository.findRoutineNameByUserIdLockMode(routineName, user);
 
@@ -113,5 +117,14 @@ export class RoutineService {
       return routine.id;
     });
     await this.routineRepository.softDeleteRoutines(routineIds);
+  }
+
+  async getAllRoutinesByUser(user: User): Promise<GroupedRoutine[]> {
+    const userRoutines = await this.routineRepository.findAllByUserId(user.id);
+    if (userRoutines.length === 0) {
+      throw new NotFoundException(`Routines not found`);
+    }
+    const data = userRoutines.map((routine) => new GetAllRoutineByUserResponseDto(routine));
+    return routineGroupByName(data);
   }
 }
