@@ -14,7 +14,7 @@ export class UserController {
     return this.userService.signUp(signUpRequestDto);
   }
 
-  @Get()
+  @Post('sign-in')
   @HttpCode(200)
   signIn(@Body() signInRequestDto: SignInRequestDto) {
     return this.userService.signIn(signInRequestDto);
