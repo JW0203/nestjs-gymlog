@@ -122,7 +122,7 @@ export class RoutineService {
   async getAllRoutinesByUser(user: User): Promise<GroupedRoutine[]> {
     const userRoutines = await this.routineRepository.findAllByUserId(user.id);
     if (userRoutines.length === 0) {
-      throw new NotFoundException(`Routines not found`);
+      return Promise.resolve<GroupedRoutine[]>([]);
     }
     const data = userRoutines.map((routine) => new GetAllRoutineByUserResponseDto(routine));
     return routineGroupByName(data);
