@@ -7,9 +7,7 @@ import { LoggerService } from './common/Logger/logger.service';
 
 async function bootstrap() {
   initializeTransactionalContext();
-
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
-
   app.useLogger(app.get(LoggerService));
   app.useGlobalPipes(
     new ValidationPipe({
