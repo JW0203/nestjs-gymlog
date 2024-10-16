@@ -63,11 +63,8 @@ export class RoutineService {
 
   @Transactional()
   async bulkUpdateRoutines(updateRoutineRequest: UpdateRoutinesRequestDto, user: User) {
-    const { routineName, updateData, exercises } = updateRoutineRequest;
-    const isExistRoutine = await this.routineRepository.findRoutineNameByUserIdLockMode(routineName, user);
-    if (isExistRoutine.length === 0) {
-      throw new BadRequestException('Routine is not exists');
-    }
+    const { updateData, exercises } = updateRoutineRequest;
+
     const newExercises = await this.exerciseService.findNewExercises({ exercises });
     if (newExercises.length > 0) {
       await this.exerciseService.bulkInsertExercises({ exercises: newExercises });
