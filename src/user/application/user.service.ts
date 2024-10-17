@@ -6,6 +6,7 @@ import { AuthService } from '../../auth/application/auth.service';
 import { SignUpRequestDto } from '../dto/signUp.request.dto';
 import { Transactional } from 'typeorm-transactional';
 import { User } from '../domain/User.entity';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -17,11 +18,18 @@ export class UserService {
 
   @Transactional()
   async signUp(signUpRequestDto: SignUpRequestDto): Promise<any> {
-    const user = await this.userRepository.findOneUserByEmailLockMode(signUpRequestDto.email);
+    const { email, name, password } = signUpRequestDto;
+    const user = await this.userRepository.findOneUserByEmailLockMode(email);
     if (user) {
       throw new ConflictException('User not found');
     }
-    const newUserEntity = new User(signUpRequestDto);
+    const saltRounds = this.configService.get<string>('SALT_ROUNDS');
+    if (saltRounds === undefined) {
+      throw new Error('SALT_ROUNDS is not defined in the configuration.');
+    }
+    const hashedPassword = await bcrypt.hash(password, parseInt(saltRounds));
+
+    const newUserEntity = new User({ name, email, password: hashedPassword });
     return await this.userRepository.signUp(newUserEntity);
   }
 }
