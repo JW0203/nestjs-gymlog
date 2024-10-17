@@ -9,4 +9,8 @@ export class TypeormUserRepository implements UserRepository {
   async signUp(newUserEntity: User): Promise<User> {
     return await this.userRepository.save(newUserEntity);
   }
+
+  async findOneUserByEmailLockMode(email: string): Promise<User | null> {
+    return await this.userRepository.findOne({ where: { email }, lock: { mode: 'pessimistic_write' } });
+  }
 }

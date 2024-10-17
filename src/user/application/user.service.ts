@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import { USER_REPOSITORY } from '../../common/const/inject.constant';
 import { UserRepository } from '../domain/user.repository';
 import { ConfigService } from '@nestjs/config';
@@ -17,7 +17,11 @@ export class UserService {
 
   @Transactional()
   async signUp(signUpRequestDto: SignUpRequestDto): Promise<any> {
+    const user = await this.userRepository.findOneUserByEmailLockMode(signUpRequestDto.email);
+    if (user) {
+      throw new ConflictException('User not found');
+    }
     const newUserEntity = new User(signUpRequestDto);
-    await this.userRepository.signUp(newUserEntity);
+    return await this.userRepository.signUp(newUserEntity);
   }
 }
