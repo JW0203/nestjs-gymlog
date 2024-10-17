@@ -7,6 +7,7 @@ import { SignUpRequestDto } from '../dto/signUp.request.dto';
 import { Transactional } from 'typeorm-transactional';
 import { User } from '../domain/User.entity';
 import * as bcrypt from 'bcrypt';
+import { SignUpResponseDto } from '../dto/signUp.response.dto';
 
 @Injectable()
 export class UserService {
@@ -30,6 +31,7 @@ export class UserService {
     const hashedPassword = await bcrypt.hash(password, parseInt(saltRounds));
 
     const newUserEntity = new User({ name, email, password: hashedPassword });
-    return await this.userRepository.signUp(newUserEntity);
+    const newUser = await this.userRepository.signUp(newUserEntity);
+    return new SignUpResponseDto({ ...newUser });
   }
 }
