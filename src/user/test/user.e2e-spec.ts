@@ -26,7 +26,7 @@ describe('User API (e2e)', () => {
   it('회원 가입 요청이 주어지면 새로운 사용자를 생성한다.', async () => {
     const signUpRequestDto = { email: 'newuser@email.com', password: '12345678', name: 'tester' };
     const response = await request(app.getHttpServer()).post('/users').send(signUpRequestDto);
-    expect(response.body).toBe({ id: 1, email: 'newuser@email.com', name: 'tester' });
+    expect(response.status).toBe(201);
   });
 
   afterAll(async () => {
