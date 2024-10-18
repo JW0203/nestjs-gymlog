@@ -39,7 +39,7 @@ describe('User API (e2e)', () => {
     expect(response.status).toBe(409);
   });
 
-  it('회원이 로그인을 하면 200 OK 코드를 받는다.', async () => {
+  it('회원이 로그인을 하면 200 OK 코드와 accessToken 을 받는다.', async () => {
     // 회원
     await request(app.getHttpServer())
       .post('/users')
@@ -48,8 +48,9 @@ describe('User API (e2e)', () => {
     const response = await request(app.getHttpServer())
       .post('/users/sign-in')
       .send({ email: 'test2@email.com', password: '12345678' });
-    // Then : 200 코드를 받는다.
+    // Then : 200 코드와 accessToken 을 받는다.
     expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('accessToken');
   });
 
   afterAll(async () => {

@@ -47,5 +47,7 @@ export class UserService {
     if (!passwordMatch) {
       throw new UnauthorizedException('The password does not match');
     }
+    const accessToken = this.authService.signInWithJWT({ userId: user.id });
+    return new SignInResponseDto(accessToken);
   }
 }
