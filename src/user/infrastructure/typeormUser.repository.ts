@@ -21,4 +21,8 @@ export class TypeormUserRepository implements UserRepository {
   async findOneUserById(id: number): Promise<User | null> {
     return await this.userRepository.findOne({ where: { id } });
   }
+
+  async softDeleteUser(userId: number): Promise<void> {
+    await this.userRepository.softDelete(userId);
+  }
 }

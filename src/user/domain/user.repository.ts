@@ -5,4 +5,5 @@ export interface UserRepository {
   findOneUserByEmailLockMode(email: string): Promise<User | null>;
   findOneUserByEmail(email: string): Promise<User | null>;
   findOneUserById(id: number): Promise<User | null>;
+  softDeleteUser(userId: number): Promise<void>;
 }
