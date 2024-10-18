@@ -4,5 +4,5 @@ export interface UserRepository {
   signUp(newUserEntity: User): Promise<User>;
   findOneUserByEmailLockMode(email: string): Promise<User | null>;
   findOneUserByEmail(email: string): Promise<User | null>;
-  findOneById(id: number): Promise<User | null>;
+  findOneUserById(id: number): Promise<User | null>;
 }
