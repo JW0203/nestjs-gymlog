@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Post, UseGuards, Request } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, UseGuards, Request, Delete } from '@nestjs/common';
 import { UserService } from '../application/user.service';
 import { SignUpRequestDto } from '../dto/signUp.request.dto';
 import { SignInRequestDto } from '../dto/signIn.request.dto';
@@ -25,5 +25,12 @@ export class UserController {
   @HttpCode(200)
   getMyInfo(@Request() req: any) {
     return this.userService.getMyInfo(req.user.id);
+  }
+
+  @Delete()
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(204)
+  softDeleteUser(@Request() req: any) {
+    return this.userService.softDeleteUser(req.user.id);
   }
 }
