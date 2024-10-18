@@ -63,4 +63,12 @@ export class UserService {
   async findOneById(id: number): Promise<User | null> {
     return await this.userRepository.findOneUserById(id);
   }
+
+  async softDeleteUser(userId: number): Promise<void> {
+    const user = await this.findOneById(userId);
+    if (!user) {
+      throw new NotFoundException('The user does not exist');
+    }
+    await this.userRepository.softDeleteUser(userId);
+  }
 }
