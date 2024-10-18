@@ -10,6 +10,7 @@ import * as bcrypt from 'bcrypt';
 import { SignUpResponseDto } from '../dto/signUp.response.dto';
 import { SignInRequestDto } from '../dto/signIn.request.dto';
 import { SignInResponseDto } from '../dto/signIn.response.dto';
+import { GetMyInfoResponseDto } from '../dto/getMyInfo.response.dto';
 
 @Injectable()
 export class UserService {
@@ -49,5 +50,17 @@ export class UserService {
     }
     const accessToken = this.authService.signInWithJWT({ userId: user.id });
     return new SignInResponseDto(accessToken);
+  }
+
+  async getMyInfo(userId: number): Promise<GetMyInfoResponseDto> {
+    const user = await this.userRepository.findOneUserById(userId);
+    if (!user) {
+      throw new NotFoundException('The user does not exist');
+    }
+    return new GetMyInfoResponseDto({ ...user });
+  }
+
+  async findOneById(id: number): Promise<User | null> {
+    return await this.userRepository.findOneUserById(id);
   }
 }
