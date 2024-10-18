@@ -71,6 +71,21 @@ describe('User API (e2e)', () => {
     expect(response.body).toHaveProperty('createdAt');
   });
 
+  it('등록된 유저가 자신의 계정을 삭제 하려고 하면 204 No Content 코드를 받아야한다.', async () => {
+    //Given : 로그인한 유저
+    await request(app.getHttpServer())
+      .post('/users')
+      .send({ email: 'test4@email.com', password: '12345678', name: 'tester4' });
+    const signedInUser = await request(app.getHttpServer())
+      .post('/users/sign-in')
+      .send({ email: 'test4@email.com', password: '12345678' });
+    const token = signedInUser.body.accessToken;
+    // When : 자신의 계정을 삭제하려고 한다.
+    const response = await request(app.getHttpServer()).delete('/users/').set('Authorization', `Bearer ${token}`);
+    // Then: 204 No Content 코드를 받아야 한다.
+    expect(response.status).toBe(204);
+  });
+
   afterAll(async () => {
     await app.close();
   });
