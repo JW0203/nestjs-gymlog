@@ -1,4 +1,4 @@
-import { ConflictException, Inject, Injectable } from '@nestjs/common';
+import { ConflictException, Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { USER_REPOSITORY } from '../../common/const/inject.constant';
 import { UserRepository } from '../domain/user.repository';
 import { ConfigService } from '@nestjs/config';
@@ -8,6 +8,8 @@ import { Transactional } from 'typeorm-transactional';
 import { User } from '../domain/User.entity';
 import * as bcrypt from 'bcrypt';
 import { SignUpResponseDto } from '../dto/signUp.response.dto';
+import { SignInRequestDto } from '../dto/signIn.request.dto';
+import { SignInResponseDto } from '../dto/signIn.response.dto';
 
 @Injectable()
 export class UserService {
@@ -33,5 +35,17 @@ export class UserService {
     const newUserEntity = new User({ name, email, password: hashedPassword });
     const newUser = await this.userRepository.signUp(newUserEntity);
     return new SignUpResponseDto({ ...newUser });
+  }
+
+  async signIn(signInRequestDto: SignInRequestDto): Promise<any> {
+    const { email, password } = signInRequestDto;
+    const user = await this.userRepository.findOneUserByEmail(email);
+    if (!user) {
+      throw new NotFoundException('The email does not exist');
+    }
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (!passwordMatch) {
+      throw new UnauthorizedException('The password does not match');
+    }
   }
 }
