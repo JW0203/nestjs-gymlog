@@ -53,6 +53,24 @@ describe('User API (e2e)', () => {
     expect(response.body).toHaveProperty('accessToken');
   });
 
+  it('로그인 한 유저가 자신의 정보를 검색하면 200 ok 코드와 이 메일, 이름, 생성된 날짜를 받아야한다.', async () => {
+    //Given : 로그인한 유저
+    await request(app.getHttpServer())
+      .post('/users')
+      .send({ email: 'test3@email.com', password: '12345678', name: 'tester3' });
+    const signedInUser = await request(app.getHttpServer())
+      .post('/users/sign-in')
+      .send({ email: 'test3@email.com', password: '12345678' });
+    const token = signedInUser.body.accessToken;
+    // when: 자신의 정보를 검색한다.
+    const response = await request(app.getHttpServer()).get('/users').set('Authorization', `Bearer ${token}`);
+    // Then: 200 ok 코드와 이 메일, 이름, 생성된 날짜 를 받아야한다
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('email');
+    expect(response.body).toHaveProperty('name');
+    expect(response.body).toHaveProperty('createdAt');
+  });
+
   afterAll(async () => {
     await app.close();
   });
