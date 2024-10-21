@@ -7,7 +7,7 @@ import { SaveRoutinesRequestDto } from '../dto/saveRoutines.request.dto';
 import { ROUTINE_REPOSITORY } from '../../common/const/inject.constant';
 import { RoutineRepository } from '../domain/routine.repository';
 import { Routine } from '../domain/Routine.entity';
-import { ExerciseService } from '../../excercise/application/exercise.service';
+import { ExerciseService } from '../../exercise/application/exercise.service';
 import { RoutineResponseDto } from '../dto/routine.response.dto';
 import { Transactional } from 'typeorm-transactional';
 import { GetAllRoutineByUserResponseDto } from '../dto/getAllRoutineByUser.response.dto';

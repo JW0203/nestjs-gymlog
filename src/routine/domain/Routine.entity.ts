@@ -2,7 +2,7 @@ import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Timestamps } from '../../TimeStamp.entity';
 import { User } from '../../user/domain/User.entity';
 import { validateOrReject } from 'class-validator';
-import { Exercise } from '../../excercise/domain/Exercise.entity';
+import { Exercise } from '../../exercise/domain/Exercise.entity';
 import { Logger } from '@nestjs/common';
 
 @Entity()
