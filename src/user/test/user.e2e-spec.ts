@@ -23,6 +23,19 @@ describe('User API (e2e)', () => {
     await app.init();
   });
 
+  beforeEach(async () => {
+    const queryRunner = dataSource.createQueryRunner();
+    await queryRunner.connect();
+
+    //  단순히 user 테이블 초기화
+    await queryRunner.query(`DELETE FROM user`);
+
+    // AUTO_INCREMENT 값을 초기화하
+    await queryRunner.query(`ALTER TABLE user AUTO_INCREMENT = 1`);
+
+    await queryRunner.release();
+  });
+
   it('회원 가입 요청이 주어지면 새로운 사용자를 생성한다.', async () => {
     const signUpRequestDto = { email: 'newuser@email.com', password: '12345678', name: 'tester' };
     const response = await request(app.getHttpServer()).post('/users').send(signUpRequestDto);
@@ -32,9 +45,9 @@ describe('User API (e2e)', () => {
   it('가입된 이 메일로 회원 가입 요청이 주어지면 409 Conflict 코드를 반환한다.', async () => {
     await request(app.getHttpServer())
       .post('/users')
-      .send({ email: 'test@email.com', password: '12345678', name: 'existing tester' });
+      .send({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
 
-    const signUpRequestDto = { email: 'test@email.com', password: '12345678', name: 'new tester' };
+    const signUpRequestDto = { email: 'newuser@email.com', password: '12345678', name: 'tester' };
     const response = await request(app.getHttpServer()).post('/users').send(signUpRequestDto);
     expect(response.status).toBe(409);
   });
@@ -43,11 +56,11 @@ describe('User API (e2e)', () => {
     // 회원
     await request(app.getHttpServer())
       .post('/users')
-      .send({ email: 'test2@email.com', password: '12345678', name: 'tester' });
+      .send({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
     // when: 로그인을 하면
     const response = await request(app.getHttpServer())
       .post('/users/sign-in')
-      .send({ email: 'test2@email.com', password: '12345678' });
+      .send({ email: 'newuser@email.com', password: '12345678' });
     // Then : 200 코드와 accessToken 을 받는다.
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('accessToken');
@@ -57,10 +70,10 @@ describe('User API (e2e)', () => {
     //Given : 로그인한 유저
     await request(app.getHttpServer())
       .post('/users')
-      .send({ email: 'test3@email.com', password: '12345678', name: 'tester3' });
+      .send({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
     const signedInUser = await request(app.getHttpServer())
       .post('/users/sign-in')
-      .send({ email: 'test3@email.com', password: '12345678' });
+      .send({ email: 'newuser@email.com', password: '12345678' });
     const token = signedInUser.body.accessToken;
     // when: 자신의 정보를 검색한다.
     const response = await request(app.getHttpServer()).get('/users').set('Authorization', `Bearer ${token}`);
@@ -75,10 +88,10 @@ describe('User API (e2e)', () => {
     //Given : 로그인한 유저
     await request(app.getHttpServer())
       .post('/users')
-      .send({ email: 'test4@email.com', password: '12345678', name: 'tester4' });
+      .send({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
     const signedInUser = await request(app.getHttpServer())
       .post('/users/sign-in')
-      .send({ email: 'test4@email.com', password: '12345678' });
+      .send({ email: 'newuser@email.com', password: '12345678' });
     const token = signedInUser.body.accessToken;
     // When : 자신의 계정을 삭제하려고 한다.
     const response = await request(app.getHttpServer()).delete('/users/').set('Authorization', `Bearer ${token}`);
