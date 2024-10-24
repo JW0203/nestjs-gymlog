@@ -74,7 +74,7 @@ describe('Exercise API (e2e)', () => {
     expect(response.body.exerciseName).toBe('숄더프레스');
   });
 
-  it('저장된 5개의 운동을 검색하면 200 상태 코드와 5개의 운동 항목이 포함된 응답을 받아야 한다.', async () => {
+  it('5개의 운동 데이터가 저장된 DB 에서 모든 운동을 검색하면 200 상태 코드와 5개의 운동 항목이 포함된 응답을 받아야 한다.', async () => {
     // Given : 저장된 운동들
     const exerciseData: ExerciseDataFormatDto[] = [
       { bodyPart: BodyPart.SHOULDERS, exerciseName: '어깨' },
@@ -88,9 +88,9 @@ describe('Exercise API (e2e)', () => {
     };
     await request(app.getHttpServer()).post('/exercises/').send(givenExercises);
 
-    // When : 저장된 모둔 운동이름과 부위를 찾으려고 시도한다.
+    // When : 저장된 모든 운동 데이터를 찾으려고 시도한다.
     const response = await request(app.getHttpServer()).get('/exercises/all/');
-    // Then : 200 Ok 코드와 5개의 운동 항목이 포함된 응답을 받아야 한다.
+    // Then : 200 Ok 코드와 저장되어있는 5개의 운동 항목이 포함된 응답을 받아야 한다.
     expect(response.status).toBe(200);
     expect(response.body.length).toBe(5);
   });
