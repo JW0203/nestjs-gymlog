@@ -56,6 +56,9 @@ export class RoutineService {
   async getRoutineByName(getRoutineByNameRequest: GetRoutineByNameRequestDto, user: User) {
     const { name } = getRoutineByNameRequest;
     const foundRoutines = await this.routineRepository.findRoutinesByName(name, user);
+    if (foundRoutines.length == 0) {
+      throw new NotFoundException(`Routines not found`);
+    }
     return foundRoutines.map((routine) => new RoutineResponseDto(routine));
   }
 
