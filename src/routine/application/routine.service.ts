@@ -23,8 +23,6 @@ export class RoutineService {
 
   @Transactional()
   async bulkInsertRoutines(user: User, saveRoutines: SaveRoutinesRequestDto) {
-    console.log(saveRoutines);
-    console.log(user.id);
     const { routineName, exercises, routines } = saveRoutines;
     const isExistRoutine = await this.routineRepository.findRoutineNameByUserIdLockMode(routineName, user);
 
