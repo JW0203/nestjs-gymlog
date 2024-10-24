@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Patch, Post, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Patch, Post, Query, Request, UseGuards } from '@nestjs/common';
 import { RoutineService } from '../application/routine.service';
 import { JwtAuthGuard } from '../../common/jwtPassport/jwtAuth.guard';
 import { GetRoutineByNameRequestDto } from '../dto/getRoutineByName.request.dto';
@@ -20,7 +20,7 @@ export class RoutineController {
   @Get()
   @UseGuards(JwtAuthGuard)
   @HttpCode(200)
-  getRoutine(@Body() getRoutineByName: GetRoutineByNameRequestDto, @Request() req: any) {
+  getRoutine(@Query() getRoutineByName: GetRoutineByNameRequestDto, @Request() req: any) {
     return this.routineService.getRoutineByName(getRoutineByName, req.user);
   }
 
