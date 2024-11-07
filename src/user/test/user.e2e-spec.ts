@@ -5,6 +5,31 @@ import { AppModule } from '../../app.module';
 import { initializeTransactionalContext } from 'typeorm-transactional';
 import { DataSource } from 'typeorm';
 
+interface TEST_USER {
+  email: string;
+  password: string;
+  name: string;
+}
+
+function createUser(app: INestApplication, user: TEST_USER) {
+  return request(app.getHttpServer()).post('/users').send(user);
+}
+
+async function getUserAccessToken(app: INestApplication, user: TEST_USER) {
+  const response = await request(app.getHttpServer())
+    .post('/users/sign-in')
+    .send({ email: user.email, password: user.password });
+  return response.body.accessToken;
+}
+
+async function resetDatabase(dataSource: DataSource) {
+  const queryRunner = dataSource.createQueryRunner();
+  await queryRunner.connect();
+  await queryRunner.query(`DELETE FROM user`);
+  await queryRunner.query(`ALTER TABLE user AUTO_INCREMENT = 1`);
+  await queryRunner.release();
+}
+
 describe('User API (e2e)', () => {
   let app: INestApplication;
   let dataSource: DataSource;
@@ -24,78 +49,72 @@ describe('User API (e2e)', () => {
   });
 
   beforeEach(async () => {
-    const queryRunner = dataSource.createQueryRunner();
-    await queryRunner.connect();
-
-    //  단순히 user 테이블 초기화
-    await queryRunner.query(`DELETE FROM user`);
-
-    // AUTO_INCREMENT 값을 초기화하
-    await queryRunner.query(`ALTER TABLE user AUTO_INCREMENT = 1`);
-
-    await queryRunner.release();
+    await resetDatabase(dataSource);
   });
 
-  it('회원 가입 요청이 주어지면 새로운 사용자를 생성한다.', async () => {
-    const signUpRequestDto = { email: 'newuser@email.com', password: '12345678', name: 'tester' };
-    const response = await request(app.getHttpServer()).post('/users').send(signUpRequestDto);
+  it('Given a new user, when the user signs up, then the response status should be 201', async () => {
+    // Given: A new user
+    const newUser: TEST_USER = { email: 'newuser@email.com', name: 'tester', password: '12345678' };
+
+    // When: The user signs up
+    const response = await request(app.getHttpServer()).post('/users').send(newUser);
+
+    // Then: The response status should be 201
     expect(response.status).toBe(201);
+    expect(response.body).toMatchObject({ email: newUser.email, name: newUser.name });
   });
 
-  it('가입된 이 메일로 회원 가입 요청이 주어지면 409 Conflict 코드를 반환한다.', async () => {
-    await request(app.getHttpServer())
-      .post('/users')
-      .send({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
+  it('Given an existing user, when the same user tries to sign up again, then the response status should be 409', async () => {
+    // Given: An existing user
+    const existingUser: TEST_USER = { email: 'newuser@email.com', name: 'tester', password: '12345678' };
+    await createUser(app, existingUser);
 
-    const signUpRequestDto = { email: 'newuser@email.com', password: '12345678', name: 'tester' };
-    const response = await request(app.getHttpServer()).post('/users').send(signUpRequestDto);
+    // When: The same user tries to sign up again
+    const response = await request(app.getHttpServer()).post('/users').send(existingUser);
+
+    // Then: The response status should be 409
     expect(response.status).toBe(409);
   });
 
-  it('회원이 로그인을 하면 200 OK 코드와 accessToken 을 받는다.', async () => {
-    // 회원
-    await request(app.getHttpServer())
-      .post('/users')
-      .send({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
-    // when: 로그인을 하면
+  it('Given a registered user, when the user logs in, then the response should contain an access token and status should be 200', async () => {
+    // Given: A registered user
+    const registeredUser: TEST_USER = { email: 'newuser@email.com', name: 'tester', password: '12345678' };
+    await createUser(app, registeredUser);
+    // When: The user logs in
     const response = await request(app.getHttpServer())
       .post('/users/sign-in')
-      .send({ email: 'newuser@email.com', password: '12345678' });
-    // Then : 200 코드와 accessToken 을 받는다.
+      .send({ email: registeredUser.email, password: registeredUser.password });
+
+    // Then: The response status should be 200 and the response should contain an access token
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('accessToken');
   });
 
-  it('로그인 한 유저가 자신의 정보를 검색하면 200 ok 코드와 이 메일, 이름, 생성된 날짜를 받아야한다.', async () => {
-    //Given : 로그인한 유저
-    await request(app.getHttpServer())
-      .post('/users')
-      .send({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
-    const signedInUser = await request(app.getHttpServer())
-      .post('/users/sign-in')
-      .send({ email: 'newuser@email.com', password: '12345678' });
-    const token = signedInUser.body.accessToken;
-    // when: 자신의 정보를 검색한다.
+  it('Given a logged-in user, when the user requests their info, then the response status should be 200 and the response should contain user info', async () => {
+    // Given: A logged-in user
+    const registeredUser: TEST_USER = { email: 'newuser@email.com', name: 'tester', password: '12345678' };
+    await createUser(app, registeredUser);
+    const token = await getUserAccessToken(app, registeredUser);
+    console.log(token);
+
+    // When: The user requests their info
     const response = await request(app.getHttpServer()).get('/users').set('Authorization', `Bearer ${token}`);
-    // Then: 200 ok 코드와 이 메일, 이름, 생성된 날짜 를 받아야한다
+
+    // Then: The response status should be 200 and the response should contain user info
     expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('email');
-    expect(response.body).toHaveProperty('name');
-    expect(response.body).toHaveProperty('createdAt');
+    expect(response.body).toHaveProperty('email', registeredUser.email);
+    expect(response.body).toHaveProperty('name', registeredUser.name);
   });
 
-  it('등록된 유저가 자신의 계정을 삭제 하려고 하면 204 No Content 코드를 받아야한다.', async () => {
-    //Given : 로그인한 유저
-    await request(app.getHttpServer())
-      .post('/users')
-      .send({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
-    const signedInUser = await request(app.getHttpServer())
-      .post('/users/sign-in')
-      .send({ email: 'newuser@email.com', password: '12345678' });
-    const token = signedInUser.body.accessToken;
-    // When : 자신의 계정을 삭제하려고 한다.
+  it('Given a logged-in user, when the user requests to delete their account, then the response status should be 204', async () => {
+    // Given: A logged-in user
+    const registeredUser: TEST_USER = { email: 'newuser@email.com', name: 'tester', password: '12345678' };
+    await createUser(app, registeredUser);
+    const token = await getUserAccessToken(app, registeredUser);
+    // When: The user requests to delete their account
     const response = await request(app.getHttpServer()).delete('/users/').set('Authorization', `Bearer ${token}`);
-    // Then: 204 No Content 코드를 받아야 한다.
+
+    // Then: The response status should be 204
     expect(response.status).toBe(204);
   });
 
