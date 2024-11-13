@@ -95,7 +95,6 @@ describe('User API (e2e)', () => {
     const registeredUser: TEST_USER = { email: 'newuser@email.com', name: 'tester', password: '12345678' };
     await createUser(app, registeredUser);
     const token = await getUserAccessToken(app, registeredUser);
-    console.log(token);
 
     // When: The user requests their info
     const response = await request(app.getHttpServer()).get('/users').set('Authorization', `Bearer ${token}`);
