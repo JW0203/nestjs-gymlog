@@ -6,6 +6,25 @@ import { AppModule } from '../../app.module';
 import * as request from 'supertest';
 import { BodyPart } from '../../common/bodyPart.enum';
 
+interface TEST_USER {
+  email: string;
+  name: string;
+  password: string;
+}
+
+async function createUser(app: INestApplication, user: TEST_USER) {
+  await request(app.getHttpServer())
+    .post('/users')
+    .send({ email: user.email, password: user.password, name: user.name });
+}
+
+async function getUserAccessToken(app: INestApplication, user: TEST_USER): Promise<string> {
+  const response = await request(app.getHttpServer())
+    .post('/users/sign-in')
+    .send({ email: user.email, password: user.password });
+  return response.body.accessToken;
+}
+
 function createRoutine(routineName: string, exercises: any[]) {
   const routines: { routineName: string; bodyPart: BodyPart; exerciseName: string }[] = [];
   exercises.forEach((exercise) =>
@@ -48,17 +67,13 @@ describe('Routine', () => {
 
     await queryRunner.release();
 
-    await request(app.getHttpServer())
-      .post('/users')
-      .send({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
-    const signedInUser = await request(app.getHttpServer())
-      .post('/users/sign-in')
-      .send({ email: 'newuser@email.com', password: '12345678' });
-    token = signedInUser.body.accessToken;
+    const newUser: TEST_USER = { email: 'newuser@email.com', password: '12345678', name: 'tester' };
+    await createUser(app, newUser);
+    token = await getUserAccessToken(app, newUser);
   });
 
-  it('로그인한 유저가 새로운 루틴을 추가하면 201 created 코드를 받아야 하고 ', async () => {
-    // Given : 로그인한 유저가 저장하는 루틴
+  it('Given a logged-in user and a routine containing 4 exercises, when creating the new routine, then the response with status code should be 201 and response body should contain the 4 exercises', async () => {
+    // Given : logged-in user and a routine data with exercises
     const routineName = '등데이';
     const exercises = [
       { bodyPart: 'Back', exerciseName: '케이블 암 풀다운' },
@@ -68,19 +83,20 @@ describe('Routine', () => {
     ];
     const newRoutine = createRoutine(routineName, exercises);
 
-    // When : 저장을 한다.
+    // When : creating the new routine
     const response = await request(app.getHttpServer())
       .post('/routines')
       .set('Authorization', `Bearer ${token}`)
       .send(newRoutine);
 
-    // Then : 201 Created 코드를 받아야 한다.
+    // Then : the response with status code should be 201
     expect(response.status).toBe(201);
+    // response body should contain the 4 exercises
     expect(response.body.length).toBe(4); // 4
   });
-
-  it('로그인한 유저가 자신의 routines 을 루틴의 이름으로 검색하면 200 Ok 코드를 받아야하고 검색결과가 저장된 운동의 갯수와 일치해야한다.', async () => {
-    // Given: 로그인한 유저와 유저가 저장한 루틴의 이름
+  //로그인한 유저가 자신의 routines 을 루틴의 이름으로 검색하면 200 Ok 코드를 받아야하고 검색결과가 저장된 운동의 갯수와 일치해야한다.
+  it('Given a logged-in user with an existing routine, when searching routine by routine name, then the response with status code should be 200 and the length of response body should match the number of exercises in found routine ', async () => {
+    // Given: a logged-in user with an existing routine
     const routineName: string = '레그데이';
     const exercises = [
       { bodyPart: 'Legs', exerciseName: '덤벨 스쿼트' },
@@ -90,18 +106,19 @@ describe('Routine', () => {
 
     await request(app.getHttpServer()).post('/routines/').set('Authorization', `Bearer ${token}`).send(createdRoutine);
 
-    // When: 루틴이름으로 자신의 루틴을 검색하려고 한다.
+    // When: searching routine by routine name
     const response = await request(app.getHttpServer())
       .get('/routines/')
       .set('Authorization', `Bearer ${token}`)
       .query({ name: routineName });
 
-    // Then: 200 Ok 코드를 받아야 하고 검색결과가 저장된 운동의 개수와 일치해야 한다.
+    // Then: response with status code should be 200
     expect(response.status).toBe(200);
+    // the length of response body should match the number of exercises in found routine
     expect(response.body.length).toBe(exercises.length); //2
   });
-  it('로그인한 유저가 자신의 루틴을 업데이트할 때, 업데이트된 운동 정보가 성공적으로 반영되어야 한다.', async () => {
-    // Given: 로그인한 유저 , 업데이트할 루틴 정보
+  it('Given a logged-in user with an existing routine, when updating routine, then the response with status code should be 200 and updated information should be successfully reflected', async () => {
+    // Given: a logged-in user with an existing routine
     const routineName: string = '가슴데이';
     const routineData = [
       { bodyPart: 'Chest', exerciseName: '푸쉬 업' },
@@ -110,6 +127,8 @@ describe('Routine', () => {
     const createdRoutine = createRoutine(routineName, routineData);
     await request(app.getHttpServer()).post('/routines/').set('Authorization', `Bearer ${token}`).send(createdRoutine);
 
+    // When: updating routine
+    // update info
     const updateInfo = [
       { id: 1, name: routineName, exerciseName: '벤치 프레스', bodyPart: 'Chest' },
       { id: 2, name: routineName, exerciseName: '덤벨 인클라인', bodyPart: 'Chest' },
@@ -123,22 +142,20 @@ describe('Routine', () => {
         { bodyPart: 'Chest', exerciseName: '덤벨 인클라인' },
       ],
     };
-
-    // When: 자신의 루틴을 업데이트하려고 시도한다.
     const response = await request(app.getHttpServer())
       .patch('/routines/')
       .set('Authorization', `Bearer ${token}`)
       .send(routineUpdate);
 
-    // Then: 200 Ok 코드를 받아야 하고,
+    // Then:  the response with status code should be 200
     expect(response.status).toBe(200);
-    // 업데이트된 운동 정보가 성공적으로 반영되어야 한다.
+    // The updated information should be successfully reflected
     const containsBenchPress = response.body.some((routine: any) => routine.exercise.exerciseName === '벤치 프레스');
     expect(containsBenchPress).toBe(true);
   });
 
-  it('로그인한 유저가 저장된 루틴 중 하나를 지우면, 204 No content 코드를 받아야하고, 해당 루틴을 찾을 수가 없어야 한다.', async () => {
-    // Given: 로그인 한 유저, 저장된 루틴
+  it('Given a logged-in user with an existing routine, when deleting a routine, then the response with status code should be 204 and the deleted routine should not be found.', async () => {
+    // Given: existing routine
     const routineName: string = '등데이';
     const routineData = [
       { bodyPart: 'Back', exerciseName: '어시스트 풀업' },
@@ -148,15 +165,15 @@ describe('Routine', () => {
     const createdRoutine = createRoutine(routineName, routineData);
     await request(app.getHttpServer()).post('/routines/').set('Authorization', `Bearer ${token}`).send(createdRoutine);
 
-    // When: 저장된 루틴을 지운다.
+    // When: deleting a routine
     const response = await request(app.getHttpServer())
       .delete('/routines/')
       .set('Authorization', `Bearer ${token}`)
       .send({ ids: [1, 2, 3] });
 
-    // Then: 204 No content 코드를 받아야한다.
+    // Then: the response with status code should be 204
     expect(response.status).toBe(204);
-    // 해당 루틴을 찾을 수가 없어야 한다.
+    // the deleted routine should not be found
     const queryResponse = await request(app.getHttpServer())
       .get('/routines/')
       .set('Authorization', `Bearer ${token}`)
