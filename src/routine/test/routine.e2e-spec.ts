@@ -40,7 +40,6 @@ function createRoutineData(routineName: string, exercises: ExerciseDataFormatDto
 describe('Routine', () => {
   let app: INestApplication;
   let dataSource: DataSource;
-  let token: string;
 
   beforeAll(async () => {
     initializeTransactionalContext();
