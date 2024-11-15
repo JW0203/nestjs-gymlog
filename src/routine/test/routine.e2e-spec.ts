@@ -5,6 +5,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../../app.module';
 import * as request from 'supertest';
 import { BodyPart } from '../../common/bodyPart.enum';
+import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
+import { UpdateRoutine } from '../dto/updateRoutine.format.dto';
+import { UpdateRoutinesRequestDto } from '../dto/updateRoutines.request.dto';
+import { SaveRoutinesRequestDto } from '../dto/saveRoutines.request.dto';
 
 interface TEST_USER {
   email: string;
@@ -25,7 +29,7 @@ async function getUserAccessToken(app: INestApplication, user: TEST_USER): Promi
   return response.body.accessToken;
 }
 
-function createRoutine(routineName: string, exercises: any[]) {
+function createRoutineData(routineName: string, exercises: ExerciseDataFormatDto[]) {
   const routines: { routineName: string; bodyPart: BodyPart; exerciseName: string }[] = [];
   exercises.forEach((exercise) =>
     routines.push({ routineName, bodyPart: exercise.bodyPart, exerciseName: exercise.exerciseName }),
@@ -72,74 +76,79 @@ describe('Routine', () => {
     token = await getUserAccessToken(app, newUser);
   });
 
-  it('Given a logged-in user and a routine containing 4 exercises, when creating the new routine, then the response with status code should be 201 and response body should contain the 4 exercises', async () => {
-    // Given : logged-in user and a routine data with exercises
-    const routineName = '등데이';
-    const exercises = [
-      { bodyPart: 'Back', exerciseName: '케이블 암 풀다운' },
-      { bodyPart: 'Back', exerciseName: '어시스트 풀업 머신' },
-      { bodyPart: 'Back', exerciseName: '투 암 하이로우 머신' },
-      { bodyPart: 'Back', exerciseName: '랫풀다운' },
-    ];
-    const newRoutine = createRoutine(routineName, exercises);
+  it('Given a token of a logged-in user and a routine containing 4 exercises, when creating the new routine, then the response with status code should be 201 and response body should contain the 4 exercises', async () => {
+    // Given
+    const newUser: TEST_USER = { email: 'newuser@email.com', password: '12345678', name: 'tester' };
+    await createUser(app, newUser);
+    token = await getUserAccessToken(app, newUser);
 
-    // When : creating the new routine
+    const routineName = '등데이';
+    const exercises: ExerciseDataFormatDto[] = [
+      { bodyPart: BodyPart.BACK, exerciseName: '케이블 암 풀다운' },
+      { bodyPart: BodyPart.BACK, exerciseName: '어시스트 풀업 머신' },
+      { bodyPart: BodyPart.BACK, exerciseName: '투 암 하이로우 머신' },
+      { bodyPart: BodyPart.BACK, exerciseName: '랫풀다운' },
+    ];
+    const newRoutine: SaveRoutinesRequestDto = createRoutineData(routineName, exercises);
+
+    // When
     const response = await request(app.getHttpServer())
       .post('/routines')
       .set('Authorization', `Bearer ${token}`)
       .send(newRoutine);
 
-    // Then : the response with status code should be 201
+    // Then
     expect(response.status).toBe(201);
-    // response body should contain the 4 exercises
-    expect(response.body.length).toBe(4); // 4
+    expect(response.body.length).toBe(exercises.length); // 4
   });
-  //로그인한 유저가 자신의 routines 을 루틴의 이름으로 검색하면 200 Ok 코드를 받아야하고 검색결과가 저장된 운동의 갯수와 일치해야한다.
-  it('Given a logged-in user with an existing routine, when searching routine by routine name, then the response with status code should be 200 and the length of response body should match the number of exercises in found routine ', async () => {
-    // Given: a logged-in user with an existing routine
+
+  it('Given a token of a logged-in user and an existing routine, when searching routine by routine name, then the response with status code should be 200 and the length of response body should match the number of exercises in found routine ', async () => {
+    // Given
+    const newUser: TEST_USER = { email: 'newuser@email.com', password: '12345678', name: 'tester' };
+    await createUser(app, newUser);
+    token = await getUserAccessToken(app, newUser);
+
     const routineName: string = '레그데이';
-    const exercises = [
-      { bodyPart: 'Legs', exerciseName: '덤벨 스쿼트' },
-      { bodyPart: 'Legs', exerciseName: '케틀벨 스모 스쿼트' },
+    const exercises: ExerciseDataFormatDto[] = [
+      { bodyPart: BodyPart.LEGS, exerciseName: '덤벨 스쿼트' },
+      { bodyPart: BodyPart.LEGS, exerciseName: '케틀벨 스모 스쿼트' },
     ];
-    const createdRoutine = createRoutine(routineName, exercises);
+    const existingRoutine: SaveRoutinesRequestDto = createRoutineData(routineName, exercises);
+    await request(app.getHttpServer()).post('/routines/').set('Authorization', `Bearer ${token}`).send(existingRoutine);
 
-    await request(app.getHttpServer()).post('/routines/').set('Authorization', `Bearer ${token}`).send(createdRoutine);
-
-    // When: searching routine by routine name
+    // When
     const response = await request(app.getHttpServer())
       .get('/routines/')
       .set('Authorization', `Bearer ${token}`)
       .query({ name: routineName });
 
-    // Then: response with status code should be 200
+    // Then
     expect(response.status).toBe(200);
-    // the length of response body should match the number of exercises in found routine
-    expect(response.body.length).toBe(exercises.length); //2
+    expect(response.body.length).toBe(exercises.length);
   });
-  it('Given a logged-in user with an existing routine, when updating routine, then the response with status code should be 200 and updated information should be successfully reflected', async () => {
-    // Given: a logged-in user with an existing routine
+
+  it('Given a token of a logged-in user and an existing routine, when updating routine, then the response with status code should be 200 and updated information should be successfully reflected', async () => {
+    // Given
     const routineName: string = '가슴데이';
-    const routineData = [
-      { bodyPart: 'Chest', exerciseName: '푸쉬 업' },
-      { bodyPart: 'Chest', exerciseName: '덤벨 인클라인' },
+    const routineData: ExerciseDataFormatDto[] = [
+      { bodyPart: BodyPart.CHEST, exerciseName: '푸쉬 업' },
+      { bodyPart: BodyPart.CHEST, exerciseName: '덤벨 인클라인' },
     ];
-    const createdRoutine = createRoutine(routineName, routineData);
-    await request(app.getHttpServer()).post('/routines/').set('Authorization', `Bearer ${token}`).send(createdRoutine);
+    const existingRoutine: SaveRoutinesRequestDto = createRoutineData(routineName, routineData);
+    await request(app.getHttpServer()).post('/routines/').set('Authorization', `Bearer ${token}`).send(existingRoutine);
 
-    // When: updating routine
-    // update info
-    const updateInfo = [
-      { id: 1, name: routineName, exerciseName: '벤치 프레스', bodyPart: 'Chest' },
-      { id: 2, name: routineName, exerciseName: '덤벨 인클라인', bodyPart: 'Chest' },
+    // When
+    const routineExerciseNameUpdate: UpdateRoutine[] = [
+      { id: 1, routineName: routineName, exerciseName: '벤치 프레스', bodyPart: BodyPart.CHEST },
+      { id: 2, routineName: routineName, exerciseName: '덤벨 인클라인', bodyPart: BodyPart.CHEST },
     ];
 
-    const routineUpdate = {
+    const routineUpdate: UpdateRoutinesRequestDto = {
       routineName: '가슴데이',
-      updateData: updateInfo,
+      updateData: routineExerciseNameUpdate,
       exercises: [
-        { bodyPart: 'Chest', exerciseName: '벤치 프레스' },
-        { bodyPart: 'Chest', exerciseName: '덤벨 인클라인' },
+        { bodyPart: BodyPart.CHEST, exerciseName: '벤치 프레스' },
+        { bodyPart: BodyPart.CHEST, exerciseName: '덤벨 인클라인' },
       ],
     };
     const response = await request(app.getHttpServer())
@@ -147,39 +156,36 @@ describe('Routine', () => {
       .set('Authorization', `Bearer ${token}`)
       .send(routineUpdate);
 
-    // Then:  the response with status code should be 200
+    // Then
     expect(response.status).toBe(200);
-    // The updated information should be successfully reflected
     const containsBenchPress = response.body.some((routine: any) => routine.exercise.exerciseName === '벤치 프레스');
     expect(containsBenchPress).toBe(true);
   });
 
   it('Given a logged-in user with an existing routine, when deleting a routine, then the response with status code should be 204 and the deleted routine should not be found.', async () => {
-    // Given: existing routine
+    // Given
     const routineName: string = '등데이';
-    const routineData = [
-      { bodyPart: 'Back', exerciseName: '어시스트 풀업' },
-      { bodyPart: 'Back', exerciseName: '데드리프트' },
-      { bodyPart: 'Back', exerciseName: '어시스트 풀업' },
+    const routineData: ExerciseDataFormatDto[] = [
+      { bodyPart: BodyPart.BACK, exerciseName: '어시스트 풀업' },
+      { bodyPart: BodyPart.BACK, exerciseName: '데드리프트' },
+      { bodyPart: BodyPart.BACK, exerciseName: '어시스트 풀업' },
     ];
-    const createdRoutine = createRoutine(routineName, routineData);
-    await request(app.getHttpServer()).post('/routines/').set('Authorization', `Bearer ${token}`).send(createdRoutine);
+    const existingRoutine: SaveRoutinesRequestDto = createRoutineData(routineName, routineData);
+    await request(app.getHttpServer()).post('/routines/').set('Authorization', `Bearer ${token}`).send(existingRoutine);
 
-    // When: deleting a routine
+    // When
     const response = await request(app.getHttpServer())
       .delete('/routines/')
       .set('Authorization', `Bearer ${token}`)
       .send({ ids: [1, 2, 3] });
 
-    // Then: the response with status code should be 204
+    // Then
     expect(response.status).toBe(204);
-    // the deleted routine should not be found
+
     const queryResponse = await request(app.getHttpServer())
       .get('/routines/')
       .set('Authorization', `Bearer ${token}`)
       .query({ name: '등데이' });
-    console.log(queryResponse.status);
-    console.log(queryResponse.body);
     expect(queryResponse.status).toBe(404);
   });
 
