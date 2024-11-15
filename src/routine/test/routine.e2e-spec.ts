@@ -40,6 +40,7 @@ function createRoutineData(routineName: string, exercises: ExerciseDataFormatDto
 describe('Routine', () => {
   let app: INestApplication;
   let dataSource: DataSource;
+  let token: string;
 
   beforeAll(async () => {
     initializeTransactionalContext();
@@ -69,10 +70,6 @@ describe('Routine', () => {
     await queryRunner.query(`ALTER TABLE user AUTO_INCREMENT = 1`);
 
     await queryRunner.release();
-
-    const newUser: TEST_USER = { email: 'newuser@email.com', password: '12345678', name: 'tester' };
-    await createUser(app, newUser);
-    token = await getUserAccessToken(app, newUser);
   });
 
   it('Given a token of a logged-in user and a routine containing 4 exercises, when creating the new routine, then the response with status code should be 201 and response body should contain the 4 exercises', async () => {
