@@ -9,25 +9,8 @@ import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto'
 import { UpdateRoutine } from '../dto/updateRoutine.format.dto';
 import { UpdateRoutinesRequestDto } from '../dto/updateRoutines.request.dto';
 import { SaveRoutinesRequestDto } from '../dto/saveRoutines.request.dto';
-
-interface TEST_USER {
-  email: string;
-  name: string;
-  password: string;
-}
-
-async function createUser(app: INestApplication, user: TEST_USER) {
-  await request(app.getHttpServer())
-    .post('/users')
-    .send({ email: user.email, password: user.password, name: user.name });
-}
-
-async function getUserAccessToken(app: INestApplication, user: TEST_USER): Promise<string> {
-  const response = await request(app.getHttpServer())
-    .post('/users/sign-in')
-    .send({ email: user.email, password: user.password });
-  return response.body.accessToken;
-}
+import { clearAndResetTable } from '../../../test/utils/dbUtils';
+import { createUser, getUserAccessToken, TEST_USER } from '../../../test/utils/userUtils';
 
 function createRoutineData(routineName: string, exercises: ExerciseDataFormatDto[]) {
   const routines: { routineName: string; bodyPart: BodyPart; exerciseName: string }[] = [];
@@ -58,17 +41,8 @@ describe('Routine', () => {
   beforeEach(async () => {
     const queryRunner = dataSource.createQueryRunner();
     await queryRunner.connect();
-
-    // routine 테이블 초기화
-    await queryRunner.query(`DELETE FROM routine`);
-    // AUTO_INCREMENT 값을 초기화
-    await queryRunner.query(`ALTER TABLE routine AUTO_INCREMENT = 1`);
-
-    // user 테이블 초기화
-    await queryRunner.query(`DELETE FROM user`);
-    // AUTO_INCREMENT 값을 초기화
-    await queryRunner.query(`ALTER TABLE user AUTO_INCREMENT = 1`);
-
+    await clearAndResetTable(queryRunner, 'routine');
+    await clearAndResetTable(queryRunner, 'user');
     await queryRunner.release();
   });
 
@@ -125,6 +99,10 @@ describe('Routine', () => {
 
   it('Given a token of a logged-in user and an existing routine, when updating routine, then the response with status code should be 200 and updated information should be successfully reflected', async () => {
     // Given
+    const newUser: TEST_USER = { email: 'newuser@email.com', password: '12345678', name: 'tester' };
+    await createUser(app, newUser);
+    token = await getUserAccessToken(app, newUser);
+
     const routineName: string = '가슴데이';
     const routineData: ExerciseDataFormatDto[] = [
       { bodyPart: BodyPart.CHEST, exerciseName: '푸쉬 업' },
@@ -160,6 +138,10 @@ describe('Routine', () => {
 
   it('Given a logged-in user with an existing routine, when deleting a routine, then the response with status code should be 204 and the deleted routine should not be found.', async () => {
     // Given
+    const newUser: TEST_USER = { email: 'newuser@email.com', password: '12345678', name: 'tester' };
+    await createUser(app, newUser);
+    token = await getUserAccessToken(app, newUser);
+
     const routineName: string = '등데이';
     const routineData: ExerciseDataFormatDto[] = [
       { bodyPart: BodyPart.BACK, exerciseName: '어시스트 풀업' },
