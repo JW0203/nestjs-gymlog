@@ -7,6 +7,7 @@ import { initializeTransactionalContext } from 'typeorm-transactional';
 import { BodyPart } from '../../common/bodyPart.enum';
 import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
 import { SaveExercisesRequestDto } from '../dto/saveExercises.request.dto';
+import { clearAndResetTable } from '../../../test/utils/dbUtils';
 
 describe('Exercise API (e2e)', () => {
   let app: INestApplication;
@@ -28,18 +29,12 @@ describe('Exercise API (e2e)', () => {
   beforeEach(async () => {
     const queryRunner = dataSource.createQueryRunner();
     await queryRunner.connect();
-
-    //  단순히 exercise 테이블 초기화
-    await queryRunner.query(`DELETE FROM exercise`);
-
-    // AUTO_INCREMENT 값을 초기화
-    await queryRunner.query(`ALTER TABLE exercise AUTO_INCREMENT = 1`);
-
+    await clearAndResetTable(queryRunner, 'exercise');
     await queryRunner.release();
   });
 
-  it('주어진 새로운 운동 부위와 이름을 저장을 성공하면 201 created 코드를 받아야한다.', async () => {
-    // Given: 한가지 이상의 새로운 운동 이름과 운동부위
+  it('Given new exercises with body part and exercise name, When saving exercise, then then the response with status code should be 201.', async () => {
+    // Given
     const exerciseDataArray: ExerciseDataFormatDto[] = [
       { bodyPart: BodyPart.SHOULDERS, exerciseName: '숄더프레스' },
       { bodyPart: BodyPart.BACK, exerciseName: '시티드 로우' },
@@ -56,7 +51,7 @@ describe('Exercise API (e2e)', () => {
     expect(response.status).toBe(201);
   });
 
-  it('저장된 exercise 중 하나를 운동부위와 운동이름을 이용하여 검색하면 200 Ok 코드를 받고 검색한 운동부위와 운동이름을 받는다.', async () => {
+  it('Given saved exercise, when searching a exercise using body part and exercise name, then the response with status code should be and response body should contain the body part and exercise name used in the search', async () => {
     // Given: 저장된 exercise
     const exerciseDataArray: ExerciseDataFormatDto[] = [{ bodyPart: BodyPart.SHOULDERS, exerciseName: '숄더프레스' }];
     const exercises: SaveExercisesRequestDto = {
@@ -74,8 +69,8 @@ describe('Exercise API (e2e)', () => {
     expect(response.body.exerciseName).toBe('숄더프레스');
   });
 
-  it('5개의 운동 데이터가 저장된 DB 에서 모든 운동을 검색하면 200 상태 코드와 5개의 운동 항목이 포함된 응답을 받아야 한다.', async () => {
-    // Given : 저장된 운동들
+  it('Given 5 saved exercises, when searching all exercises, then the response with status should be 200 and the length of response body should be 5.', async () => {
+    // Given :
     const exerciseData: ExerciseDataFormatDto[] = [
       { bodyPart: BodyPart.SHOULDERS, exerciseName: '어깨' },
       { bodyPart: BodyPart.BACK, exerciseName: '등' },
@@ -88,14 +83,14 @@ describe('Exercise API (e2e)', () => {
     };
     await request(app.getHttpServer()).post('/exercises/').send(givenExercises);
 
-    // When : 저장된 모든 운동 데이터를 찾으려고 시도한다.
+    // When
     const response = await request(app.getHttpServer()).get('/exercises/all/');
-    // Then : 200 Ok 코드와 저장되어있는 5개의 운동 항목이 포함된 응답을 받아야 한다.
+    // Then
     expect(response.status).toBe(200);
     expect(response.body.length).toBe(5);
   });
 
-  it('저장된 2개 exercises 의 id 를 이용하여 해당 exercises 삭제하면 204 No Content 코드를 받아야 한다.', async () => {
+  it('Given 2 saved exercises, when deleting 2 exercise using their ids, then the response with status should be 204.', async () => {
     // Given: 저장된 2개 exercises 의 ids
     const exerciseData: ExerciseDataFormatDto[] = [
       { bodyPart: BodyPart.LEGS, exerciseName: '고블린스퀏트' },
