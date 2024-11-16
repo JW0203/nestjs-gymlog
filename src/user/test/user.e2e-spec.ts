@@ -4,31 +4,8 @@ import * as request from 'supertest';
 import { AppModule } from '../../app.module';
 import { initializeTransactionalContext } from 'typeorm-transactional';
 import { DataSource } from 'typeorm';
-
-interface TEST_USER {
-  email: string;
-  password: string;
-  name: string;
-}
-
-function createUser(app: INestApplication, user: TEST_USER) {
-  return request(app.getHttpServer()).post('/users').send(user);
-}
-
-async function getUserAccessToken(app: INestApplication, user: TEST_USER) {
-  const response = await request(app.getHttpServer())
-    .post('/users/sign-in')
-    .send({ email: user.email, password: user.password });
-  return response.body.accessToken;
-}
-
-async function resetDatabase(dataSource: DataSource) {
-  const queryRunner = dataSource.createQueryRunner();
-  await queryRunner.connect();
-  await queryRunner.query(`DELETE FROM user`);
-  await queryRunner.query(`ALTER TABLE user AUTO_INCREMENT = 1`);
-  await queryRunner.release();
-}
+import { clearAndResetTable } from '../../../test/utils/dbUtils';
+import { createUser, getUserAccessToken, TEST_USER } from '../../../test/utils/userUtils';
 
 describe('User API (e2e)', () => {
   let app: INestApplication;
@@ -49,71 +26,75 @@ describe('User API (e2e)', () => {
   });
 
   beforeEach(async () => {
-    await resetDatabase(dataSource);
+    const queryRunner = dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await clearAndResetTable(queryRunner, 'user');
+    await clearAndResetTable(queryRunner, 'routine');
+    await queryRunner.release();
   });
 
   it('Given a new user, when the user signs up, then the response status should be 201', async () => {
-    // Given: A new user
+    // Given
     const newUser: TEST_USER = { email: 'newuser@email.com', name: 'tester', password: '12345678' };
 
-    // When: The user signs up
+    // When
     const response = await request(app.getHttpServer()).post('/users').send(newUser);
 
-    // Then: The response status should be 201
+    // Then
     expect(response.status).toBe(201);
     expect(response.body).toMatchObject({ email: newUser.email, name: newUser.name });
   });
 
   it('Given an existing user, when the same user tries to sign up again, then the response status should be 409', async () => {
-    // Given: An existing user
+    // Given
     const existingUser: TEST_USER = { email: 'newuser@email.com', name: 'tester', password: '12345678' };
     await createUser(app, existingUser);
 
-    // When: The same user tries to sign up again
+    // When
     const response = await request(app.getHttpServer()).post('/users').send(existingUser);
 
-    // Then: The response status should be 409
+    // Then
     expect(response.status).toBe(409);
   });
 
   it('Given a registered user, when the user logs in, then the response should contain an access token and status should be 200', async () => {
-    // Given: A registered user
+    // Given
     const registeredUser: TEST_USER = { email: 'newuser@email.com', name: 'tester', password: '12345678' };
     await createUser(app, registeredUser);
-    // When: The user logs in
+    // When
     const response = await request(app.getHttpServer())
       .post('/users/sign-in')
       .send({ email: registeredUser.email, password: registeredUser.password });
 
-    // Then: The response status should be 200 and the response should contain an access token
+    // Then
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('accessToken');
   });
 
   it('Given a logged-in user, when the user requests their info, then the response status should be 200 and the response should contain user info', async () => {
-    // Given: A logged-in user
+    // Given
     const registeredUser: TEST_USER = { email: 'newuser@email.com', name: 'tester', password: '12345678' };
     await createUser(app, registeredUser);
     const token = await getUserAccessToken(app, registeredUser);
 
-    // When: The user requests their info
+    // When
     const response = await request(app.getHttpServer()).get('/users').set('Authorization', `Bearer ${token}`);
 
-    // Then: The response status should be 200 and the response should contain user info
+    // Then
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('email', registeredUser.email);
     expect(response.body).toHaveProperty('name', registeredUser.name);
   });
 
   it('Given a logged-in user, when the user requests to delete their account, then the response status should be 204', async () => {
-    // Given: A logged-in user
+    // Given
     const registeredUser: TEST_USER = { email: 'newuser@email.com', name: 'tester', password: '12345678' };
     await createUser(app, registeredUser);
     const token = await getUserAccessToken(app, registeredUser);
-    // When: The user requests to delete their account
+    // When
     const response = await request(app.getHttpServer()).delete('/users/').set('Authorization', `Bearer ${token}`);
 
-    // Then: The response status should be 204
+    // Then
     expect(response.status).toBe(204);
   });
 
