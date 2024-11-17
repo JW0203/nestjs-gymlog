@@ -9,6 +9,8 @@ import { BodyPart } from '../../common/bodyPart.enum';
 import { SaveWorkoutLogsRequestDto } from '../dto/saveWorkoutLogs.request.dto';
 import { UpdateWorkoutLogsRequestDto } from '../dto/updateWorkoutLogs.request.dto';
 import { UpdateWorkoutLogFormatDto } from '../dto/updateWorkoutLog.format.dto';
+import { clearAndResetTable } from '../../../test/utils/dbUtils';
+import { createUser, getUserAccessToken, TEST_USER } from '../../../test/utils/userUtils';
 
 function getTodayDate() {
   const today = new Date();
@@ -47,32 +49,19 @@ describe('WorkoutLog API (e2e)', () => {
   beforeEach(async () => {
     const queryRunner = dataSource.createQueryRunner();
     await queryRunner.connect();
-
-    // workoutLog 테이블 초기화 및 AUTO_INCREMENT 값을 초기화
-    await queryRunner.query(`DELETE FROM workout_log`);
-    await queryRunner.query(`ALTER TABLE workout_log AUTO_INCREMENT = 1`);
-
-    // user 테이블 초기화 및 AUTO_INCREMENT 값을 초기화
-    await queryRunner.query(`DELETE FROM user`);
-    await queryRunner.query(`ALTER TABLE user AUTO_INCREMENT = 1`);
-
-    // exercise 테이블 초기화 및 AUTO_INCREMENT 값을 초기화
-    await queryRunner.query(`DELETE FROM exercise`);
-    await queryRunner.query(`ALTER TABLE exercise AUTO_INCREMENT = 1`);
-
-    // 새로운 유저 생성
-    await request(app.getHttpServer())
-      .post('/users')
-      .send({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
-    const signedInUser = await request(app.getHttpServer())
-      .post('/users/sign-in')
-      .send({ email: 'newuser@email.com', password: '12345678' });
-    token = signedInUser.body.accessToken;
+    await clearAndResetTable(queryRunner, 'workout_log');
+    await clearAndResetTable(queryRunner, 'user');
+    await clearAndResetTable(queryRunner, 'exercise');
+    await queryRunner.release();
   });
 
-  it('회원 가입한 유저가 운동일지를 저장하면 201 created 코드를 받아야 한다.. ', async () => {
-    // Given: 가입한 유저가 기록한 운동일지
-    const usersWorkoutLogs: SaveWorkoutLogFormatDto[] = [
+  it('Given a token of a logged-in user and workoutLogs, when saving the workoutLogs, then then the response with status code should be 201.', async () => {
+    // Given
+    const testUser: TEST_USER = { email: 'newuser@email.com', name: 'tester', password: '12345678' };
+    await createUser(app, testUser);
+    token = await getUserAccessToken(app, testUser);
+
+    const workoutLogs: SaveWorkoutLogFormatDto[] = [
       {
         setCount: 1,
         weight: 30,
@@ -88,13 +77,6 @@ describe('WorkoutLog API (e2e)', () => {
         exerciseName: '시티드 로우',
       },
       {
-        setCount: 3,
-        weight: 30,
-        repeatCount: 15,
-        bodyPart: BodyPart.BACK,
-        exerciseName: '시티드 로우',
-      },
-      {
         setCount: 1,
         weight: 30,
         repeatCount: 15,
@@ -103,13 +85,6 @@ describe('WorkoutLog API (e2e)', () => {
       },
       {
         setCount: 2,
-        weight: 30,
-        repeatCount: 15,
-        bodyPart: BodyPart.BACK,
-        exerciseName: '티바 로우',
-      },
-      {
-        setCount: 3,
         weight: 30,
         repeatCount: 15,
         bodyPart: BodyPart.BACK,
@@ -120,22 +95,26 @@ describe('WorkoutLog API (e2e)', () => {
       { bodyPart: BodyPart.BACK, exerciseName: '티바 로우' },
       { bodyPart: BodyPart.BACK, exerciseName: '시티드 로우' },
     ];
-    const data = { workoutLogs: usersWorkoutLogs, exercises: uniqueExercises };
+    const requestData = { workoutLogs, exercises: uniqueExercises };
 
-    // When : 운동일지를 저장한다.
+    // When
     const response = await request(app.getHttpServer())
       .post('/workout-logs')
       .set('Authorization', `Bearer ${token}`)
-      .send(data);
+      .send(requestData);
 
-    // Then : 201 Created 코드를 받아야 한다.
+    // Then
     expect(response.status).toBe(201);
   });
 
-  it('유저가 저장한 운동일지를 날짜를 이용하여 검색하면 200 Ok 코드를 받고 응답의 길이가 0 이상이여야 한다..', async () => {
-    //Given : 날짜와 저장한 운동일지
-    const day = getTodayDate();
-    const usersWorkoutLogs: SaveWorkoutLogFormatDto[] = [
+  it('Given a token of a logged-in user, workoutLogs and workoutLogSavedDate, when searching workoutLogs using workoutLogSavedDate, then the response status code should be 200 and the response body length should be greater than 0', async () => {
+    //Given
+    const testUser: TEST_USER = { email: 'newuser@email.com', name: 'tester', password: '12345678' };
+    await createUser(app, testUser);
+    token = await getUserAccessToken(app, testUser);
+
+    const workoutLogSavedDate = getTodayDate();
+    const workoutLogs: SaveWorkoutLogFormatDto[] = [
       {
         setCount: 1,
         weight: 30,
@@ -183,24 +162,27 @@ describe('WorkoutLog API (e2e)', () => {
       { bodyPart: BodyPart.BACK, exerciseName: '티바 로우' },
       { bodyPart: BodyPart.BACK, exerciseName: '시티드 로우' },
     ];
-    const workoutLogs = { workoutLogs: usersWorkoutLogs, exercises: uniqueExercises };
+    const requestData = { workoutLogs, exercises: uniqueExercises };
 
-    // 저장된 운동일지
-    await request(app.getHttpServer()).post('/workout-logs').set('Authorization', `Bearer ${token}`).send(workoutLogs);
+    await request(app.getHttpServer()).post('/workout-logs').set('Authorization', `Bearer ${token}`).send(requestData);
 
-    // When : date 를 이용하여 해당날의 운동일지를 찾는다.
+    // When
     const response = await request(app.getHttpServer())
       .get('/workout-logs')
-      .query({ date: day })
+      .query({ date: workoutLogSavedDate })
       .set('Authorization', `Bearer ${token}`);
 
-    // Then : 200
+    // Then
     expect(response.status).toBe(200);
     expect(response.body).not.toHaveLength(0);
   });
 
-  it('로그인 한 유저의 모든 운동일지를 유저의 아이디를 이용하여 검색하면 200 Ok 코드를 받아야한다.', async () => {
-    // Given : 유저 토큰, 저장된 운동기록들
+  it('Given a token of a logged-in user and workoutLogs, when searching all workoutLogs of the user, then the response status code should be 200', async () => {
+    // Given
+    const testUser: TEST_USER = { email: 'newuser@email.com', name: 'tester', password: '12345678' };
+    await createUser(app, testUser);
+    token = await getUserAccessToken(app, testUser);
+
     const userWorkoutLogs: SaveWorkoutLogsRequestDto = {
       workoutLogs: [
         {
@@ -224,17 +206,22 @@ describe('WorkoutLog API (e2e)', () => {
       .post('/workout-logs')
       .set('Authorization', `Bearer ${token}`)
       .send(userWorkoutLogs);
-    // When : 유저의 아이디로 운동일지를 검색한다.
+
+    // When
     const response = await request(app.getHttpServer())
       .get('/workout-logs/user')
       .set('Authorization', `Bearer ${token}`);
 
-    //Then: 200 Ok 코드를 받아야한다.
+    // Then
     expect(response.status).toBe(200);
   });
 
-  it('로그인 한 유저가 자신의 운동일지를 업데이트 하면 업데이트를 성공하고 200 Ok 코드를 받는다.', async () => {
-    // Given :  유저 토큰과 운동기록
+  it('Given a token of a logged-in user and workoutLogs, when updating the workoutLogs, then the response status code should be 200 and it should successfully reflect the updated information.', async () => {
+    // Given
+    const testUser: TEST_USER = { email: 'newuser@email.com', name: 'tester', password: '12345678' };
+    await createUser(app, testUser);
+    token = await getUserAccessToken(app, testUser);
+
     const workoutLogs: SaveWorkoutLogFormatDto[] = [
       {
         setCount: 1,
@@ -260,21 +247,22 @@ describe('WorkoutLog API (e2e)', () => {
       .post('/workout-logs')
       .set('Authorization', `Bearer ${token}`)
       .send(userWorkoutLogs);
-    // When: 업데이트를 한다.
+
+    // When
     const updateData: UpdateWorkoutLogFormatDto[] = [
       {
         id: 1,
         setCount: 1,
-        weight: 40, //30,
-        repeatCount: 10, //15
+        weight: 40, //30 -> 40,
+        repeatCount: 10, //15 -> 10
         bodyPart: BodyPart.SHOULDERS,
         exerciseName: '밀리터리프레스',
       },
       {
         id: 2,
         setCount: 2,
-        weight: 45, //35,
-        repeatCount: 10, //15
+        weight: 45, //35 -> 45,
+        repeatCount: 10, //15 -> 10
         bodyPart: BodyPart.SHOULDERS,
         exerciseName: '밀리터리프레스',
       },
@@ -288,15 +276,20 @@ describe('WorkoutLog API (e2e)', () => {
       .patch('/workout-logs')
       .set('Authorization', `Bearer ${token}`)
       .send(workoutLogUpdate);
-    //Then: 200 Ok 코드를 받아야 하고
+
+    //Then
     expect(response.status).toBe(200);
-    // 업데이트된 정보가 성공적으로 반영되어야 한다.
+
     const checkUpdatedData = response.body.some((workoutLog: any) => workoutLog.weight === 40);
     expect(checkUpdatedData).toBe(true);
   });
 
-  it('유저가 자신의 운동일지를 삭제하면 삭제 성공 메세지로 204 코드를 받고 해당 운동일지 검색할 수 없다.', async () => {
-    // Given : 로그인 한 유저, 저장된 운동일지
+  it('Given a token of logged-in user and workoutLogs, when the user delete the workoutLogs, then the response status code should be 204 and the workoutLogs should not be searched.', async () => {
+    // Given
+    const testUser: TEST_USER = { email: 'newuser@email.com', name: 'tester', password: '12345678' };
+    await createUser(app, testUser);
+    token = await getUserAccessToken(app, testUser);
+
     const workoutLogs: SaveWorkoutLogFormatDto[] = [
       {
         setCount: 1,
@@ -324,14 +317,15 @@ describe('WorkoutLog API (e2e)', () => {
       .set('Authorization', `Bearer ${token}`);
     console.log(saveResponse.body);
 
-    // When : 운동일지를 지운다.
+    // When
     const response = await request(app.getHttpServer())
       .delete('/workout-logs/')
       .set('Authorization', `Bearer ${token}`)
       .send({ ids: [1, 2] });
-    // Then:204 No content 코드를 받아야한다.
+
+    // Then
     expect(response.status).toBe(204);
-    // 해당 운동일지를 찾을 수가 없어야 한다.
+
     const searchResponse = await request(app.getHttpServer())
       .get('/workout-logs')
       .set('Authorization', `Bearer ${token}`)
