@@ -1,7 +1,7 @@
 import { IsEnum, IsNotEmpty, IsNumber } from 'class-validator';
 import { BodyPart } from '../bodyPart.enum';
 import { IsExerciseName } from '../validation/isExerciseName.validation';
-import { Exercise } from '../../excercise/domain/Exercise.entity';
+import { Exercise } from '../../exercise/domain/Exercise.entity';
 
 export class ExerciseDataResponseDto {
   @IsNotEmpty()

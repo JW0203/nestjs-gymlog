@@ -7,7 +7,7 @@ import { SaveRoutinesRequestDto } from '../dto/saveRoutines.request.dto';
 import { ROUTINE_REPOSITORY } from '../../common/const/inject.constant';
 import { RoutineRepository } from '../domain/routine.repository';
 import { Routine } from '../domain/Routine.entity';
-import { ExerciseService } from '../../excercise/application/exercise.service';
+import { ExerciseService } from '../../exercise/application/exercise.service';
 import { RoutineResponseDto } from '../dto/routine.response.dto';
 import { Transactional } from 'typeorm-transactional';
 import { GetAllRoutineByUserResponseDto } from '../dto/getAllRoutineByUser.response.dto';
@@ -23,8 +23,6 @@ export class RoutineService {
 
   @Transactional()
   async bulkInsertRoutines(user: User, saveRoutines: SaveRoutinesRequestDto) {
-    console.log(saveRoutines);
-    console.log(user.id);
     const { routineName, exercises, routines } = saveRoutines;
     const isExistRoutine = await this.routineRepository.findRoutineNameByUserIdLockMode(routineName, user);
 
@@ -58,6 +56,9 @@ export class RoutineService {
   async getRoutineByName(getRoutineByNameRequest: GetRoutineByNameRequestDto, user: User) {
     const { name } = getRoutineByNameRequest;
     const foundRoutines = await this.routineRepository.findRoutinesByName(name, user);
+    if (foundRoutines.length == 0) {
+      throw new NotFoundException(`Routines not found`);
+    }
     return foundRoutines.map((routine) => new RoutineResponseDto(routine));
   }
 

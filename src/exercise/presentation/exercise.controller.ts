@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Post, Query } from '@nestjs/common';
 import { ExerciseService } from '../application/exercise.service';
 import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
 import { SaveExercisesRequestDto } from '../dto/saveExercises.request.dto';
@@ -22,7 +22,7 @@ export class ExerciseController {
 
   @Get()
   @HttpCode(200)
-  getExerciseByNameAndBodyPart(@Body() exerciseData: ExerciseDataFormatDto) {
+  getExerciseByNameAndBodyPart(@Query() exerciseData: ExerciseDataFormatDto) {
     return this.exerciseService.findOneByExerciseNameAndBodyPart(exerciseData);
   }
 

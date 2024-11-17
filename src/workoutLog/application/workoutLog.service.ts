@@ -8,7 +8,7 @@ import { WORKOUTLOG_REPOSITORY } from '../../common/const/inject.constant';
 import { WorkoutRepository } from '../domain/workout.repository';
 import { Transactional } from 'typeorm-transactional';
 import { WorkoutLog } from '../domain/WorkoutLog.entity';
-import { ExerciseService } from '../../excercise/application/exercise.service';
+import { ExerciseService } from '../../exercise/application/exercise.service';
 import { UserService } from '../../user/application/user.service';
 import { GetWorkoutLogByUserResponseDto } from '../dto/getWorkoutLogByUser.response.dto';
 
