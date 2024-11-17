@@ -168,6 +168,6 @@ describe('Routine', () => {
   });
 
   afterAll(async () => {
-    app.close();
+    await app.close();
   });
 });
