@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { WorkoutLog } from './domain/WorkoutLog.entity';
-import { ExerciseModule } from '../excercise/excercise.module';
+import { ExerciseModule } from '../exercise/excercise.module';
 import { WorkoutLogController } from './presentation/workoutLog.controller';
 import { UserModule } from '../user/user.module';
 import { WorkoutLogService } from './application/workoutLog.service';

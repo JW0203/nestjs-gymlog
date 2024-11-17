@@ -43,7 +43,7 @@ export class ExerciseService {
     });
     return await this.exerciseRepository.findExercisesByExerciseNameAndBodyPart(exercisesRequest);
   }
-
+  // Todo: TypeError: Cannot read properties of undefined (reading 'map') from bulkInsertExercises
   async findExercisesByExerciseNameAndBodyPartLockMode(exercises: ExerciseDataFormatDto[]): Promise<Exercise[]> {
     const lockMode = LockConfigManager.setLockConfig('mySQLPessimistic', { mode: 'pessimistic_write' });
     const exercisesRequest: ExerciseDataFormatDto[] = exercises.map((exercise) => {
