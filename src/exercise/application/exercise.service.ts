@@ -22,7 +22,7 @@ export class ExerciseService {
     const { exerciseName, bodyPart } = findByExerciseNameAndBodyPart;
     const foundExercise = await this.exerciseRepository.findOneByExerciseNameAndBodyPart(exerciseName, bodyPart);
     if (!foundExercise) {
-      return foundExercise;
+      throw new NotFoundException(`Exercise '${exerciseName}' not found`);
     }
     return new ExerciseDataResponseDto(foundExercise);
   }
