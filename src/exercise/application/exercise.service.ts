@@ -41,7 +41,11 @@ export class ExerciseService {
     const exercisesRequest: ExerciseDataFormatDto[] = exercises.map((exercise) => {
       return { exerciseName: exercise.exerciseName, bodyPart: exercise.bodyPart };
     });
-    return await this.exerciseRepository.findExercisesByExerciseNameAndBodyPart(exercisesRequest);
+    const foundExercises = await this.exerciseRepository.findExercisesByExerciseNameAndBodyPart(exercisesRequest);
+    if (foundExercises.length === 0) {
+      throw new NotFoundException('No matching exercises found in the database');
+    }
+    return foundExercises;
   }
 
   async findExercisesByExerciseNameAndBodyPartLockMode(exercises: ExerciseDataFormatDto[]): Promise<Exercise[]> {
