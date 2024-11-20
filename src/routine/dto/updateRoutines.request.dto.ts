@@ -4,6 +4,8 @@ import { Type } from 'class-transformer';
 import { UpdateRoutine } from './updateRoutine.format.dto';
 
 export class UpdateRoutinesRequestDto {
+  routineName: string;
+
   @ValidateNested()
   @Type(() => UpdateRoutine)
   updateData: UpdateRoutine[];
