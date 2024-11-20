@@ -35,30 +35,26 @@ describe('Test ExerciseService', () => {
   beforeAll(async () => {
     // 트랜잭션 컨텍스트 초기화
     initializeTransactionalContext();
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(EXERCISE_REPOSITORY)
+      .useValue(mockExerciseRepository)
+      .compile();
+
     dataSource = moduleFixture.get<DataSource>(DataSource);
+
     await dataSource.dropDatabase();
     await dataSource.synchronize();
 
     app = moduleFixture.createNestApplication();
     await app.init();
+
+    service = moduleFixture.get<ExerciseService>(ExerciseService);
+    mockRepository = moduleFixture.get(EXERCISE_REPOSITORY);
   });
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        ExerciseService,
-        {
-          provide: EXERCISE_REPOSITORY,
-          useValue: mockExerciseRepository,
-        },
-      ],
-    }).compile();
-    service = module.get<ExerciseService>(ExerciseService);
-    mockRepository = module.get(EXERCISE_REPOSITORY);
-  });
   it('service and mockRepository should be defined', () => {
     expect(service).toBeDefined();
     expect(mockRepository).toBeDefined();
