@@ -15,6 +15,7 @@ import { initializeTransactionalContext } from 'typeorm-transactional';
 import { DataSource } from 'typeorm';
 import { AppModule } from '../../app.module';
 import { DeleteExerciseRequestDto } from '../dto/deleteExercise.request.dto';
+import { MySqlLock } from '../../common/type/typeormLock.type';
 
 const mockExerciseRepository: jest.Mocked<ExerciseRepository> = {
   findOneByExerciseNameAndBodyPart: jest.fn(),
@@ -33,7 +34,6 @@ describe('Test ExerciseService', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    // 트랜잭션 컨텍스트 초기화
     initializeTransactionalContext();
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -68,7 +68,10 @@ describe('Test ExerciseService', () => {
 
       mockRepository.findOneByExerciseNameAndBodyPart.mockResolvedValue(mockExercise);
 
-      const result = await service.findOneByExerciseNameAndBodyPart({ exerciseName, bodyPart: BodyPart.SHOULDERS });
+      const result: ExerciseDataResponseDto = await service.findOneByExerciseNameAndBodyPart({
+        exerciseName,
+        bodyPart: BodyPart.SHOULDERS,
+      });
       expect(result).toEqual(mockExercise);
     });
 
@@ -92,14 +95,14 @@ describe('Test ExerciseService', () => {
         new Exercise({ bodyPart: BodyPart.CHEST, exerciseName: 'Bench Press' }),
       ];
       mockRepository.findAll.mockResolvedValue(mockExercises);
-      const result = await service.findAll();
-      expect(result).toEqual(mockExercises.map((exercise) => new ExerciseDataResponseDto(exercise)));
+      const result: ExerciseDataResponseDto[] = await service.findAll();
+      expect(result).toEqual(mockExercises.map((exercise: Exercise) => new ExerciseDataResponseDto(exercise)));
     });
 
     it('should throw NotFoundException if no exercises are found', async () => {
       mockRepository.findAll.mockResolvedValue([]);
 
-      await expect(service.findAll()).rejects.toThrow(new NotFoundException('No exercise data in Exercise entity'));
+      await expect(service.findAll()).rejects.toThrow(new NotFoundException('No exercise data in Exercise table'));
     });
   });
 
@@ -109,13 +112,14 @@ describe('Test ExerciseService', () => {
         { bodyPart: BodyPart.LEGS, exerciseName: 'Squat' },
         { bodyPart: BodyPart.CHEST, exerciseName: 'Bench Press' },
       ];
-      const expectedExercisesData = mockExercises.map(
-        (mockExercise) => new Exercise({ bodyPart: mockExercise.bodyPart, exerciseName: mockExercise.exerciseName }),
+      const expectedExercisesData: Exercise[] = mockExercises.map(
+        (mockExercise: ExerciseDataFormatDto) =>
+          new Exercise({ bodyPart: mockExercise.bodyPart, exerciseName: mockExercise.exerciseName }),
       );
 
       mockRepository.findExercisesByExerciseNameAndBodyPart.mockResolvedValue(expectedExercisesData);
 
-      const result = await service.findExercisesByExerciseNameAndBodyPart(mockExercises);
+      const result: Exercise[] = await service.findExercisesByExerciseNameAndBodyPart(mockExercises);
       expect(result).toEqual(expectedExercisesData);
     });
 
@@ -137,14 +141,15 @@ describe('Test ExerciseService', () => {
         { bodyPart: BodyPart.CHEST, exerciseName: 'Bench Press' },
       ];
 
-      const expectedExercisesData = mockExercises.map(
-        (mockExercise) => new Exercise({ bodyPart: mockExercise.bodyPart, exerciseName: mockExercise.exerciseName }),
+      const expectedExercisesData: Exercise[] = mockExercises.map(
+        (mockExercise: ExerciseDataFormatDto) =>
+          new Exercise({ bodyPart: mockExercise.bodyPart, exerciseName: mockExercise.exerciseName }),
       );
 
-      const lockMode = LockConfigManager.setLockConfig('mySQLPessimistic', { mode: 'pessimistic_write' });
+      const lockMode: MySqlLock = LockConfigManager.setLockConfig('mySQLPessimistic', { mode: 'pessimistic_write' });
       mockRepository.findExercisesByExerciseNameAndBodyPartLockMode.mockResolvedValue(expectedExercisesData);
 
-      const result = await service.findExercisesByExerciseNameAndBodyPartLockMode(mockExercises);
+      const result: Exercise[] = await service.findExercisesByExerciseNameAndBodyPartLockMode(mockExercises);
       expect(lockMode).toBeDefined();
       expect(result).toEqual(mockExercises);
     });
@@ -162,8 +167,10 @@ describe('Test ExerciseService', () => {
 
       mockRepository.findExercisesByExerciseNameAndBodyPart.mockResolvedValue([]);
 
-      const result = await service.findNewExercises(getExercisesRequest);
-      const expectedResult = exercises.map((exercise) => new FilteredExerciseDto(exercise));
+      const result: ExerciseDataFormatDto[] = await service.findNewExercises(getExercisesRequest);
+      const expectedResult: FilteredExerciseDto[] = exercises.map(
+        (exercise: ExerciseDataFormatDto) => new FilteredExerciseDto(exercise),
+      );
       expect(result).toEqual(expectedResult);
     });
     it('should return only new exercises that are not already in the repository', async () => {
@@ -174,19 +181,19 @@ describe('Test ExerciseService', () => {
           { exerciseName: 'Dead lift', bodyPart: BodyPart.BACK },
         ],
       };
-      const foundExercises = [
+      const foundExercises: Exercise[] = [
         new Exercise({ exerciseName: 'Squat', bodyPart: BodyPart.LEGS }),
         new Exercise({ exerciseName: 'Bench Press', bodyPart: BodyPart.CHEST }),
       ];
 
       mockRepository.findExercisesByExerciseNameAndBodyPart.mockResolvedValue(foundExercises);
 
-      const result = await service.findNewExercises(getExercisesRequest);
+      const result: ExerciseDataFormatDto[] = await service.findNewExercises(getExercisesRequest);
       const existingMap = new Map(foundExercises.map((ex) => [ex.bodyPart + ex.exerciseName, ex]));
-      const newExercises = getExercisesRequest.exercises.filter(
-        (ex) => !existingMap.has(ex.bodyPart + ex.exerciseName),
+      const newExercises: ExerciseDataFormatDto[] = getExercisesRequest.exercises.filter(
+        (ex: ExerciseDataFormatDto) => !existingMap.has(ex.bodyPart + ex.exerciseName),
       );
-      expect(result).toEqual(newExercises.map((exercise) => new FilteredExerciseDto(exercise)));
+      expect(result).toEqual(newExercises.map((exercise: ExerciseDataFormatDto) => new FilteredExerciseDto(exercise)));
     });
 
     it('should return empty array if all exercises are already in database', async () => {
@@ -196,14 +203,14 @@ describe('Test ExerciseService', () => {
           { exerciseName: 'Dead lift', bodyPart: BodyPart.BACK },
         ],
       };
-      const foundExercises = [
+      const foundExercises: Exercise[] = [
         new Exercise({ exerciseName: 'Squat', bodyPart: BodyPart.LEGS }),
         new Exercise({ exerciseName: 'Dead lift', bodyPart: BodyPart.BACK }),
       ];
 
       mockRepository.findExercisesByExerciseNameAndBodyPart.mockResolvedValue(foundExercises);
 
-      const result = await service.findNewExercises(getExercisesRequest);
+      const result: ExerciseDataFormatDto[] = await service.findNewExercises(getExercisesRequest);
       expect(result).toEqual([]);
     });
 
@@ -228,14 +235,15 @@ describe('Test ExerciseService', () => {
           { exerciseName: 'Dead lift', bodyPart: BodyPart.BACK },
         ],
       };
-      const savedExercises = saveExercises.exercises.map(
-        (exercise) => new Exercise({ bodyPart: exercise.bodyPart, exerciseName: exercise.exerciseName }),
+      const savedExercises: Exercise[] = saveExercises.exercises.map(
+        (exercise: ExerciseDataFormatDto) =>
+          new Exercise({ bodyPart: exercise.bodyPart, exerciseName: exercise.exerciseName }),
       );
 
       mockRepository.findExercisesByExerciseNameAndBodyPartLockMode.mockResolvedValue([]);
       mockRepository.bulkInsertExercises.mockResolvedValue(savedExercises);
 
-      const result = await service.bulkInsertExercises(saveExercises);
+      const result: ExerciseDataResponseDto[] = await service.bulkInsertExercises(saveExercises);
       expect(result).toEqual(saveExercises.exercises);
     });
 
@@ -244,8 +252,9 @@ describe('Test ExerciseService', () => {
         exercises: [{ exerciseName: 'Deadlift', bodyPart: BodyPart.BACK }],
       };
 
-      const foundExercises = saveExercisesRequest.exercises.map(
-        (exercise) => new Exercise({ bodyPart: exercise.bodyPart, exerciseName: exercise.exerciseName }),
+      const foundExercises: Exercise[] = saveExercisesRequest.exercises.map(
+        (exercise: ExerciseDataFormatDto) =>
+          new Exercise({ bodyPart: exercise.bodyPart, exerciseName: exercise.exerciseName }),
       );
       mockRepository.findExercisesByExerciseNameAndBodyPartLockMode.mockResolvedValue(foundExercises);
 
