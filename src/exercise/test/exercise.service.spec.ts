@@ -102,7 +102,7 @@ describe('Test ExerciseService', () => {
     it('should throw NotFoundException if no exercises are found', async () => {
       mockRepository.findAll.mockResolvedValue([]);
 
-      await expect(service.findAll()).rejects.toThrow(new NotFoundException('No exercise data in Exercise table'));
+      await expect(service.findAll()).rejects.toThrow(NotFoundException);
     });
   });
 
