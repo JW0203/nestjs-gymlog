@@ -98,7 +98,7 @@ describe('Test RoutineService', () => {
       ];
 
       const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
-      const routinesData: SaveRoutinesRequestDto = { routineName, routines, exercises };
+      const routinesData: SaveRoutinesRequestDto = { routines };
       const newRoutines = routines.map(
         (routine) =>
           new Routine({
