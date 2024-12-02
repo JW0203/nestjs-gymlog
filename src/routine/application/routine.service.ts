@@ -65,7 +65,8 @@ export class RoutineService {
 
   @Transactional()
   async bulkUpdateRoutines(updateRoutineRequest: UpdateRoutinesRequestDto, user: User) {
-    const { updateData, exercises } = updateRoutineRequest;
+    const { updateData } = updateRoutineRequest;
+    const exercises = updateData.map(({ exerciseName, bodyPart }) => ({ exerciseName, bodyPart }));
 
     const newExercises = await this.exerciseService.findNewExercises({ exercises });
     if (newExercises.length > 0) {
