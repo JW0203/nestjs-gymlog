@@ -315,7 +315,6 @@ describe('WorkoutLog API (e2e)', () => {
       .post('/workout-logs')
       .send(userWorkoutLogs)
       .set('Authorization', `Bearer ${token}`);
-    console.log(saveResponse.body);
 
     // When
     const response = await request(app.getHttpServer())
