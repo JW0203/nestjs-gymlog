@@ -23,13 +23,14 @@ export class RoutineService {
 
   @Transactional()
   async bulkInsertRoutines(user: User, saveRoutines: SaveRoutinesRequestDto) {
-    const { routineName, exercises, routines } = saveRoutines;
+    const { routines } = saveRoutines;
+    const routineName = routines[0].routineName;
     const isExistRoutine = await this.routineRepository.findRoutineNameByUserIdLockMode(routineName, user);
 
     if (isExistRoutine.length > 0) {
       throw new BadRequestException('Routine already exists');
     }
-
+    const exercises = routines.map(({ exerciseName, bodyPart }) => ({ exerciseName, bodyPart }));
     const newExercises = await this.exerciseService.findNewExercises({ exercises });
     if (newExercises.length > 0) {
       await this.exerciseService.bulkInsertExercises({ exercises: newExercises });
