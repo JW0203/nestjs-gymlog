@@ -1,5 +1,3 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { EXERCISE_REPOSITORY } from '../../common/const/inject.constant';
 import { BodyPart } from '../../common/bodyPart.enum';
 import { ExerciseRepository } from '../domain/exercise.repository';
 import { Exercise } from '../domain/Exercise.entity';
@@ -7,7 +5,7 @@ import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto'
 import { MySqlLock } from '../../common/type/typeormLock.type';
 import { LockConfigManager } from '../../common/infrastructure/typeormMysql.lock';
 
-const mockExerciseRepository: ExerciseRepository = {
+const mockExerciseRepository: jest.Mocked<ExerciseRepository> = {
   findOneByExerciseNameAndBodyPart: jest.fn(),
   findExercisesByExerciseNameAndBodyPart: jest.fn(),
   findExercisesByExerciseNameAndBodyPartLockMode: jest.fn(),
@@ -18,18 +16,10 @@ const mockExerciseRepository: ExerciseRepository = {
 };
 
 describe('ExerciseRepository', () => {
-  let exerciseRepository: jest.Mocked<typeof mockExerciseRepository>;
+  let exerciseRepository: jest.Mocked<ExerciseRepository>;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        {
-          provide: EXERCISE_REPOSITORY,
-          useValue: mockExerciseRepository,
-        },
-      ],
-    }).compile();
-    exerciseRepository = module.get(EXERCISE_REPOSITORY);
+    exerciseRepository = mockExerciseRepository;
   });
 
   describe('findOneByExerciseNameAndBodyPart', () => {
