@@ -3,11 +3,8 @@ import { Routine } from '../domain/Routine.entity';
 import { Exercise } from '../../exercise/domain/Exercise.entity';
 import { BodyPart } from '../../common/bodyPart.enum';
 import { User } from '../../user/domain/User.entity';
-import { Test, TestingModule } from '@nestjs/testing';
-import { ROUTINE_REPOSITORY } from '../../common/const/inject.constant';
-import { DataSource } from 'typeorm';
 
-const mockRoutineRepository: RoutineRepository = {
+const mockRoutineRepository: jest.Mocked<RoutineRepository> = {
   bulkInsertRoutines: jest.fn(),
   findRoutinesByName: jest.fn(),
   findOneRoutineById: jest.fn(),
@@ -19,26 +16,10 @@ const mockRoutineRepository: RoutineRepository = {
 };
 
 describe('Test RoutineRepository', () => {
-  let routineRepository: jest.Mocked<typeof mockRoutineRepository>;
+  let routineRepository: jest.Mocked<RoutineRepository>;
 
-  beforeAll(async () => {
-    const mockDataSource = {
-      createQueryRunner: jest.fn(),
-    } as unknown as DataSource;
-
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        {
-          provide: ROUTINE_REPOSITORY,
-          useValue: mockRoutineRepository,
-        },
-        {
-          provide: DataSource,
-          useValue: mockDataSource,
-        },
-      ],
-    }).compile();
-    routineRepository = module.get(ROUTINE_REPOSITORY);
+  beforeEach(async () => {
+    routineRepository = mockRoutineRepository;
   });
 
   describe('bulkInsertRoutines', () => {
@@ -158,7 +139,7 @@ describe('Test RoutineRepository', () => {
     let mockRoutines: Routine[];
     let routineIds: number[];
 
-    beforeAll(() => {
+    beforeEach(() => {
       mockUser = new User({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
       mockUser.id = 1;
       const routineName = '다리 루틴';
@@ -214,7 +195,7 @@ describe('Test RoutineRepository', () => {
     let mockRoutine1: Routine;
     let mockRoutine2: Routine;
 
-    beforeAll(() => {
+    beforeEach(() => {
       mockUser = new User({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
       mockUser.id = 1;
       const routineName = '다리 루틴';
@@ -246,7 +227,6 @@ describe('Test RoutineRepository', () => {
 
       routineRepository.bulkUpdateRoutines.mockResolvedValue([updatedRoutine1, updatedRoutine2]);
       const result = await routineRepository.bulkUpdateRoutines([updatedRoutine1, updatedRoutine2]);
-      console.log(new Exercise({ exerciseName: '런지', bodyPart: BodyPart.LEGS }));
 
       expect(result).toEqual([updatedRoutine1, updatedRoutine2]);
       expect(result[0].name).toBe('수정된 루틴');
@@ -285,7 +265,7 @@ describe('Test RoutineRepository', () => {
     let mockRoutine1: Routine;
     let mockRoutine2: Routine;
 
-    beforeAll(async () => {
+    beforeEach(async () => {
       mockUser = new User({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
       mockUser.id = 1;
       const routineName = '다리 루틴';
