@@ -17,7 +17,7 @@ describe('Test UserRepository', () => {
 
   describe('signUp', () => {
     it('Should sign up a new user', async () => {
-      const newUser: User = new User({ email: 'test@example.com', name: 'Test User', password: 'test1234' });
+      const newUser: User = new User({ email: 'test@example.com', name: 'tester', password: 'test1234' });
       newUser.id = 1;
       userRepository.signUp.mockResolvedValue(newUser);
 
@@ -30,7 +30,7 @@ describe('Test UserRepository', () => {
 
   describe('findOneUserByEmailLockMode', () => {
     it('Should fine one user by the user email', async () => {
-      const newUser: User = new User({ email: 'test@example.com', name: 'Test User', password: 'test1234' });
+      const newUser: User = new User({ email: 'test@example.com', name: 'tester', password: 'test1234' });
       newUser.id = 1;
       userRepository.findOneUserByEmailLockMode.mockResolvedValue(newUser);
 
@@ -50,7 +50,7 @@ describe('Test UserRepository', () => {
 
   describe('findOneUserByEmail', () => {
     it('Should fine one user by the user email', async () => {
-      const newUser: User = new User({ email: 'test@example.com', name: 'Test User', password: 'test1234' });
+      const newUser: User = new User({ email: 'test@example.com', name: 'tester', password: 'test1234' });
       newUser.id = 1;
       userRepository.findOneUserByEmail.mockResolvedValue(newUser);
 
@@ -72,7 +72,7 @@ describe('Test UserRepository', () => {
 
   describe('findOneUserById', () => {
     it('Should fine one user by the user email', async () => {
-      const newUser: User = new User({ email: 'test@example.com', name: 'Test User', password: 'test1234' });
+      const newUser: User = new User({ email: 'test@example.com', name: '테스터', password: 'test1234' });
       newUser.id = 1;
       userRepository.findOneUserById.mockResolvedValue(newUser);
 
