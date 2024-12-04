@@ -37,21 +37,15 @@ const mockExerciseService = {
 jest.mock('typeorm-transactional', () => ({
   Transactional: () => jest.fn(),
   initializeTransactionalContext: jest.fn(),
-  addTransactionalDataSource: jest.fn(),
 }));
 
 describe('Test RoutineService', () => {
   let routineService: RoutineService;
   let routineRepository: jest.Mocked<typeof mockRoutineRepository>;
   let exerciseService: jest.Mocked<typeof mockExerciseService>;
-  let dataSource: DataSource;
 
   beforeAll(async () => {
     initializeTransactionalContext();
-    const mockDataSource = {
-      createQueryRunner: jest.fn(),
-    } as unknown as DataSource;
-    addTransactionalDataSource(mockDataSource);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -64,17 +58,12 @@ describe('Test RoutineService', () => {
           provide: ExerciseService,
           useValue: mockExerciseService,
         },
-        {
-          provide: DataSource,
-          useValue: mockDataSource,
-        },
       ],
     }).compile();
 
     routineService = module.get<RoutineService>(RoutineService);
     routineRepository = module.get(ROUTINE_REPOSITORY);
     exerciseService = module.get(ExerciseService);
-    dataSource = module.get<DataSource>(DataSource);
   });
 
   describe('bulkInsertRoutines service', () => {
@@ -197,11 +186,6 @@ describe('Test RoutineService', () => {
       mockRoutine2.id = 2;
 
       const updateRoutineRequest: UpdateRoutinesRequestDto = {
-        routineName: '하체 뒤',
-        exercises: [
-          { bodyPart: BodyPart.LEGS, exerciseName: '레그 프레스' },
-          { bodyPart: BodyPart.LEGS, exerciseName: '고블린 스쿼트' },
-        ],
         updateData: [
           {
             id: 1,
@@ -244,8 +228,6 @@ describe('Test RoutineService', () => {
       mockUser.id = 1;
       const mockExercise: Exercise = new Exercise({ exerciseName: '레그 프레스', bodyPart: BodyPart.LEGS });
       const updateRoutinesDto: UpdateRoutinesRequestDto = {
-        routineName: 'test routine',
-        exercises: [{ exerciseName: '레그 프레스', bodyPart: BodyPart.LEGS }],
         updateData: [
           {
             id: 999, // 존재하지 않는 ID
@@ -270,8 +252,6 @@ describe('Test RoutineService', () => {
       mockUser.id = 1;
 
       const updateRoutinesDto: UpdateRoutinesRequestDto = {
-        routineName: 'test routine',
-        exercises: [{ exerciseName: '레그 프레스', bodyPart: BodyPart.LEGS }],
         updateData: [
           {
             id: 1,
