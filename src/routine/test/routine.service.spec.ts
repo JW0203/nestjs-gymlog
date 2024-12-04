@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RoutineService } from '../application/routine.service';
 import { ROUTINE_REPOSITORY } from '../../common/const/inject.constant';
-import { DataSource } from 'typeorm';
 import { ExerciseService } from '../../exercise/application/exercise.service';
 import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
 import { BodyPart } from '../../common/bodyPart.enum';
@@ -11,7 +10,7 @@ import { User } from '../../user/domain/User.entity';
 import { Exercise } from '../../exercise/domain/Exercise.entity';
 import { Routine } from '../domain/Routine.entity';
 import { RoutineResponseDto } from '../dto/routine.response.dto';
-import { addTransactionalDataSource, initializeTransactionalContext } from 'typeorm-transactional';
+import { initializeTransactionalContext } from 'typeorm-transactional';
 import { GetRoutineByNameRequestDto } from '../dto/getRoutineByName.request.dto';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { UpdateRoutinesRequestDto } from '../dto/updateRoutines.request.dto';
