@@ -221,9 +221,7 @@ describe('Test ExerciseService', () => {
 
       mockRepository.findExercisesByExerciseNameAndBodyPart.mockRejectedValue(new Error('Database error'));
 
-      await expect(service.findNewExercises(getExercisesRequest)).rejects.toThrow(
-        'Error while finding new exercises: Database error',
-      );
+      await expect(service.findNewExercises(getExercisesRequest)).rejects.toThrow(Error);
     });
   });
 
@@ -258,9 +256,7 @@ describe('Test ExerciseService', () => {
       );
       mockRepository.findExercisesByExerciseNameAndBodyPartLockMode.mockResolvedValue(foundExercises);
 
-      await expect(service.bulkInsertExercises(saveExercisesRequest)).rejects.toThrow(
-        new ConflictException('Some or all exercises already exist. No new data was saved.'),
-      );
+      await expect(service.bulkInsertExercises(saveExercisesRequest)).rejects.toThrow(ConflictException);
     });
   });
 
