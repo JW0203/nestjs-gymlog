@@ -25,7 +25,7 @@ export class UserService {
     const { email, name, password } = signUpRequestDto;
     const user = await this.userRepository.findOneUserByEmailLockMode(email);
     if (user) {
-      throw new ConflictException('User not found');
+      throw new ConflictException('The email is already in use');
     }
     const saltRounds = this.configService.get<string>('SALT_ROUNDS');
     if (saltRounds === undefined) {
