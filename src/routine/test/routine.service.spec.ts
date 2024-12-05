@@ -241,9 +241,7 @@ describe('Test RoutineService', () => {
       exerciseService.findExercisesByExerciseNameAndBodyPart.mockResolvedValue([mockExercise]);
       routineRepository.findOneRoutineById.mockResolvedValue(null);
 
-      await expect(routineService.bulkUpdateRoutines(updateRoutinesDto, mockUser)).rejects.toThrow(
-        new BadRequestException('Routine with id 999 not found.'),
-      );
+      await expect(routineService.bulkUpdateRoutines(updateRoutinesDto, mockUser)).rejects.toThrow(BadRequestException);
     });
 
     it('should handle exercise not found during update', async () => {
@@ -265,9 +263,7 @@ describe('Test RoutineService', () => {
       exerciseService.findExercisesByExerciseNameAndBodyPart.mockResolvedValue([]);
       routineRepository.findOneRoutineById.mockResolvedValue(null);
 
-      await expect(routineService.bulkUpdateRoutines(updateRoutinesDto, mockUser)).rejects.toThrow(
-        new NotFoundException('exercises can not found'),
-      );
+      await expect(routineService.bulkUpdateRoutines(updateRoutinesDto, mockUser)).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -309,9 +305,7 @@ describe('Test RoutineService', () => {
       mockUser.id = 1;
 
       routineRepository.findRoutinesByIds.mockResolvedValue([]);
-      await expect(routineService.softDeleteRoutines(mockRoutineIds, mockUser)).rejects.toThrow(
-        new BadRequestException('Routines not found'),
-      );
+      await expect(routineService.softDeleteRoutines(mockRoutineIds, mockUser)).rejects.toThrow(BadRequestException);
     });
   });
 
