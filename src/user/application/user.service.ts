@@ -65,7 +65,7 @@ export class UserService {
   }
 
   async softDeleteUser(userId: number): Promise<void> {
-    const user = await this.findOneById(userId);
+    const user = await this.userRepository.findOneUserById(userId);
     if (!user) {
       throw new NotFoundException('The user does not exist');
     }
