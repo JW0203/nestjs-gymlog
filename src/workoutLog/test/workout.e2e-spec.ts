@@ -200,7 +200,6 @@ describe('WorkoutLog API (e2e)', () => {
           exerciseName: '레그레이즈',
         },
       ],
-      exercises: [{ bodyPart: BodyPart.ABS, exerciseName: '레그레이즈' }],
     };
     await request(app.getHttpServer())
       .post('/workout-logs')
@@ -238,9 +237,8 @@ describe('WorkoutLog API (e2e)', () => {
         exerciseName: '밀리터리프레스',
       },
     ];
-    const exercise = { bodyPart: BodyPart.SHOULDERS, exerciseName: '밀리터리프레스' };
+
     const userWorkoutLogs: SaveWorkoutLogsRequestDto = {
-      exercises: [exercise],
       workoutLogs: workoutLogs,
     };
     await request(app.getHttpServer())
@@ -269,7 +267,6 @@ describe('WorkoutLog API (e2e)', () => {
     ];
     const workoutLogUpdate: UpdateWorkoutLogsRequestDto = {
       updateWorkoutLogs: updateData,
-      exercises: [{ bodyPart: BodyPart.SHOULDERS, exerciseName: '밀리터리프레스' }],
     };
 
     const response = await request(app.getHttpServer())
@@ -306,12 +303,11 @@ describe('WorkoutLog API (e2e)', () => {
         exerciseName: '밀리터리프레스',
       },
     ];
-    const exercise = { bodyPart: BodyPart.SHOULDERS, exerciseName: '밀리터리프레스' };
+
     const userWorkoutLogs: SaveWorkoutLogsRequestDto = {
-      exercises: [exercise],
       workoutLogs: workoutLogs,
     };
-    const saveResponse = await request(app.getHttpServer())
+    await request(app.getHttpServer())
       .post('/workout-logs')
       .send(userWorkoutLogs)
       .set('Authorization', `Bearer ${token}`);
