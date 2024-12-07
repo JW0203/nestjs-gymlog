@@ -11,6 +11,56 @@ import { WorkoutLog } from '../domain/WorkoutLog.entity';
 import { ExerciseService } from '../../exercise/application/exercise.service';
 import { UserService } from '../../user/application/user.service';
 import { GetWorkoutLogByUserResponseDto } from '../dto/getWorkoutLogByUser.response.dto';
+import { Exercise } from '../../exercise/domain/Exercise.entity';
+
+interface UpdateWorkoutLogsParams {
+  workoutLogMap: Map<number, WorkoutLog>;
+  foundExercises: Exercise[];
+  updateWorkoutLogs: {
+    id: number;
+    setCount: number;
+    repeatCount: number;
+    weight: number;
+    exerciseName: string;
+    bodyPart: string;
+  }[];
+  user: User;
+}
+
+export async function updateWorkoutLogsWithValidation({
+  workoutLogMap,
+  foundExercises,
+  updateWorkoutLogs,
+  user,
+}: UpdateWorkoutLogsParams): Promise<WorkoutLog[]> {
+  return Promise.all(
+    updateWorkoutLogs.map(async (workoutLog) => {
+      const { id, setCount, repeatCount, weight, exerciseName, bodyPart } = workoutLog;
+
+      const exercise = foundExercises.find(
+        (exercise) => exercise.exerciseName === exerciseName && exercise.bodyPart === bodyPart,
+      );
+      if (!exercise) {
+        throw new NotFoundException(`Cannot find exercise "${exerciseName}" for body part "${bodyPart}"`);
+      }
+
+      const foundWorkoutLog = workoutLogMap.get(id);
+      if (!foundWorkoutLog) {
+        throw new NotFoundException(`WorkoutLog with id "${id}" not found`);
+      }
+
+      foundWorkoutLog.update({
+        setCount,
+        weight,
+        repeatCount,
+        user,
+        exercise,
+      });
+
+      return foundWorkoutLog;
+    }),
+  );
+}
 
 @Injectable()
 export class WorkoutLogService {
@@ -111,31 +161,12 @@ export class WorkoutLogService {
     }
 
     const workoutLogMap = new Map(foundWorkoutLogs.map((log) => [log.id, log]));
-
-    const promisedUpdateWorkoutLogs = await Promise.all(
-      updateWorkoutLogs.map(async (workoutLog) => {
-        const { id, setCount, repeatCount, weight, exerciseName, bodyPart } = workoutLog;
-        const exercise = foundExercises.find(
-          (exercise) => exercise.exerciseName === exerciseName && exercise.bodyPart === bodyPart,
-        );
-        if (!exercise) {
-          throw new NotFoundException(`Cannot find ${exerciseName} and ${bodyPart}`);
-        }
-
-        const foundWorkoutLog = workoutLogMap.get(id); // Map에서 검색
-        if (!foundWorkoutLog) {
-          throw new NotFoundException(`WorkoutLog with id ${id} not found`);
-        }
-        foundWorkoutLog.update({
-          setCount,
-          weight,
-          repeatCount,
-          user,
-          exercise,
-        });
-        return foundWorkoutLog;
-      }),
-    );
+    const promisedUpdateWorkoutLogs = await updateWorkoutLogsWithValidation({
+      workoutLogMap,
+      foundExercises,
+      updateWorkoutLogs,
+      user,
+    });
 
     const UpdatedWorkoutLogs = await this.workoutLogRepository.bulkUpdateWorkoutLogs(promisedUpdateWorkoutLogs);
 
