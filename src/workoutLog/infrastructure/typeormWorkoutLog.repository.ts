@@ -3,10 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { WorkoutLog } from '../domain/WorkoutLog.entity';
 import { In, Raw, Repository } from 'typeorm';
 import { User } from '../../user/domain/User.entity';
-import { WorkoutRepository } from '../domain/workout.repository';
+import { WorkoutLogRepository } from '../domain/workoutLog.repository';
 
 @Injectable()
-export class TypeormWorkoutLogRepository implements WorkoutRepository {
+export class TypeormWorkoutLogRepository implements WorkoutLogRepository {
   constructor(
     @InjectRepository(WorkoutLog)
     private workoutLogRepository: Repository<WorkoutLog>,
