@@ -5,7 +5,7 @@ import { SaveWorkoutLogsRequestDto } from '../dto/saveWorkoutLogs.request.dto';
 import { UpdateWorkoutLogsRequestDto } from '../dto/updateWorkoutLogs.request.dto';
 import { WorkoutLogResponseDto } from '../dto/workoutLog.response.dto';
 import { WORKOUTLOG_REPOSITORY } from '../../common/const/inject.constant';
-import { WorkoutRepository } from '../domain/workout.repository';
+import { WorkoutLogRepository } from '../domain/workoutLog.repository';
 import { Transactional } from 'typeorm-transactional';
 import { WorkoutLog } from '../domain/WorkoutLog.entity';
 import { ExerciseService } from '../../exercise/application/exercise.service';
@@ -16,14 +16,16 @@ import { GetWorkoutLogByUserResponseDto } from '../dto/getWorkoutLogByUser.respo
 export class WorkoutLogService {
   constructor(
     @Inject(WORKOUTLOG_REPOSITORY)
-    readonly workoutLogRepository: WorkoutRepository,
+    readonly workoutLogRepository: WorkoutLogRepository,
     private readonly exerciseService: ExerciseService,
     private readonly userService: UserService,
   ) {}
 
   @Transactional()
   async bulkInsertWorkoutLogs(userId: number, saveWorkoutLogs: SaveWorkoutLogsRequestDto): Promise<any> {
-    const { exercises, workoutLogs } = saveWorkoutLogs;
+    const { workoutLogs } = saveWorkoutLogs;
+    const exercises = workoutLogs.map(({ bodyPart, exerciseName }) => ({ bodyPart, exerciseName }));
+
     const user = await this.userService.findOneById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
