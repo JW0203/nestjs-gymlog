@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { SoftDeleteWorkoutLogRequestDto } from '../dto/softDeleteWorkoutLog.request.dto';
 import { User } from '../../user/domain/User.entity';
 import { SaveWorkoutLogsRequestDto } from '../dto/saveWorkoutLogs.request.dto';
@@ -116,7 +116,7 @@ export class WorkoutLogService {
           (exercise) => exercise.exerciseName === exerciseName && exercise.bodyPart === bodyPart,
         );
         if (!exercise) {
-          throw new BadRequestException(`Cannot find ${exerciseName} and ${bodyPart}`);
+          throw new NotFoundException(`Cannot find ${exerciseName} and ${bodyPart}`);
         }
 
         const foundWorkoutLog = await this.workoutLogRepository.findOneById(id);
@@ -146,7 +146,7 @@ export class WorkoutLogService {
     const { ids } = softDeleteRequestDto;
     const foundWorkoutLogs = await this.workoutLogRepository.findWorkoutLogsByIdsLockMode(ids, user.id);
     if (foundWorkoutLogs.length === 0) {
-      throw new BadRequestException(`WorkoutLogs are not existed`);
+      throw new NotFoundException(`WorkoutLogs are not existed`);
     }
     await this.workoutLogRepository.softDeleteWorkoutLogs(ids, user);
   }
