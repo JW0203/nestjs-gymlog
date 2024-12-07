@@ -81,7 +81,7 @@ export class WorkoutLogService {
     userId: number,
     updateWorkoutLogsRequest: UpdateWorkoutLogsRequestDto,
   ): Promise<WorkoutLogResponseDto[]> {
-    const { updateWorkoutLogs, exercises } = updateWorkoutLogsRequest;
+    const { updateWorkoutLogs } = updateWorkoutLogsRequest;
     const user = await this.userService.findOneById(userId);
 
     if (!user) {
@@ -98,6 +98,7 @@ export class WorkoutLogService {
       throw new NotFoundException('WorkoutLogs not found');
     }
 
+    const exercises = updateWorkoutLogs.map(({ bodyPart, exerciseName }) => ({ bodyPart, exerciseName }));
     const newExercises = await this.exerciseService.findNewExercises({ exercises });
 
     if (newExercises.length > 0) {
@@ -109,6 +110,8 @@ export class WorkoutLogService {
       throw new NotFoundException('Exercises not found');
     }
 
+    const workoutLogMap = new Map(foundWorkoutLogs.map((log) => [log.id, log]));
+
     const promisedUpdateWorkoutLogs = await Promise.all(
       updateWorkoutLogs.map(async (workoutLog) => {
         const { id, setCount, repeatCount, weight, exerciseName, bodyPart } = workoutLog;
@@ -119,9 +122,9 @@ export class WorkoutLogService {
           throw new NotFoundException(`Cannot find ${exerciseName} and ${bodyPart}`);
         }
 
-        const foundWorkoutLog = await this.workoutLogRepository.findOneById(id);
+        const foundWorkoutLog = workoutLogMap.get(id); // Map에서 검색
         if (!foundWorkoutLog) {
-          throw 'workoutLogs not found';
+          throw new NotFoundException(`WorkoutLog with id ${id} not found`);
         }
         foundWorkoutLog.update({
           setCount,
