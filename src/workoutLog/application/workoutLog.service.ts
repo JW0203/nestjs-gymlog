@@ -95,7 +95,7 @@ export class WorkoutLogService {
     const foundWorkoutLogs = await this.workoutLogRepository.findWorkoutLogsByIdsLockMode(ids, userId);
 
     if (foundWorkoutLogs.length === 0) {
-      throw new BadRequestException('WorkoutLogs not found');
+      throw new NotFoundException('WorkoutLogs not found');
     }
 
     const newExercises = await this.exerciseService.findNewExercises({ exercises });
