@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, NotFoundException } from '@nestjs/common';
 import { User } from '../../user/domain/User.entity';
 import { GetRoutineByNameRequestDto } from '../dto/getRoutineByName.request.dto';
 import { UpdateRoutinesRequestDto } from '../dto/updateRoutines.request.dto';
@@ -13,7 +13,6 @@ import { Transactional } from 'typeorm-transactional';
 import { GetAllRoutineByUserResponseDto } from '../dto/getAllRoutineByUser.response.dto';
 import { GroupedRoutine, routineGroupByName } from '../functions/routineGroupByName';
 
-@Injectable()
 export class RoutineService {
   constructor(
     @Inject(ROUTINE_REPOSITORY)
@@ -25,7 +24,7 @@ export class RoutineService {
   async bulkInsertRoutines(user: User, saveRoutines: SaveRoutinesRequestDto) {
     const { routines } = saveRoutines;
     const routineName = routines[0].routineName;
-    const isExistRoutine = await this.routineRepository.findRoutineNameByUserIdLockMode(routineName, user);
+    const isExistRoutine = await this.routineRepository.findRoutinesByNameLockMode(routineName, user);
 
     if (isExistRoutine.length > 0) {
       throw new BadRequestException('Routine already exists');
