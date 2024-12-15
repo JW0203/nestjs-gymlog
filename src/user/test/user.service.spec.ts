@@ -2,27 +2,27 @@ import { UserService } from '../application/user.service';
 import { UserRepository } from '../domain/user.repository';
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
-import { USER_REPOSITORY } from '../../common/const/inject.constant';
+import { PASSWORD_HASHER, USER_REPOSITORY } from '../../common/const/inject.constant';
 import { SignUpRequestDto } from '../dto/signUp.request.dto';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from '../../auth/application/auth.service';
 import { User } from '../domain/User.entity';
-import * as bcrypt from 'bcrypt';
 import { ConflictException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { SignUpResponseDto } from '../dto/signUp.response.dto';
 import { SignInRequestDto } from '../dto/signIn.request.dto';
 import { SignInResponseDto } from '../dto/signIn.response.dto';
 import { GetMyInfoResponseDto } from '../dto/getMyInfo.response.dto';
+import { PasswordHasher } from '../domain/password.hasher';
 
 jest.mock('typeorm-transactional', () => ({
   Transactional: () => jest.fn(),
   initializeTransactionalContext: jest.fn(),
 }));
 
-jest.mock('bcrypt', () => ({
-  hash: jest.fn(),
+const mockPasswordHasher: jest.Mocked<PasswordHasher> = {
+  hash: jest.fn().mockReturnValue('hashedPassword'),
   compare: jest.fn(),
-}));
+};
 
 const mockUserRepository: jest.Mocked<UserRepository> = {
   signUp: jest.fn(),
@@ -50,31 +50,22 @@ describe('UserRepository', () => {
   let jwtService: jest.Mocked<typeof mockJwtService>;
   let configService: jest.Mocked<typeof mockConfigService>;
   let authService: jest.Mocked<typeof mockAuthService>;
+  let passwordHasher: jest.Mocked<typeof mockPasswordHasher>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserService,
-        {
-          provide: USER_REPOSITORY,
-          useValue: mockUserRepository,
-        },
-        {
-          provide: JwtService,
-          useValue: mockJwtService,
-        },
-        {
-          provide: ConfigService,
-          useValue: mockConfigService,
-        },
-        {
-          provide: AuthService,
-          useValue: mockAuthService,
-        },
+        { provide: USER_REPOSITORY, useValue: mockUserRepository },
+        { provide: JwtService, useValue: mockJwtService },
+        { provide: ConfigService, useValue: mockConfigService },
+        { provide: AuthService, useValue: mockAuthService },
+        { provide: PASSWORD_HASHER, useValue: mockPasswordHasher },
       ],
     }).compile();
 
     userService = module.get<UserService>(UserService);
+    passwordHasher = module.get(PASSWORD_HASHER);
     configService = module.get(ConfigService);
     jwtService = module.get(JwtService);
     userRepository = module.get(USER_REPOSITORY);
@@ -117,12 +108,11 @@ describe('UserRepository', () => {
 
       userRepository.findOneUserByEmailLockMode.mockResolvedValue(null);
       configService.get.mockReturnValue(saltRounds);
-      jest.spyOn(bcrypt, 'hash').mockImplementation(async () => 'hashedpassword');
       userRepository.signUp.mockResolvedValue(newUser);
 
       const result = await userService.signUp(signUpRequestDto);
       expect(result).toEqual(signUpResponseDto);
-      expect(bcrypt.hash).toHaveBeenCalledWith(password, parseInt(saltRounds));
+      expect(passwordHasher.hash).toHaveBeenCalledWith(password, parseInt(saltRounds));
     });
   });
 
@@ -146,10 +136,10 @@ describe('UserRepository', () => {
       user.id = 1;
 
       userRepository.findOneUserByEmail.mockResolvedValue(user);
-      jest.spyOn(bcrypt, 'compare').mockImplementation(async () => false);
+      mockPasswordHasher.compare.mockResolvedValue(false);
 
       await expect(userService.signIn(signInRequestDto)).rejects.toThrow(UnauthorizedException);
-      expect(bcrypt.compare).toHaveBeenCalledWith(wrongPassword, password);
+      expect(mockPasswordHasher.compare).toHaveBeenCalledWith(wrongPassword, password);
     });
 
     it('Should return accessToken if the password match and user is exist', async () => {
@@ -163,8 +153,8 @@ describe('UserRepository', () => {
       const expectResult: SignInResponseDto = { accessToken: 'accessToken' };
 
       userRepository.findOneUserByEmail.mockResolvedValue(user);
-      jest.spyOn(bcrypt, 'compare').mockImplementation(async () => true);
       authService.signInWithJWT.mockReturnValue('accessToken');
+      mockPasswordHasher.compare.mockResolvedValue(true);
 
       const result = await userService.signIn(signInRequestDto);
       expect(result).toEqual(expectResult);
