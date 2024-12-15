@@ -6,7 +6,7 @@ import { UserService } from './application/user.service';
 import { AuthModule } from '../auth/application/auth.module';
 import { PASSWORD_HASHER, USER_REPOSITORY } from '../common/const/inject.constant';
 import { TypeormUserRepository } from './infrastructure/typeormUser.repository';
-import { bycptHasher } from './infrastructure/bcrypt.hasher';
+import { BycptHasher } from './infrastructure/bcrypt.hasher';
 
 @Module({
   imports: [TypeOrmModule.forFeature([User]), AuthModule],
@@ -14,7 +14,7 @@ import { bycptHasher } from './infrastructure/bcrypt.hasher';
   providers: [
     UserService,
     { provide: USER_REPOSITORY, useClass: TypeormUserRepository },
-    { provide: PASSWORD_HASHER, useClass: bycptHasher },
+    { provide: PASSWORD_HASHER, useClass: BycptHasher },
   ],
   exports: [UserService],
 })
