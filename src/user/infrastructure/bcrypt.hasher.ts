@@ -1,7 +1,7 @@
 import { PasswordHasher } from '../domain/password.hasher';
 import * as bcrypt from 'bcrypt';
 
-export class bycptHasher implements PasswordHasher {
+export class BycptHasher implements PasswordHasher {
   async hash(password: string, saltRounds: number): Promise<string> {
     return await bcrypt.hash(password, saltRounds);
   }
