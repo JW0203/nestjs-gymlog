@@ -348,9 +348,14 @@ describe('Test RoutineRepository', () => {
 
     const result = await routineRepository.softDeleteRoutines([1, 2]);
     const findQueryResult = await dataSource.getRepository(Routine).find({ where: { id: In([1, 2]) } });
+    const findOneWithDeletedQueryResult = await dataSource
+      .getRepository(Routine)
+      .find({ where: { id: In([1, 2]) }, withDeleted: true });
 
     expect(result).toBe(undefined);
     expect(findQueryResult.length).toBe(0);
+    expect(findOneWithDeletedQueryResult.length).toBe(2);
+    expect(findOneWithDeletedQueryResult).not.toBeNull();
   });
 
   it('should return all routines saved by a user when a user find their routines with their id using findAllByUserId', async () => {
