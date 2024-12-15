@@ -32,7 +32,7 @@ export class UserService {
     if (saltRounds === undefined) {
       throw new Error('SALT_ROUNDS is not defined in the configuration.');
     }
-    // const hashedPassword = await bcrypt.hash(password, parseInt(saltRounds));
+
     const hashedPassword = await this.passwordHasher.hash(password, parseInt(saltRounds));
 
     const newUserEntity = new User({ name, email, password: hashedPassword });
