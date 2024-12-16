@@ -46,7 +46,7 @@ describe('ExerciseRepository', () => {
       await queryRunner.release();
     });
 
-    it('should save new exercises at once using bulkInsertExercises', async () => {
+    it('should save new exercises at once', async () => {
       const exerciseDtos: ExerciseDataFormatDto[] = [
         { exerciseName: 'Squat', bodyPart: BodyPart.LEGS },
         { exerciseName: 'Bench Press', bodyPart: BodyPart.CHEST },
