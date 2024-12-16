@@ -115,7 +115,7 @@ describe('Test UserRepository', () => {
     expect(result).toEqual(findOneQueryResult);
   });
 
-  it('Should soft delete a user when using ', async () => {
+  it('Should soft delete a user when using softDeleteUser', async () => {
     const user: User = new User({ email: 'test@example.com', name: 'tester', password: 'test1234' });
     user.id = 1;
     await userRepository.signUp(user);
