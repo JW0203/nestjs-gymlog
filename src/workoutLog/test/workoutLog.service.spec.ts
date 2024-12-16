@@ -1,7 +1,7 @@
 import { ExerciseService } from '../../exercise/application/exercise.service';
 import { UserService } from '../../user/application/user.service';
 import { updateWorkoutLogsWithValidation, WorkoutLogService } from '../application/workoutLog.service';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { WORKOUTLOG_REPOSITORY } from '../../common/const/inject.constant';
 import { SaveWorkoutLogsRequestDto } from '../dto/saveWorkoutLogs.request.dto';
@@ -11,7 +11,6 @@ import { User } from '../../user/domain/User.entity';
 import { WorkoutLog } from '../domain/WorkoutLog.entity';
 import { WorkoutLogResponseDto } from '../dto/workoutLog.response.dto';
 import { UpdateWorkoutLogsRequestDto } from '../dto/updateWorkoutLogs.request.dto';
-import e from 'express';
 import { GetWorkoutLogByUserResponseDto } from '../dto/getWorkoutLogByUser.response.dto';
 
 jest.mock('typeorm-transactional', () => ({
