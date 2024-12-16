@@ -117,7 +117,7 @@ describe('WorkoutLogService', () => {
       await expect(workoutLogService.bulkInsertWorkoutLogs(1, saveWorkoutLogs)).rejects.toThrow(NotFoundException);
     });
 
-    it('Should throw NotFoundException if exercise in workout can not be found from database', async () => {
+    it('Should save new workoutLogs at once', async () => {
       const user: User = new User({ name: 'test', password: 'password123', email: 'test@example.com' });
       user.id = 1;
 
