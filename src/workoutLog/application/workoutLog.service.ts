@@ -185,7 +185,7 @@ export class WorkoutLogService {
     await this.workoutLogRepository.softDeleteWorkoutLogs(ids, user);
   }
 
-  async getWorkoutLogByUser(user: User): Promise<object> {
+  async getWorkoutLogsByUser(user: User): Promise<object> {
     const result = await this.workoutLogRepository.findWorkoutLogByUser(user);
     return GetWorkoutLogByUserResponseDto(result);
   }
