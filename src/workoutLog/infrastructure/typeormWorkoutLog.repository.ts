@@ -23,7 +23,6 @@ export class TypeormWorkoutLogRepository implements WorkoutLogRepository {
   async findWorkoutLogsByIdsLockMode(ids: number[], userId: number): Promise<WorkoutLog[]> {
     return await this.workoutLogRepository.find({
       where: { id: In(ids), user: { id: userId } },
-      relations: ['user'],
       lock: { mode: 'pessimistic_write' },
     });
   }
@@ -41,7 +40,7 @@ export class TypeormWorkoutLogRepository implements WorkoutLogRepository {
         createdAt: Raw((alias) => `Date(${alias}) = :date`, { date }),
         user: { id: userId },
       },
-      relations: { exercise: true, user: true },
+      relations: ['exercise', 'user'],
     });
   }
   async softDeleteWorkoutLogs(ids: number[], user: User): Promise<void> {
