@@ -8,5 +8,4 @@ export interface WorkoutLogRepository {
   softDeleteWorkoutLogs(ids: number[], user: User): Promise<void>;
   findWorkoutLogsByUser(user: User): Promise<WorkoutLog[]>;
   findWorkoutLogsByIdsLockMode(ids: number[], userId: number): Promise<WorkoutLog[]>;
-  findOneById(id: number): Promise<WorkoutLog | null>;
 }

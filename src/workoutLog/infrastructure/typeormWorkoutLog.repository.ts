@@ -27,13 +27,6 @@ export class TypeormWorkoutLogRepository implements WorkoutLogRepository {
     });
   }
 
-  async findOneById(id: number): Promise<WorkoutLog | null> {
-    return await this.workoutLogRepository.findOne({
-      where: { id },
-      relations: ['user', 'exercise'],
-    });
-  }
-
   async findWorkoutLogsByDay(date: string, userId: number): Promise<WorkoutLog[]> {
     return await this.workoutLogRepository.find({
       where: {
