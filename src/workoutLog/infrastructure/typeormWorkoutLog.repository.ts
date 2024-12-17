@@ -48,7 +48,7 @@ export class TypeormWorkoutLogRepository implements WorkoutLogRepository {
     await this.workoutLogRepository.softDelete({ id: In(ids), user: { id: user.id } });
   }
 
-  async findWorkoutLogByUser(user: User): Promise<WorkoutLog[]> {
+  async findWorkoutLogsByUser(user: User): Promise<WorkoutLog[]> {
     return await this.workoutLogRepository.find({
       where: { user: { id: user.id } },
       relations: ['exercise'],

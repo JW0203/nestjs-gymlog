@@ -186,7 +186,7 @@ export class WorkoutLogService {
   }
 
   async getWorkoutLogsByUser(user: User): Promise<object> {
-    const result = await this.workoutLogRepository.findWorkoutLogByUser(user);
+    const result = await this.workoutLogRepository.findWorkoutLogsByUser(user);
     return GetWorkoutLogByUserResponseDto(result);
   }
 }

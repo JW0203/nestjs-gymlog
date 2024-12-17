@@ -442,7 +442,7 @@ describe('WorkoutLogService', () => {
       const expectedResult: object = GetWorkoutLogByUserResponseDto(workoutLogEntities);
       workoutLogRepository.findWorkoutLogByUser.mockResolvedValue(workoutLogEntities);
 
-      const result = await workoutLogService.getWorkoutLogByUser(user);
+      const result = await workoutLogService.getWorkoutLogsByUser(user);
       expect(result).toEqual(expectedResult);
       expect(workoutLogRepository.findWorkoutLogByUser).toHaveBeenCalledWith(user);
     });
