@@ -40,7 +40,7 @@ describe('WorkoutLogService', () => {
     findWorkoutLogsByIdsLockMode: jest.fn(),
     bulkUpdateWorkoutLogs: jest.fn(),
     softDeleteWorkoutLogs: jest.fn(),
-    findWorkoutLogByUser: jest.fn(),
+    findWorkoutLogsByUser: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -420,7 +420,7 @@ describe('WorkoutLogService', () => {
     });
   });
 
-  describe('getWorkoutLogByUser', () => {
+  describe('getWorkoutLogsByUser', () => {
     it('should return all workoutLogs by users', async () => {
       const user: User = new User({ email: 'test@email.com', password: '12345678', name: 'tester' });
       user.id = 1;
@@ -440,11 +440,11 @@ describe('WorkoutLogService', () => {
       );
 
       const expectedResult: object = GetWorkoutLogByUserResponseDto(workoutLogEntities);
-      workoutLogRepository.findWorkoutLogByUser.mockResolvedValue(workoutLogEntities);
+      workoutLogRepository.findWorkoutLogsByUser.mockResolvedValue(workoutLogEntities);
 
       const result = await workoutLogService.getWorkoutLogsByUser(user);
       expect(result).toEqual(expectedResult);
-      expect(workoutLogRepository.findWorkoutLogByUser).toHaveBeenCalledWith(user);
+      expect(workoutLogRepository.findWorkoutLogsByUser).toHaveBeenCalledWith(user);
     });
   });
 });

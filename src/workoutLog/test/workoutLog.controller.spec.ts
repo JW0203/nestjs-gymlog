@@ -14,7 +14,7 @@ const mockWorkoutLogService = {
   getWorkoutLogsByDay: jest.fn(),
   bulkUpdateWorkoutLogs: jest.fn(),
   softDeleteWorkoutLogs: jest.fn(),
-  getWorkoutLogByUser: jest.fn(),
+  getWorkoutLogsByUser: jest.fn(),
 };
 
 describe('Test WorkoutLogController', () => {
@@ -128,34 +128,33 @@ describe('Test WorkoutLogController', () => {
 
       expect(workoutLogService.bulkUpdateWorkoutLogs).toHaveBeenCalledWith(req.user.id, updateWorkoutLogs);
     });
+  });
+  describe('softDeleteWorkoutLogs', () => {
+    it('should use JwtAuthGuard', () => {
+      const guards = Reflect.getMetadata(GUARDS_METADATA, workoutLogController.softDeleteWorkoutLogs);
+      expect(guards[0]).toBe(JwtAuthGuard);
+    });
 
-    describe('softDeleteWorkoutLogs', () => {
-      it('should use JwtAuthGuard', () => {
-        const guards = Reflect.getMetadata(GUARDS_METADATA, workoutLogController.softDeleteWorkoutLogs);
-        expect(guards[0]).toBe(JwtAuthGuard);
-      });
+    it('should have correct Http status code 204', () => {
+      const httpCode = Reflect.getMetadata(HTTP_CODE_METADATA, workoutLogController.softDeleteWorkoutLogs);
+      expect(httpCode).toBe(204);
+    });
 
-      it('should have correct Http status code 204', () => {
-        const httpCode = Reflect.getMetadata(HTTP_CODE_METADATA, workoutLogController.softDeleteWorkoutLogs);
-        expect(httpCode).toBe(204);
-      });
+    it('should have correct method DELETE and path "/" ', () => {
+      const path = Reflect.getMetadata(PATH_METADATA, workoutLogController.softDeleteWorkoutLogs);
+      const method = Reflect.getMetadata(METHOD_METADATA, workoutLogController.softDeleteWorkoutLogs);
+      expect(method).toBe(RequestMethod.DELETE);
+      expect(path).toBe('/');
+    });
 
-      it('should have correct method DELETE and path "/" ', () => {
-        const path = Reflect.getMetadata(PATH_METADATA, workoutLogController.softDeleteWorkoutLogs);
-        const method = Reflect.getMetadata(METHOD_METADATA, workoutLogController.softDeleteWorkoutLogs);
-        expect(method).toBe(RequestMethod.DELETE);
-        expect(path).toBe('/');
-      });
+    it('should call service method ? with parameters', async () => {
+      const req = { user: { id: 1 } };
+      const softDeleteWorkoutLogRequestDto: SoftDeleteWorkoutLogRequestDto = {
+        ids: [1, 2, 3],
+      };
+      await workoutLogController.softDeleteWorkoutLogs(softDeleteWorkoutLogRequestDto, req);
 
-      it('should call service method ? with parameters', async () => {
-        const req = { user: { id: 1 } };
-        const softDeleteWorkoutLogRequestDto: SoftDeleteWorkoutLogRequestDto = {
-          ids: [1, 2, 3],
-        };
-        await workoutLogController.softDeleteWorkoutLogs(softDeleteWorkoutLogRequestDto, req);
-
-        expect(workoutLogService.softDeleteWorkoutLogs).toHaveBeenCalledWith(softDeleteWorkoutLogRequestDto, req.user);
-      });
+      expect(workoutLogService.softDeleteWorkoutLogs).toHaveBeenCalledWith(softDeleteWorkoutLogRequestDto, req.user);
     });
   });
 
@@ -177,12 +176,11 @@ describe('Test WorkoutLogController', () => {
       expect(path).toBe('/');
     });
 
-    it('should call service method ? with parameters', async () => {
+    it('should call service method getWorkoutLogByUser with parameters', async () => {
       const req = { user: { id: 1 } };
 
       await workoutLogController.getWorkoutLogsByUser(req);
-
-      expect(workoutLogService.getWorkoutLogByUser).toHaveBeenCalledWith(req.user);
+      expect(workoutLogService.getWorkoutLogsByUser).toHaveBeenCalledWith(req.user);
     });
   });
 });
