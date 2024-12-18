@@ -160,31 +160,30 @@ describe('RoutineController', () => {
       expect(method).toBe(RequestMethod.PATCH);
       expect(path).toBe('/');
     });
+  });
+  describe('deleteRoutine', () => {
+    it('should call service method (softDeleteRoutines) with correct parameters', async () => {
+      const req = { user: { id: 1 } };
+      const softDeleteRoutineByIds: DeleteRoutineRequestDto = { ids: [1, 2] };
 
-    describe('deleteRoutine', () => {
-      it('should call service method (softDeleteRoutines) with correct parameters', async () => {
-        const req = { user: { id: 1 } };
-        const softDeleteRoutineByIds: DeleteRoutineRequestDto = { ids: [1, 2] };
+      await routineService.softDeleteRoutines(softDeleteRoutineByIds, req.user);
+      expect(routineService.softDeleteRoutines).toHaveBeenCalledWith(softDeleteRoutineByIds, req.user);
+    });
+    it('should use JwtAuthGuard', () => {
+      const guards = Reflect.getMetadata(GUARDS_METADATA, routineController.deleteRoutine);
+      expect(guards[0]).toBe(JwtAuthGuard);
+    });
 
-        await routineService.softDeleteRoutines(softDeleteRoutineByIds, req.user);
-        expect(routineService.softDeleteRoutines).toHaveBeenCalledWith(softDeleteRoutineByIds, req.user);
-      });
-      it('should use JwtAuthGuard', () => {
-        const guards = Reflect.getMetadata(GUARDS_METADATA, routineController.deleteRoutine);
-        expect(guards[0]).toBe(JwtAuthGuard);
-      });
+    it('should have correct Http status code 200', () => {
+      const httpCode = Reflect.getMetadata(HTTP_CODE_METADATA, routineController.deleteRoutine);
+      expect(httpCode).toBe(204);
+    });
 
-      it('should have correct Http status code 200', () => {
-        const httpCode = Reflect.getMetadata(HTTP_CODE_METADATA, routineController.deleteRoutine);
-        expect(httpCode).toBe(204);
-      });
-
-      it('should have correct method PATCH and path "/" ', () => {
-        const path = Reflect.getMetadata(PATH_METADATA, routineController.deleteRoutine);
-        const method = Reflect.getMetadata(METHOD_METADATA, routineController.deleteRoutine);
-        expect(method).toBe(RequestMethod.DELETE);
-        expect(path).toBe('/');
-      });
+    it('should have correct method PATCH and path "/" ', () => {
+      const path = Reflect.getMetadata(PATH_METADATA, routineController.deleteRoutine);
+      const method = Reflect.getMetadata(METHOD_METADATA, routineController.deleteRoutine);
+      expect(method).toBe(RequestMethod.DELETE);
+      expect(path).toBe('/');
     });
   });
 });
