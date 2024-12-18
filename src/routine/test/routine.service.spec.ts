@@ -17,7 +17,7 @@ import { UpdateRoutinesRequestDto } from '../dto/updateRoutines.request.dto';
 import { DeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
 
 const mockRoutineRepository = {
-  findRoutineNameByUserIdLockMode: jest.fn(),
+  findRoutinesByNameLockMode: jest.fn(),
   bulkInsertRoutines: jest.fn(),
   findRoutinesByName: jest.fn(),
   findOneRoutineById: jest.fn(),
@@ -101,7 +101,7 @@ describe('Test RoutineService', () => {
       );
       const expectedRoutineData = newRoutines.map((routine) => new RoutineResponseDto(routine));
 
-      routineRepository.findRoutineNameByUserIdLockMode.mockResolvedValue([]);
+      routineRepository.findRoutinesByNameLockMode.mockResolvedValue([]);
       exerciseService.findNewExercises.mockResolvedValue([]);
       exerciseService.findExercisesByExerciseNameAndBodyPart.mockResolvedValue(mockExercises);
       routineRepository.bulkInsertRoutines.mockResolvedValue(newRoutines);
