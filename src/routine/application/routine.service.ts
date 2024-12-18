@@ -75,7 +75,7 @@ export class RoutineService {
     const foundExercises = await this.exerciseService.findExercisesByExerciseNameAndBodyPart(exercises);
 
     if (foundExercises.length === 0) {
-      throw new BadRequestException('exercises can not found');
+      throw new NotFoundException('exercises can not found');
     }
     const updatedIds: number[] = [];
     const promiseUpdateRoutine = await Promise.all(
