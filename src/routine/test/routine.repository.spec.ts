@@ -25,20 +25,20 @@ function createRoutines(user: User, exercises: Exercise[], routineName: string) 
   });
 }
 
-async function createMockUser(dataSource: DataSource, userInfo: TEST_USER) {
+async function createUser(dataSource: DataSource, userInfo: TEST_USER) {
   const userRepository = dataSource.getRepository(User);
   const user = userRepository.create(userInfo);
 
   return await userRepository.save(user);
 }
 
-async function createMockExercise(dataSource: DataSource, exercise: ExerciseDataFormatDto) {
+async function createExercise(dataSource: DataSource, exercise: ExerciseDataFormatDto) {
   const exerciseRepository = dataSource.getRepository(Exercise);
   const exerciseEntity = exerciseRepository.create(exercise);
   return await exerciseRepository.save(exerciseEntity);
 }
 
-async function createMockExercises(dataSource: DataSource, exercises: ExerciseDataFormatDto[]) {
+async function createExercises(dataSource: DataSource, exercises: ExerciseDataFormatDto[]) {
   const exerciseRepository = dataSource.getRepository(Exercise);
   const exerciseEntities = exercises.map((exercise) => {
     return exerciseRepository.create(exercise);
@@ -80,7 +80,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should save new routines for a user at once', async () => {
-      const mockUser: User = await createMockUser(dataSource, {
+      const user: User = await createUser(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
         name: 'Test User',
@@ -89,10 +89,10 @@ describe('Test RoutineRepository', () => {
         { exerciseName: 'Push-up', bodyPart: BodyPart.CHEST },
         { exerciseName: 'Pull-up', bodyPart: BodyPart.BACK },
       ];
-      const mockExercises = await createMockExercises(dataSource, exerciseInfo);
+      const Exercises = await createExercises(dataSource, exerciseInfo);
 
       const routineName = '다리 루틴';
-      const routines = createRoutines(mockUser, mockExercises, routineName);
+      const routines = createRoutines(user, Exercises, routineName);
 
       const result = await routineRepository.bulkInsertRoutines(routines);
       const savedResult = await dataSource
@@ -115,14 +115,14 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should return an empty array when a user searches for a non-existent routine name', async () => {
-      const mockUser: User = await createMockUser(dataSource, {
+      const user: User = await createUser(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
         name: 'Test User',
       });
 
       const notExistRoutineName: string = '등데이';
-      const result = await routineRepository.findRoutinesByName(notExistRoutineName, mockUser);
+      const result = await routineRepository.findRoutinesByName(notExistRoutineName, user);
 
       const findQueryResult = await dataSource
         .getRepository(Routine)
@@ -132,7 +132,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should find routines saved by the user when a user searches for a routine name', async () => {
-      const mockUser: User = await createMockUser(dataSource, {
+      const user: User = await createUser(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
         name: 'Test User',
@@ -141,13 +141,13 @@ describe('Test RoutineRepository', () => {
         { exerciseName: 'Push-up', bodyPart: BodyPart.CHEST },
         { exerciseName: 'Pull-up', bodyPart: BodyPart.BACK },
       ];
-      const mockExercises = await createMockExercises(dataSource, exerciseInfo);
+      const Exercises = await createExercises(dataSource, exerciseInfo);
 
       const routineName = '다리 루틴';
-      const routines = createRoutines(mockUser, mockExercises, routineName);
+      const routines = createRoutines(user, Exercises, routineName);
       await routineRepository.bulkInsertRoutines(routines);
 
-      const result = await routineRepository.findRoutinesByName(routineName, mockUser);
+      const result = await routineRepository.findRoutinesByName(routineName, user);
 
       const findQueryResult = await dataSource
         .getRepository(Routine)
@@ -168,19 +168,19 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should find a routine saved by a user when a user searches for a routine id', async () => {
-      const mockUser: User = await createMockUser(dataSource, {
+      const user: User = await createUser(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
         name: 'Test User',
       });
       const exerciseInfo: ExerciseDataFormatDto[] = [{ exerciseName: 'Push-up', bodyPart: BodyPart.CHEST }];
-      const mockExercise = await createMockExercises(dataSource, exerciseInfo);
+      const Exercise = await createExercises(dataSource, exerciseInfo);
       const routineName = '다리 루틴';
-      const routines = createRoutines(mockUser, mockExercise, routineName);
+      const routines = createRoutines(user, Exercise, routineName);
 
       await routineRepository.bulkInsertRoutines(routines);
-
-      const result = await routineRepository.findOneRoutineById(1, mockUser);
+      //todo: 유지보수를 위해서 user.id 를 고민해보자
+      const result = await routineRepository.findOneRoutineById(1, user);
       const findOneQueryResult = await dataSource
         .getRepository(Routine)
         .findOne({ where: { id: 1, user: { id: 1 } }, relations: ['user', 'exercise'] });
@@ -189,13 +189,13 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should return null when a user searches for a non-existent routine id', async () => {
-      const mockUser: User = await createMockUser(dataSource, {
+      const user: User = await createUser(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
         name: 'Test User',
       });
 
-      const result = await routineRepository.findOneRoutineById(999, mockUser);
+      const result = await routineRepository.findOneRoutineById(999, user);
       const findOneQueryResult = await dataSource
         .getRepository(Routine)
         .findOne({ where: { id: 999, user: { id: 1 } }, relations: ['user', 'exercise'] });
@@ -215,7 +215,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should return all routines when a user searches for routine ids', async () => {
-      const mockUser: User = await createMockUser(dataSource, {
+      const user: User = await createUser(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
         name: 'Test User',
@@ -226,11 +226,11 @@ describe('Test RoutineRepository', () => {
         { exerciseName: 'Pull-up', bodyPart: BodyPart.BACK },
         { exerciseName: '', bodyPart: BodyPart.LEGS },
       ];
-      const mockExercises = await createMockExercises(dataSource, exerciseInfo);
-      const mockRoutines = createRoutines(mockUser, mockExercises, 'all routine');
-      await routineRepository.bulkInsertRoutines(mockRoutines);
+      const Exercises = await createExercises(dataSource, exerciseInfo);
+      const Routines = createRoutines(user, Exercises, 'all routine');
+      await routineRepository.bulkInsertRoutines(Routines);
 
-      const result = await routineRepository.findRoutinesByIds([1, 2, 3], mockUser);
+      const result = await routineRepository.findRoutinesByIds([1, 2, 3], user);
       const findQueryResult = await dataSource
         .getRepository(Routine)
         .find({ where: { id: In([1, 2, 3]), user: { id: 1 } }, relations: ['user', 'exercise'] });
@@ -239,7 +239,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should return 2 routines when a user searches for 2 routine ids', async () => {
-      const mockUser: User = await createMockUser(dataSource, {
+      const user: User = await createUser(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
         name: 'Test User',
@@ -250,11 +250,11 @@ describe('Test RoutineRepository', () => {
         { exerciseName: 'Pull-up', bodyPart: BodyPart.BACK },
         { exerciseName: '', bodyPart: BodyPart.LEGS },
       ];
-      const mockExercises = await createMockExercises(dataSource, exerciseInfo);
-      const mockRoutines = createRoutines(mockUser, mockExercises, 'all routine');
-      await routineRepository.bulkInsertRoutines(mockRoutines);
+      const Exercises = await createExercises(dataSource, exerciseInfo);
+      const Routines = createRoutines(user, Exercises, 'all routine');
+      await routineRepository.bulkInsertRoutines(Routines);
 
-      const result = await routineRepository.findRoutinesByIds([1, 2], mockUser);
+      const result = await routineRepository.findRoutinesByIds([1, 2], user);
       const findQueryResult = await dataSource
         .getRepository(Routine)
         .find({ where: { id: In([1, 2]), user: { id: 1 } }, relations: ['user', 'exercise'] });
@@ -263,7 +263,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should return only existence routines when a user searches for routine ids', async () => {
-      const mockUser: User = await createMockUser(dataSource, {
+      const user: User = await createUser(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
         name: 'Test User',
@@ -274,11 +274,11 @@ describe('Test RoutineRepository', () => {
         { exerciseName: 'Pull-up', bodyPart: BodyPart.BACK },
         { exerciseName: '', bodyPart: BodyPart.LEGS },
       ];
-      const mockExercises = await createMockExercises(dataSource, exerciseInfo);
-      const mockRoutines = createRoutines(mockUser, mockExercises, 'all routine');
-      await routineRepository.bulkInsertRoutines(mockRoutines);
+      const Exercises = await createExercises(dataSource, exerciseInfo);
+      const Routines = createRoutines(user, Exercises, 'all routine');
+      await routineRepository.bulkInsertRoutines(Routines);
 
-      const result = await routineRepository.findRoutinesByIds([1, 2, 999], mockUser);
+      const result = await routineRepository.findRoutinesByIds([1, 2, 999], user);
       const findQueryResult = await dataSource
         .getRepository(Routine)
         .find({ where: { id: In([1, 2, 999]), user: { id: 1 } }, relations: ['user', 'exercise'] });
@@ -287,13 +287,13 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should return an empty array when a user searches for non-existence routine ids', async () => {
-      const mockUser: User = await createMockUser(dataSource, {
+      const user: User = await createUser(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
         name: 'Test User',
       });
 
-      const result = await routineRepository.findRoutinesByIds([1000, 102, 999], mockUser);
+      const result = await routineRepository.findRoutinesByIds([1000, 102, 999], user);
       const findQueryResult = await dataSource
         .getRepository(Routine)
         .find({ where: { id: In([1000, 102, 999]), user: { id: 1 } }, relations: ['user', 'exercise'] });
@@ -313,7 +313,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should return updated routines when a user update routines', async () => {
-      const mockUser: User = await createMockUser(dataSource, {
+      const user: User = await createUser(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
         name: 'Test User',
@@ -323,9 +323,9 @@ describe('Test RoutineRepository', () => {
         { exerciseName: 'Pull-up', bodyPart: BodyPart.BACK },
         { exerciseName: '', bodyPart: BodyPart.LEGS },
       ];
-      const mockExercises = await createMockExercises(dataSource, exerciseInfo);
-      const mockRoutines: Routine[] = createRoutines(mockUser, mockExercises, 'testroutine');
-      await routineRepository.bulkInsertRoutines(mockRoutines);
+      const Exercises = await createExercises(dataSource, exerciseInfo);
+      const Routines: Routine[] = createRoutines(user, Exercises, 'testroutine');
+      await routineRepository.bulkInsertRoutines(Routines);
 
       const existenceRoutines = await dataSource
         .getRepository(Routine)
@@ -356,12 +356,12 @@ describe('Test RoutineRepository', () => {
         existenceRoutines.map(async (routine: Routine, i) => {
           const updateData = givenUpdateDataArray[i];
           const { id, routineName, exerciseName, bodyPart } = updateData;
-          const exercise = await createMockExercise(dataSource, { exerciseName, bodyPart });
+          const exercise = await createExercise(dataSource, { exerciseName, bodyPart });
           if (id === routine.id) {
             routine.update({
               name: routineName,
               exercise,
-              user: mockUser,
+              user,
             });
           }
           return routine;
@@ -388,7 +388,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should soft delete routines when user delete routines with their ids', async () => {
-      const mockUser: User = await createMockUser(dataSource, {
+      const user: User = await createUser(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
         name: 'Test User',
@@ -397,9 +397,9 @@ describe('Test RoutineRepository', () => {
         { exerciseName: 'Push-up', bodyPart: BodyPart.CHEST },
         { exerciseName: 'Pull-up', bodyPart: BodyPart.BACK },
       ];
-      const mockExercises = await createMockExercises(dataSource, exerciseInfo);
-      const mockRoutines: Routine[] = createRoutines(mockUser, mockExercises, 'testroutine');
-      await routineRepository.bulkInsertRoutines(mockRoutines);
+      const Exercises = await createExercises(dataSource, exerciseInfo);
+      const Routines: Routine[] = createRoutines(user, Exercises, 'testroutine');
+      await routineRepository.bulkInsertRoutines(Routines);
 
       const result = await routineRepository.softDeleteRoutines([1, 2]);
       const findQueryResult = await dataSource.getRepository(Routine).find({ where: { id: In([1, 2]) } });
@@ -427,7 +427,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should return all routines saved by a user when a user find their routines with their id', async () => {
-      const mockUser: User = await createMockUser(dataSource, {
+      const user: User = await createUser(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
         name: 'Test User',
@@ -436,29 +436,29 @@ describe('Test RoutineRepository', () => {
         { exerciseName: 'Push-up', bodyPart: BodyPart.CHEST },
         { exerciseName: 'Pull-up', bodyPart: BodyPart.BACK },
       ];
-      const mockExercises = await createMockExercises(dataSource, exerciseInfo);
-      const mockRoutines: Routine[] = createRoutines(mockUser, mockExercises, 'testroutine');
-      await routineRepository.bulkInsertRoutines(mockRoutines);
+      const Exercises = await createExercises(dataSource, exerciseInfo);
+      const Routines: Routine[] = createRoutines(user, Exercises, 'testroutine');
+      await routineRepository.bulkInsertRoutines(Routines);
 
-      const result = await routineRepository.findAllByUserId(mockUser.id);
+      const result = await routineRepository.findAllByUserId(user.id);
       const findQueryResult = await dataSource
         .getRepository(Routine)
-        .find({ where: { user: { id: mockUser.id } }, relations: ['user', 'exercise'] });
+        .find({ where: { user: { id: user.id } }, relations: ['user', 'exercise'] });
 
       expect(result).toStrictEqual(findQueryResult);
     });
 
     it('should return all routines save by a user when a user find using findAllByUserId', async () => {
-      const mockUser: User = await createMockUser(dataSource, {
+      const user: User = await createUser(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
         name: 'Test User',
       });
 
-      const result = await routineRepository.findAllByUserId(mockUser.id);
+      const result = await routineRepository.findAllByUserId(user.id);
       const findQueryResult = await dataSource
         .getRepository(Routine)
-        .find({ where: { user: { id: mockUser.id } }, relations: ['user', 'exercise'] });
+        .find({ where: { user: { id: user.id } }, relations: ['user', 'exercise'] });
 
       expect(result).toStrictEqual(findQueryResult);
     });
