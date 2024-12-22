@@ -1,4 +1,4 @@
-import { PasswordHasher } from '../domain/password.hasher';
+import { PasswordHasher } from '../domain/passwordHasher.interface';
 import * as bcrypt from 'bcrypt';
 
 export class BycptHasher implements PasswordHasher {
