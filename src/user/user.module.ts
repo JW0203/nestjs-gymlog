@@ -6,7 +6,7 @@ import { UserService } from './application/user.service';
 import { AuthModule } from '../auth/application/auth.module';
 import { PASSWORD_HASHER, USER_REPOSITORY } from '../common/const/inject.constant';
 import { TypeormUserRepository } from './infrastructure/typeormUser.repository';
-import { BycptHasher } from './infrastructure/bcrypt.hasher';
+import { BycptHasher } from './application/bcryptHasher.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([User]), AuthModule],
