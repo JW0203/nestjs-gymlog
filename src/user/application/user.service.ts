@@ -10,7 +10,7 @@ import { SignUpResponseDto } from '../dto/signUp.response.dto';
 import { SignInRequestDto } from '../dto/signIn.request.dto';
 import { SignInResponseDto } from '../dto/signIn.response.dto';
 import { GetMyInfoResponseDto } from '../dto/getMyInfo.response.dto';
-import { PasswordHasher } from '../domain/password.hasher';
+import { PasswordHasher } from '../domain/passwordHasher.interface';
 
 @Injectable()
 export class UserService {
