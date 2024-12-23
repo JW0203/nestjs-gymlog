@@ -13,8 +13,6 @@ import { User } from '../../user/domain/User.entity';
 import { WorkoutLog } from '../../workoutLog/domain/WorkoutLog.entity';
 import { LockConfigManager } from '../../common/infrastructure/typeormMysql.lock';
 import { MySqlLock } from '../../common/type/typeormLock.type';
-import { clearAndResetTable } from '../../../test/utils/dbUtils';
-import { TypeormUserRepository } from '../../user/infrastructure/typeormUser.repository';
 
 describe('ExerciseRepository', () => {
   let exerciseRepository: ExerciseRepository;
@@ -38,12 +36,8 @@ describe('ExerciseRepository', () => {
 
   describe('bulkInsertExercises', () => {
     beforeEach(async () => {
-      const queryRunner = dataSource.createQueryRunner();
-      await queryRunner.connect();
-      await clearAndResetTable(queryRunner, 'routine');
-      await clearAndResetTable(queryRunner, 'user');
-      await clearAndResetTable(queryRunner, 'exercise');
-      await queryRunner.release();
+      await dataSource.dropDatabase();
+      await dataSource.synchronize();
     });
 
     it('should save new exercises at once', async () => {
@@ -61,12 +55,8 @@ describe('ExerciseRepository', () => {
 
   describe('findOneByExerciseNameAndBodyPart', () => {
     beforeEach(async () => {
-      const queryRunner = dataSource.createQueryRunner();
-      await queryRunner.connect();
-      await clearAndResetTable(queryRunner, 'routine');
-      await clearAndResetTable(queryRunner, 'user');
-      await clearAndResetTable(queryRunner, 'exercise');
-      await queryRunner.release();
+      await dataSource.dropDatabase();
+      await dataSource.synchronize();
     });
 
     it('should find a exercise data when searching exercise', async () => {
@@ -94,12 +84,8 @@ describe('ExerciseRepository', () => {
 
   describe('findExercisesByExerciseNameAndBodyPart', () => {
     beforeEach(async () => {
-      const queryRunner = dataSource.createQueryRunner();
-      await queryRunner.connect();
-      await clearAndResetTable(queryRunner, 'routine');
-      await clearAndResetTable(queryRunner, 'user');
-      await clearAndResetTable(queryRunner, 'exercise');
-      await queryRunner.release();
+      await dataSource.dropDatabase();
+      await dataSource.synchronize();
     });
 
     it('should find a exercise data when searching exercise', async () => {
@@ -131,12 +117,8 @@ describe('ExerciseRepository', () => {
   });
   describe('findExercisesByExerciseNameAndBodyPartLockMode', () => {
     beforeEach(async () => {
-      const queryRunner = dataSource.createQueryRunner();
-      await queryRunner.connect();
-      await clearAndResetTable(queryRunner, 'routine');
-      await clearAndResetTable(queryRunner, 'user');
-      await clearAndResetTable(queryRunner, 'exercise');
-      await queryRunner.release();
+      await dataSource.dropDatabase();
+      await dataSource.synchronize();
     });
 
     it('should find exercises using their exercise name and body part on lock mode', async () => {
@@ -182,12 +164,8 @@ describe('ExerciseRepository', () => {
 
   describe('findAll', () => {
     beforeEach(async () => {
-      const queryRunner = dataSource.createQueryRunner();
-      await queryRunner.connect();
-      await clearAndResetTable(queryRunner, 'routine');
-      await clearAndResetTable(queryRunner, 'user');
-      await clearAndResetTable(queryRunner, 'exercise');
-      await queryRunner.release();
+      await dataSource.dropDatabase();
+      await dataSource.synchronize();
     });
 
     it('should find all exercises', async () => {
@@ -207,12 +185,8 @@ describe('ExerciseRepository', () => {
 
   describe('findExercisesByIds', () => {
     beforeEach(async () => {
-      const queryRunner = dataSource.createQueryRunner();
-      await queryRunner.connect();
-      await clearAndResetTable(queryRunner, 'routine');
-      await clearAndResetTable(queryRunner, 'user');
-      await clearAndResetTable(queryRunner, 'exercise');
-      await queryRunner.release();
+      await dataSource.dropDatabase();
+      await dataSource.synchronize();
     });
 
     it('should find exercises using their ids', async () => {
@@ -231,12 +205,8 @@ describe('ExerciseRepository', () => {
 
   describe('bulkSoftDelete', () => {
     beforeEach(async () => {
-      const queryRunner = dataSource.createQueryRunner();
-      await queryRunner.connect();
-      await clearAndResetTable(queryRunner, 'routine');
-      await clearAndResetTable(queryRunner, 'user');
-      await clearAndResetTable(queryRunner, 'exercise');
-      await queryRunner.release();
+      await dataSource.dropDatabase();
+      await dataSource.synchronize();
     });
 
     it('should soft delete exercises at once using their ids', async () => {

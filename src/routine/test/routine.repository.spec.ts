@@ -13,7 +13,6 @@ import { getMySqlTypeOrmConfig } from '../../../test/utils/getMySql.TypeOrm.conf
 import { TEST_USER } from '../../../test/utils/userUtils';
 import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
 import { UpdateRoutine } from '../dto/updateRoutine.format.dto';
-import { clearAndResetTable } from '../../../test/utils/dbUtils';
 
 function createRoutines(user: User, exercises: Exercise[], routineName: string) {
   return exercises.map((exercise) => {
@@ -71,12 +70,8 @@ describe('Test RoutineRepository', () => {
 
   describe('bulkInsertRoutines', () => {
     beforeEach(async () => {
-      const queryRunner = dataSource.createQueryRunner();
-      await queryRunner.connect();
-      await clearAndResetTable(queryRunner, 'routine');
-      await clearAndResetTable(queryRunner, 'user');
-      await clearAndResetTable(queryRunner, 'exercise');
-      await queryRunner.release();
+      await dataSource.dropDatabase();
+      await dataSource.synchronize();
     });
 
     it('should save new routines for a user at once', async () => {
@@ -106,12 +101,8 @@ describe('Test RoutineRepository', () => {
 
   describe('findRoutinesByName', () => {
     beforeEach(async () => {
-      const queryRunner = dataSource.createQueryRunner();
-      await queryRunner.connect();
-      await clearAndResetTable(queryRunner, 'routine');
-      await clearAndResetTable(queryRunner, 'user');
-      await clearAndResetTable(queryRunner, 'exercise');
-      await queryRunner.release();
+      await dataSource.dropDatabase();
+      await dataSource.synchronize();
     });
 
     it('should return an empty array when a user searches for a non-existent routine name', async () => {
@@ -159,12 +150,8 @@ describe('Test RoutineRepository', () => {
 
   describe('findOneRoutinesById', () => {
     beforeEach(async () => {
-      const queryRunner = dataSource.createQueryRunner();
-      await queryRunner.connect();
-      await clearAndResetTable(queryRunner, 'routine');
-      await clearAndResetTable(queryRunner, 'user');
-      await clearAndResetTable(queryRunner, 'exercise');
-      await queryRunner.release();
+      await dataSource.dropDatabase();
+      await dataSource.synchronize();
     });
 
     it('should find a routine saved by a user when a user searches for a routine id', async () => {
@@ -206,12 +193,8 @@ describe('Test RoutineRepository', () => {
 
   describe('findRoutinesByIds', () => {
     beforeEach(async () => {
-      const queryRunner = dataSource.createQueryRunner();
-      await queryRunner.connect();
-      await clearAndResetTable(queryRunner, 'routine');
-      await clearAndResetTable(queryRunner, 'user');
-      await clearAndResetTable(queryRunner, 'exercise');
-      await queryRunner.release();
+      await dataSource.dropDatabase();
+      await dataSource.synchronize();
     });
 
     it('should return all routines when a user searches for routine ids', async () => {
@@ -304,12 +287,8 @@ describe('Test RoutineRepository', () => {
 
   describe('bulkUpdateRoutines', () => {
     beforeEach(async () => {
-      const queryRunner = dataSource.createQueryRunner();
-      await queryRunner.connect();
-      await clearAndResetTable(queryRunner, 'routine');
-      await clearAndResetTable(queryRunner, 'user');
-      await clearAndResetTable(queryRunner, 'exercise');
-      await queryRunner.release();
+      await dataSource.dropDatabase();
+      await dataSource.synchronize();
     });
 
     it('should return updated routines when a user update routines', async () => {
@@ -379,12 +358,8 @@ describe('Test RoutineRepository', () => {
 
   describe('softDeleteRoutines', () => {
     beforeEach(async () => {
-      const queryRunner = dataSource.createQueryRunner();
-      await queryRunner.connect();
-      await clearAndResetTable(queryRunner, 'routine');
-      await clearAndResetTable(queryRunner, 'user');
-      await clearAndResetTable(queryRunner, 'exercise');
-      await queryRunner.release();
+      await dataSource.dropDatabase();
+      await dataSource.synchronize();
     });
 
     it('should soft delete routines when user delete routines with their ids', async () => {

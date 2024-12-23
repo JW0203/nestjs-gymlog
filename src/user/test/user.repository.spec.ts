@@ -9,7 +9,6 @@ import { Exercise } from '../../exercise/domain/Exercise.entity';
 import { WorkoutLog } from '../../workoutLog/domain/WorkoutLog.entity';
 import { USER_REPOSITORY } from '../../common/const/inject.constant';
 import { TypeormUserRepository } from '../infrastructure/typeormUser.repository';
-import { clearAndResetTable } from '../../../test/utils/dbUtils';
 
 jest.mock('typeorm-transactional', () => ({
   Transactional: () => jest.fn(),
@@ -42,12 +41,8 @@ describe('Test UserRepository', () => {
 
   describe('signUp', () => {
     beforeEach(async () => {
-      const queryRunner = dataSource.createQueryRunner();
-      await queryRunner.connect();
-      await clearAndResetTable(queryRunner, 'routine');
-      await clearAndResetTable(queryRunner, 'user');
-      await clearAndResetTable(queryRunner, 'exercise');
-      await queryRunner.release();
+      await dataSource.dropDatabase();
+      await dataSource.synchronize();
     });
 
     it('Should sign up a new user', async () => {
@@ -62,12 +57,8 @@ describe('Test UserRepository', () => {
 
   describe('findOneUserByEmail', () => {
     beforeEach(async () => {
-      const queryRunner = dataSource.createQueryRunner();
-      await queryRunner.connect();
-      await clearAndResetTable(queryRunner, 'routine');
-      await clearAndResetTable(queryRunner, 'user');
-      await clearAndResetTable(queryRunner, 'exercise');
-      await queryRunner.release();
+      await dataSource.dropDatabase();
+      await dataSource.synchronize();
     });
 
     it('Should fine one user by the user email', async () => {
@@ -92,12 +83,8 @@ describe('Test UserRepository', () => {
 
   describe('findOneUserByEmailLockMode', () => {
     beforeEach(async () => {
-      const queryRunner = dataSource.createQueryRunner();
-      await queryRunner.connect();
-      await clearAndResetTable(queryRunner, 'routine');
-      await clearAndResetTable(queryRunner, 'user');
-      await clearAndResetTable(queryRunner, 'exercise');
-      await queryRunner.release();
+      await dataSource.dropDatabase();
+      await dataSource.synchronize();
     });
 
     it('Should fine one user by the user email', async () => {
@@ -132,13 +119,10 @@ describe('Test UserRepository', () => {
 
   describe('findOneUserById', () => {
     beforeEach(async () => {
-      const queryRunner = dataSource.createQueryRunner();
-      await queryRunner.connect();
-      await clearAndResetTable(queryRunner, 'routine');
-      await clearAndResetTable(queryRunner, 'user');
-      await clearAndResetTable(queryRunner, 'exercise');
-      await queryRunner.release();
+      await dataSource.dropDatabase();
+      await dataSource.synchronize();
     });
+
     it('Should fine one user by their id using findOneUserById', async () => {
       const newUser: User = new User({ email: 'test@example.com', name: '테스터', password: 'test1234' });
       newUser.id = 1;
@@ -161,12 +145,8 @@ describe('Test UserRepository', () => {
 
   describe('softDeleteUser', () => {
     beforeEach(async () => {
-      const queryRunner = dataSource.createQueryRunner();
-      await queryRunner.connect();
-      await clearAndResetTable(queryRunner, 'routine');
-      await clearAndResetTable(queryRunner, 'user');
-      await clearAndResetTable(queryRunner, 'exercise');
-      await queryRunner.release();
+      await dataSource.dropDatabase();
+      await dataSource.synchronize();
     });
     it('Should soft delete a user when using softDeleteUser', async () => {
       const user: User = new User({ email: 'test@example.com', name: 'tester', password: 'test1234' });
