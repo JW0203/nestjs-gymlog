@@ -16,7 +16,7 @@ export class SaveWorkoutLogFormatDto {
   setCount: number;
 
   @IsInt()
-  @Min(1)
+  @Min(0)
   weight: number;
 
   @IsInt()

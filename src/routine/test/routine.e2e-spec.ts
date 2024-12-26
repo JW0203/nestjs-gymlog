@@ -118,13 +118,9 @@ describe('Routine', () => {
     ];
 
     const routineUpdate: UpdateRoutinesRequestDto = {
-      routineName: '가슴데이',
       updateData: routineExerciseNameUpdate,
-      exercises: [
-        { bodyPart: BodyPart.CHEST, exerciseName: '벤치 프레스' },
-        { bodyPart: BodyPart.CHEST, exerciseName: '덤벨 인클라인' },
-      ],
     };
+    
     const response = await request(app.getHttpServer())
       .patch('/routines/')
       .set('Authorization', `Bearer ${token}`)

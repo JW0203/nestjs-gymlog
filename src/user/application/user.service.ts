@@ -1,21 +1,23 @@
 import { ConflictException, Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { USER_REPOSITORY } from '../../common/const/inject.constant';
+import { PASSWORD_HASHER, USER_REPOSITORY } from '../../common/const/inject.constant';
 import { UserRepository } from '../domain/user.repository';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from '../../auth/application/auth.service';
 import { SignUpRequestDto } from '../dto/signUp.request.dto';
 import { Transactional } from 'typeorm-transactional';
 import { User } from '../domain/User.entity';
-import * as bcrypt from 'bcrypt';
 import { SignUpResponseDto } from '../dto/signUp.response.dto';
 import { SignInRequestDto } from '../dto/signIn.request.dto';
 import { SignInResponseDto } from '../dto/signIn.response.dto';
 import { GetMyInfoResponseDto } from '../dto/getMyInfo.response.dto';
+import { PasswordHasher } from '../domain/passwordHasher.interface';
+
 
 @Injectable()
 export class UserService {
   constructor(
     @Inject(USER_REPOSITORY) readonly userRepository: UserRepository,
+    @Inject(PASSWORD_HASHER) readonly passwordHasher: PasswordHasher,
     private readonly configService: ConfigService,
     private readonly authService: AuthService,
   ) {}
@@ -25,14 +27,14 @@ export class UserService {
     const { email, name, password } = signUpRequestDto;
     const user = await this.userRepository.findOneUserByEmailLockMode(email);
     if (user) {
-      throw new ConflictException('User not found');
+      throw new ConflictException('The email is already in use');
     }
     const saltRounds = this.configService.get<string>('SALT_ROUNDS');
     if (saltRounds === undefined) {
       throw new Error('SALT_ROUNDS is not defined in the configuration.');
     }
-    const hashedPassword = await bcrypt.hash(password, parseInt(saltRounds));
 
+    const hashedPassword = await this.passwordHasher.hash(password, parseInt(saltRounds));
     const newUserEntity = new User({ name, email, password: hashedPassword });
     const newUser = await this.userRepository.signUp(newUserEntity);
     return new SignUpResponseDto({ ...newUser });
@@ -44,7 +46,7 @@ export class UserService {
     if (!user) {
       throw new NotFoundException('The email does not exist');
     }
-    const passwordMatch = await bcrypt.compare(password, user.password);
+    const passwordMatch = await this.passwordHasher.compare(password, user.password);
     if (!passwordMatch) {
       throw new UnauthorizedException('The password does not match');
     }
@@ -65,7 +67,8 @@ export class UserService {
   }
 
   async softDeleteUser(userId: number): Promise<void> {
-    const user = await this.findOneById(userId);
+    const user = await this.userRepository.findOneUserById(userId);
+
     if (!user) {
       throw new NotFoundException('The user does not exist');
     }

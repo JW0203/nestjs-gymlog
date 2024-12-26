@@ -23,7 +23,7 @@ export class UpdateWorkoutLogFormatDto {
 
   @IsInt()
   @IsNotEmpty()
-  @Min(1)
+  @Min(0)
   @Max(1000)
   weight: number;
 
