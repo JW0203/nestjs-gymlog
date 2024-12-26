@@ -12,6 +12,7 @@ import { SignInResponseDto } from '../dto/signIn.response.dto';
 import { GetMyInfoResponseDto } from '../dto/getMyInfo.response.dto';
 import { PasswordHasher } from '../domain/passwordHasher.interface';
 
+
 @Injectable()
 export class UserService {
   constructor(
@@ -34,7 +35,6 @@ export class UserService {
     }
 
     const hashedPassword = await this.passwordHasher.hash(password, parseInt(saltRounds));
-
     const newUserEntity = new User({ name, email, password: hashedPassword });
     const newUser = await this.userRepository.signUp(newUserEntity);
     return new SignUpResponseDto({ ...newUser });
@@ -68,6 +68,7 @@ export class UserService {
 
   async softDeleteUser(userId: number): Promise<void> {
     const user = await this.userRepository.findOneUserById(userId);
+
     if (!user) {
       throw new NotFoundException('The user does not exist');
     }

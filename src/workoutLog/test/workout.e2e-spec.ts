@@ -241,6 +241,7 @@ describe('WorkoutLog API (e2e)', () => {
     const userWorkoutLogs: SaveWorkoutLogsRequestDto = {
       workoutLogs: workoutLogs,
     };
+    
     await request(app.getHttpServer())
       .post('/workout-logs')
       .set('Authorization', `Bearer ${token}`)

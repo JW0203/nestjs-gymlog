@@ -120,6 +120,7 @@ describe('Routine', () => {
     const routineUpdate: UpdateRoutinesRequestDto = {
       updateData: routineExerciseNameUpdate,
     };
+    
     const response = await request(app.getHttpServer())
       .patch('/routines/')
       .set('Authorization', `Bearer ${token}`)
