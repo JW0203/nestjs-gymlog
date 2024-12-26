@@ -8,6 +8,6 @@ export interface RoutineRepository {
   findRoutinesByIds(ids: number[], user: User): Promise<Routine[]>;
   bulkUpdateRoutines(updateRoutines: Routine[]): Promise<Routine[]>;
   softDeleteRoutines(routineIds: number[]): Promise<void>;
-  findRoutineNameByUserIdLockMode(routineName: string, user: User): Promise<Routine[]>;
+  findRoutinesByNameLockMode(routineName: string, user: User): Promise<Routine[]>;
   findAllByUserId(userId: number): Promise<Routine[]>;
 }

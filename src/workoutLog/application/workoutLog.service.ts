@@ -1,29 +1,81 @@
-import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { SoftDeleteWorkoutLogRequestDto } from '../dto/softDeleteWorkoutLog.request.dto';
 import { User } from '../../user/domain/User.entity';
 import { SaveWorkoutLogsRequestDto } from '../dto/saveWorkoutLogs.request.dto';
 import { UpdateWorkoutLogsRequestDto } from '../dto/updateWorkoutLogs.request.dto';
 import { WorkoutLogResponseDto } from '../dto/workoutLog.response.dto';
 import { WORKOUTLOG_REPOSITORY } from '../../common/const/inject.constant';
-import { WorkoutRepository } from '../domain/workout.repository';
+import { WorkoutLogRepository } from '../domain/workoutLog.repository';
 import { Transactional } from 'typeorm-transactional';
 import { WorkoutLog } from '../domain/WorkoutLog.entity';
 import { ExerciseService } from '../../exercise/application/exercise.service';
 import { UserService } from '../../user/application/user.service';
 import { GetWorkoutLogByUserResponseDto } from '../dto/getWorkoutLogByUser.response.dto';
+import { Exercise } from '../../exercise/domain/Exercise.entity';
+
+interface UpdateWorkoutLogsParams {
+  workoutLogMap: Map<number, WorkoutLog>;
+  foundExercises: Exercise[];
+  updateWorkoutLogs: {
+    id: number;
+    setCount: number;
+    repeatCount: number;
+    weight: number;
+    exerciseName: string;
+    bodyPart: string;
+  }[];
+  user: User;
+}
+
+export async function updateWorkoutLogsWithValidation({
+  workoutLogMap,
+  foundExercises,
+  updateWorkoutLogs,
+  user,
+}: UpdateWorkoutLogsParams): Promise<WorkoutLog[]> {
+  return Promise.all(
+    updateWorkoutLogs.map(async (workoutLog) => {
+      const { id, setCount, repeatCount, weight, exerciseName, bodyPart } = workoutLog;
+
+      const exercise = foundExercises.find(
+        (exercise) => exercise.exerciseName === exerciseName && exercise.bodyPart === bodyPart,
+      );
+      if (!exercise) {
+        throw new NotFoundException(`Cannot find exercise "${exerciseName}" for body part "${bodyPart}"`);
+      }
+
+      const foundWorkoutLog = workoutLogMap.get(id);
+      if (!foundWorkoutLog) {
+        throw new NotFoundException(`WorkoutLog with id "${id}" not found`);
+      }
+
+      foundWorkoutLog.update({
+        setCount,
+        weight,
+        repeatCount,
+        user,
+        exercise,
+      });
+
+      return foundWorkoutLog;
+    }),
+  );
+}
 
 @Injectable()
 export class WorkoutLogService {
   constructor(
     @Inject(WORKOUTLOG_REPOSITORY)
-    readonly workoutLogRepository: WorkoutRepository,
+    readonly workoutLogRepository: WorkoutLogRepository,
     private readonly exerciseService: ExerciseService,
     private readonly userService: UserService,
   ) {}
 
   @Transactional()
   async bulkInsertWorkoutLogs(userId: number, saveWorkoutLogs: SaveWorkoutLogsRequestDto): Promise<any> {
-    const { exercises, workoutLogs } = saveWorkoutLogs;
+    const { workoutLogs } = saveWorkoutLogs;
+    const exercises = workoutLogs.map(({ bodyPart, exerciseName }) => ({ bodyPart, exerciseName }));
+
     const user = await this.userService.findOneById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
@@ -79,7 +131,7 @@ export class WorkoutLogService {
     userId: number,
     updateWorkoutLogsRequest: UpdateWorkoutLogsRequestDto,
   ): Promise<WorkoutLogResponseDto[]> {
-    const { updateWorkoutLogs, exercises } = updateWorkoutLogsRequest;
+    const { updateWorkoutLogs } = updateWorkoutLogsRequest;
     const user = await this.userService.findOneById(userId);
 
     if (!user) {
@@ -93,9 +145,10 @@ export class WorkoutLogService {
     const foundWorkoutLogs = await this.workoutLogRepository.findWorkoutLogsByIdsLockMode(ids, userId);
 
     if (foundWorkoutLogs.length === 0) {
-      throw new BadRequestException('WorkoutLogs not found');
+      throw new NotFoundException('WorkoutLogs not found');
     }
 
+    const exercises = updateWorkoutLogs.map(({ bodyPart, exerciseName }) => ({ bodyPart, exerciseName }));
     const newExercises = await this.exerciseService.findNewExercises({ exercises });
 
     if (newExercises.length > 0) {
@@ -107,30 +160,13 @@ export class WorkoutLogService {
       throw new NotFoundException('Exercises not found');
     }
 
-    const promisedUpdateWorkoutLogs = await Promise.all(
-      updateWorkoutLogs.map(async (workoutLog) => {
-        const { id, setCount, repeatCount, weight, exerciseName, bodyPart } = workoutLog;
-        const exercise = foundExercises.find(
-          (exercise) => exercise.exerciseName === exerciseName && exercise.bodyPart === bodyPart,
-        );
-        if (!exercise) {
-          throw new BadRequestException(`Cannot find ${exerciseName} and ${bodyPart}`);
-        }
-
-        const foundWorkoutLog = await this.workoutLogRepository.findOneById(id);
-        if (!foundWorkoutLog) {
-          throw 'workoutLogs not found';
-        }
-        foundWorkoutLog.update({
-          setCount,
-          weight,
-          repeatCount,
-          user,
-          exercise,
-        });
-        return foundWorkoutLog;
-      }),
-    );
+    const workoutLogMap = new Map(foundWorkoutLogs.map((log) => [log.id, log]));
+    const promisedUpdateWorkoutLogs = await updateWorkoutLogsWithValidation({
+      workoutLogMap,
+      foundExercises,
+      updateWorkoutLogs,
+      user,
+    });
 
     const UpdatedWorkoutLogs = await this.workoutLogRepository.bulkUpdateWorkoutLogs(promisedUpdateWorkoutLogs);
 
@@ -144,13 +180,13 @@ export class WorkoutLogService {
     const { ids } = softDeleteRequestDto;
     const foundWorkoutLogs = await this.workoutLogRepository.findWorkoutLogsByIdsLockMode(ids, user.id);
     if (foundWorkoutLogs.length === 0) {
-      throw new BadRequestException(`WorkoutLogs are not existed`);
+      throw new NotFoundException(`WorkoutLogs are not existed`);
     }
     await this.workoutLogRepository.softDeleteWorkoutLogs(ids, user);
   }
 
-  async getWorkoutLogByUser(user: User): Promise<object> {
-    const result = await this.workoutLogRepository.findWorkoutLogByUser(user);
+  async getWorkoutLogsByUser(user: User): Promise<object> {
+    const result = await this.workoutLogRepository.findWorkoutLogsByUser(user);
     return GetWorkoutLogByUserResponseDto(result);
   }
 }

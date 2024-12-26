@@ -7,7 +7,7 @@ import { In, Repository } from 'typeorm';
 export class TypeormRoutineRepository implements RoutineRepository {
   constructor(@InjectRepository(Routine) private routineRepository: Repository<Routine>) {}
 
-  async findRoutineNameByUserIdLockMode(routineName: string, user: User): Promise<Routine[]> {
+  async findRoutinesByNameLockMode(routineName: string, user: User): Promise<Routine[]> {
     return await this.routineRepository.find({
       where: { name: routineName, user: { id: user.id } },
       relations: ['user'],

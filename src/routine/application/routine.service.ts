@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, NotFoundException } from '@nestjs/common';
 import { User } from '../../user/domain/User.entity';
 import { GetRoutineByNameRequestDto } from '../dto/getRoutineByName.request.dto';
 import { UpdateRoutinesRequestDto } from '../dto/updateRoutines.request.dto';
@@ -13,7 +13,6 @@ import { Transactional } from 'typeorm-transactional';
 import { GetAllRoutineByUserResponseDto } from '../dto/getAllRoutineByUser.response.dto';
 import { GroupedRoutine, routineGroupByName } from '../functions/routineGroupByName';
 
-@Injectable()
 export class RoutineService {
   constructor(
     @Inject(ROUTINE_REPOSITORY)
@@ -23,13 +22,14 @@ export class RoutineService {
 
   @Transactional()
   async bulkInsertRoutines(user: User, saveRoutines: SaveRoutinesRequestDto) {
-    const { routineName, exercises, routines } = saveRoutines;
-    const isExistRoutine = await this.routineRepository.findRoutineNameByUserIdLockMode(routineName, user);
+    const { routines } = saveRoutines;
+    const routineName = routines[0].routineName;
+    const isExistRoutine = await this.routineRepository.findRoutinesByNameLockMode(routineName, user);
 
     if (isExistRoutine.length > 0) {
       throw new BadRequestException('Routine already exists');
     }
-
+    const exercises = routines.map(({ exerciseName, bodyPart }) => ({ exerciseName, bodyPart }));
     const newExercises = await this.exerciseService.findNewExercises({ exercises });
     if (newExercises.length > 0) {
       await this.exerciseService.bulkInsertExercises({ exercises: newExercises });
@@ -64,7 +64,8 @@ export class RoutineService {
 
   @Transactional()
   async bulkUpdateRoutines(updateRoutineRequest: UpdateRoutinesRequestDto, user: User) {
-    const { updateData, exercises } = updateRoutineRequest;
+    const { updateData } = updateRoutineRequest;
+    const exercises = updateData.map(({ exerciseName, bodyPart }) => ({ exerciseName, bodyPart }));
 
     const newExercises = await this.exerciseService.findNewExercises({ exercises });
     if (newExercises.length > 0) {
@@ -74,7 +75,7 @@ export class RoutineService {
     const foundExercises = await this.exerciseService.findExercisesByExerciseNameAndBodyPart(exercises);
 
     if (foundExercises.length === 0) {
-      throw new BadRequestException('exercises can not found');
+      throw new NotFoundException('exercises can not found');
     }
     const updatedIds: number[] = [];
     const promiseUpdateRoutine = await Promise.all(

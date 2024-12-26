@@ -19,7 +19,7 @@ export class WorkoutLog extends Timestamps {
 
   @IsNotEmpty()
   @IsNumber()
-  @Min(1)
+  @Min(0)
   @Max(1000)
   @Column()
   weight: number;

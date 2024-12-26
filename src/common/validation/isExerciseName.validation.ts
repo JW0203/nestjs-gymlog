@@ -17,7 +17,7 @@ class IsExerciseNameValidation implements ValidatorConstraintInterface {
       args.constraints[0] = 'Invalid length';
       return false;
     }
-    const allowPattern = /^[a-zA-Z0-9\uAC00-\uD7A3\s]*$/;
+    const allowPattern = /^[a-zA-Z\uAC00-\uD7A3][a-zA-Z0-9\uAC00-\uD7A3\s]*[a-zA-Z0-9\uAC00-\uD7A3]$/;
     const matchedPattern = allowPattern.test(exerciseName);
     if (!matchedPattern) {
       args.constraints[0] = 'Invalid pattern';
