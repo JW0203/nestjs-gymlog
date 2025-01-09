@@ -12,7 +12,7 @@ import { SignUpResponseDto } from '../dto/signUp.response.dto';
 import { SignInRequestDto } from '../dto/signIn.request.dto';
 import { SignInResponseDto } from '../dto/signIn.response.dto';
 import { GetMyInfoResponseDto } from '../dto/getMyInfo.response.dto';
-import { PasswordHasher } from '../domain/passwordHasher.interface';
+import { PasswordHasher } from '../application/passwordHasher.interface';
 
 jest.mock('typeorm-transactional', () => ({
   Transactional: () => jest.fn(),
