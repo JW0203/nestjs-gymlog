@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { WorkoutLog } from '../domain/WorkoutLog.entity';
-import { In, Raw, Repository } from 'typeorm';
+import { Between, In, Raw, Repository } from 'typeorm';
 import { User } from '../../user/domain/User.entity';
 import { WorkoutLogRepository } from '../domain/workoutLog.repository';
 
@@ -26,16 +26,19 @@ export class TypeormWorkoutLogRepository implements WorkoutLogRepository {
       lock: { mode: 'pessimistic_write' },
     });
   }
-
   async findWorkoutLogsByDay(date: string, userId: number): Promise<WorkoutLog[]> {
+    const startOfDay = new Date(`${date}T00:00:00`);
+    const endOfDay = new Date(`${date}T23:59:59`);
+
     return await this.workoutLogRepository.find({
       where: {
-        createdAt: Raw((alias) => `Date(${alias}) = :date`, { date }),
+        createdAt: Between(startOfDay, endOfDay),
         user: { id: userId },
       },
       relations: ['exercise', 'user'],
     });
   }
+
   async softDeleteWorkoutLogs(ids: number[], user: User): Promise<void> {
     await this.workoutLogRepository.softDelete({ id: In(ids), user: { id: user.id } });
   }
