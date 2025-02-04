@@ -6,7 +6,9 @@ import { IsNotEmpty, IsNumber, Max, Min, validateOrReject } from 'class-validato
 import { Logger } from '@nestjs/common';
 
 @Entity()
-@Index('idx_user_id_created_at', ['user', 'createdAt']) // workout_log (user_id, created_at )
+@Index('idx_user_id', ['user'])
+@Index('idx_exercise_id', ['exercise'])
+@Index('idx_exercise_weight_created', ['exercise', 'weight', 'createdAt'])
 export class WorkoutLog extends Timestamps {
   @PrimaryGeneratedColumn()
   id: number;
