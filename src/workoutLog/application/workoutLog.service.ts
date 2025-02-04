@@ -12,6 +12,7 @@ import { ExerciseService } from '../../exercise/application/exercise.service';
 import { UserService } from '../../user/application/user.service';
 import { GetWorkoutLogByUserResponseDto } from '../dto/getWorkoutLogByUser.response.dto';
 import { Exercise } from '../../exercise/domain/Exercise.entity';
+import { BestWorkoutLog } from '../dto/findBestWorkoutLogs.response.dto';
 
 interface UpdateWorkoutLogsParams {
   workoutLogMap: Map<number, WorkoutLog>;
@@ -189,4 +190,23 @@ export class WorkoutLogService {
     const result = await this.workoutLogRepository.findWorkoutLogsByUser(user);
     return GetWorkoutLogByUserResponseDto(result);
   }
+
+  async getWorkoutLogsByYear(user: User, year: string): Promise<object> {
+    const result = await this.workoutLogRepository.findWorkoutLogsByYear(user, year);
+    return result;
+  }
+
+  async getWorkoutLogsByYearMonth(user: User, year: string, month: string): Promise<object> {
+    const result = await this.workoutLogRepository.findWorkoutLogsByYearMonth(user, year, month);
+    return result;
+  }
+
+  async getBestWorkoutLogs(): Promise<BestWorkoutLog[]> {
+    return await this.workoutLogRepository.findBestWorkoutLogs();
+  }
+
+  // aync getWorkoutLogsByYear(user: User, year:number): Promise<object> {
+  //   const result = await this.workoutLogRepository.findWorkoutLogsByYear()
+  //
+  // }
 }
