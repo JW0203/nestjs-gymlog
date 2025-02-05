@@ -27,7 +27,7 @@ export class User extends Timestamps {
   @MaxLength(15)
   @Matches(/^[a-zA-Z\uAC00-\uD7A3][a-zA-Z0-9\uAC00-\uD7A3]*$/) //문자는 영어나 한글로 시작하고 공백을 허용하지 않는다.,
   @Column()
-  name: string;
+  nickName: string;
 
   @OneToMany(() => WorkoutLog, (workoutLog) => workoutLog.user)
   public workoutLogs: WorkoutLog[];
@@ -35,12 +35,12 @@ export class User extends Timestamps {
   @OneToMany(() => Routine, (routine) => routine.user)
   public routines: Routine[];
 
-  constructor(params: { email: string; password: string; name: string }) {
+  constructor(params: { email: string; password: string; nickName: string }) {
     super();
     if (params) {
       this.email = params.email;
       this.password = params.password;
-      this.name = params.name;
+      this.nickName = params.nickName;
 
       validateOrReject(this).catch((errors) => {
         console.log(`Errors while make new user entity`, errors);
