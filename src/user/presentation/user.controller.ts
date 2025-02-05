@@ -1,8 +1,9 @@
-import { Body, Controller, Get, HttpCode, Post, UseGuards, Request, Delete } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, UseGuards, Request, Delete, Patch } from '@nestjs/common';
 import { UserService } from '../application/user.service';
 import { SignUpRequestDto } from '../dto/signUp.request.dto';
 import { SignInRequestDto } from '../dto/signIn.request.dto';
 import { JwtAuthGuard } from '../../common/jwtPassport/jwtAuth.guard';
+import { UpdateNickNameRequestDto } from '../dto/updateNickName.request.dto';
 
 @Controller('users')
 export class UserController {
@@ -39,5 +40,12 @@ export class UserController {
   @HttpCode(200)
   updateEmail(@Body() email: { email: string }, @Request() req: any) {
     return this.userService.updateEmail(req.user.id, email);
+  }
+
+  @Patch('nickname')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(200)
+  updateNickName(@Body() updateNickName: UpdateNickNameRequestDto, @Request() req: any) {
+    return this.userService.updateNickName(req.user.id, updateNickName);
   }
 }
