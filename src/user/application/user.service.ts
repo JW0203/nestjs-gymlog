@@ -12,7 +12,6 @@ import { SignInResponseDto } from '../dto/signIn.response.dto';
 import { GetMyInfoResponseDto } from '../dto/getMyInfo.response.dto';
 import { PasswordHasher } from './passwordHasher.interface';
 
-
 @Injectable()
 export class UserService {
   constructor(
@@ -73,5 +72,16 @@ export class UserService {
       throw new NotFoundException('The user does not exist');
     }
     await this.userRepository.softDeleteUser(userId);
+  }
+
+  @Transactional()
+  async updateEmail(userId: number, email: { email: string }): Promise<User | null> {
+    console.log(email);
+    const user = await this.userRepository.findOneUserByEmail(email.email);
+    if (user) {
+      throw new ConflictException('The email is already in use');
+    }
+    await this.userRepository.updateEmail(userId, email.email);
+    return await this.userRepository.findOneUserByEmail(email.email);
   }
 }

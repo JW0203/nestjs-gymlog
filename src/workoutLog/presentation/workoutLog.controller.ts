@@ -43,4 +43,24 @@ export class WorkoutLogController {
   getWorkoutLogsByUser(@Request() req: any) {
     return this.workoutLogService.getWorkoutLogsByUser(req.user);
   }
+
+  @Get('year')
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  getWorkoutLogsByYear(@Query('year') year: string, @Request() req: any) {
+    return this.workoutLogService.getWorkoutLogsByYear(req.user, year);
+  }
+
+  @Get('year-month')
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  getWorkoutLogsByMonth(@Query('year') year: string, @Query('month') month: string, @Request() req: any) {
+    return this.workoutLogService.getWorkoutLogsByYearMonth(req.user, year, month);
+  }
+
+  @Get('best')
+  @HttpCode(200)
+  getBestWorkoutLogs() {
+    return this.workoutLogService.getBestWorkoutLogs();
+  }
 }

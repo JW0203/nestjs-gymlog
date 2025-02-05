@@ -2,6 +2,7 @@ import { Exercise } from './Exercise.entity';
 import { BodyPart } from '../../common/bodyPart.enum';
 import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
 import { MySqlLock } from '../../common/type/typeormLock.type';
+import { UpdateExerciseNameRequestDto } from '../dto/updateExerciseName.request.dto';
 
 export interface ExerciseRepository {
   findOneByExerciseNameAndBodyPart(exerciseName: string, bodyPart: BodyPart): Promise<Exercise | null>;
@@ -14,4 +15,5 @@ export interface ExerciseRepository {
   findExercisesByIds(ids: number[]): Promise<Exercise[]>;
   bulkInsertExercises(exercises: ExerciseDataFormatDto[]): Promise<Exercise[]>;
   bulkSoftDelete(ids: number[]): Promise<void>;
+  changeExerciseName(updateData: UpdateExerciseNameRequestDto): Promise<any>;
 }
