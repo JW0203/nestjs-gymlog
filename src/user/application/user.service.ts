@@ -11,7 +11,7 @@ import { SignInRequestDto } from '../dto/signIn.request.dto';
 import { SignInResponseDto } from '../dto/signIn.response.dto';
 import { GetMyInfoResponseDto } from '../dto/getMyInfo.response.dto';
 import { PasswordHasher } from './passwordHasher.interface';
-
+import { UpdateNickNameRequestDto } from '../dto/updateNickName.request.dto';
 
 @Injectable()
 export class UserService {
@@ -24,18 +24,24 @@ export class UserService {
 
   @Transactional()
   async signUp(signUpRequestDto: SignUpRequestDto): Promise<any> {
-    const { email, name, password } = signUpRequestDto;
+    const { email, nickName, password } = signUpRequestDto;
     const user = await this.userRepository.findOneUserByEmailLockMode(email);
     if (user) {
       throw new ConflictException('The email is already in use');
     }
+
+    const userNickName = await this.userRepository.findOneUserByNickName(nickName);
+    if (userNickName) {
+      throw new ConflictException('The nickName is already in use');
+    }
+
     const saltRounds = this.configService.get<string>('SALT_ROUNDS');
     if (saltRounds === undefined) {
       throw new Error('SALT_ROUNDS is not defined in the configuration.');
     }
 
     const hashedPassword = await this.passwordHasher.hash(password, parseInt(saltRounds));
-    const newUserEntity = new User({ name, email, password: hashedPassword });
+    const newUserEntity = new User({ nickName, email, password: hashedPassword });
     const newUser = await this.userRepository.signUp(newUserEntity);
     return new SignUpResponseDto({ ...newUser });
   }
@@ -77,12 +83,30 @@ export class UserService {
 
   @Transactional()
   async updateEmail(userId: number, email: { email: string }): Promise<User | null> {
-    console.log(email);
-    const user = await this.userRepository.findOneUserByEmail(email.email);
-    if (user) {
-      throw new ConflictException('The email is already in use');
+    const user = await this.userRepository.findOneUserById(userId);
+
+    if (!user) {
+      throw new NotFoundException('The user does not exist');
     }
     await this.userRepository.updateEmail(userId, email.email);
     return await this.userRepository.findOneUserByEmail(email.email);
+  }
+
+  @Transactional()
+  async updateNickName(userId: number, updateNickName: UpdateNickNameRequestDto): Promise<string> {
+    const { nickName } = updateNickName;
+    const user = await this.userRepository.findOneUserById(userId);
+
+    if (!user) {
+      throw new NotFoundException('The user does not exist');
+    }
+
+    await this.userRepository.updateNickName(userId, nickName);
+
+    const updatedUser = await this.userRepository.findOneUserById(userId);
+    if (!updatedUser || updatedUser.nickName !== nickName) {
+      throw new Error('Failed to update the nickname');
+    }
+    return `Nickname updated successfully to [ ${updatedUser.nickName} ]`;
   }
 }
