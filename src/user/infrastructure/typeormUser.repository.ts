@@ -2,6 +2,7 @@ import { UserRepository } from '../domain/user.repository';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../domain/User.entity';
 import { Repository } from 'typeorm';
+import { ConflictException } from '@nestjs/common';
 
 export class TypeormUserRepository implements UserRepository {
   constructor(@InjectRepository(User) private userRepository: Repository<User>) {}
@@ -24,5 +25,14 @@ export class TypeormUserRepository implements UserRepository {
 
   async softDeleteUser(userId: number): Promise<void> {
     await this.userRepository.softDelete(userId);
+  }
+
+  async updateEmail(userId: number, email: string): Promise<void> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new ConflictException('The user does not exist');
+    }
+    user.email = email;
+    await this.userRepository.save(user);
   }
 }
