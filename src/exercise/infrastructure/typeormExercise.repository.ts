@@ -5,6 +5,8 @@ import { ExerciseRepository } from '../domain/exercise.repository';
 import { BodyPart } from '../../common/bodyPart.enum';
 import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
 import { MySqlLock } from '../../common/type/typeormLock.type';
+import { NotFoundException } from '@nestjs/common';
+import { UpdateExerciseNameRequestDto } from '../dto/updateExerciseName.request.dto';
 
 export class TypeOrmExerciseRepository implements ExerciseRepository {
   constructor(@InjectRepository(Exercise) private exerciseRepository: Repository<Exercise>) {}
@@ -39,5 +41,16 @@ export class TypeOrmExerciseRepository implements ExerciseRepository {
 
   async bulkSoftDelete(ids: number[]): Promise<void> {
     await this.exerciseRepository.softDelete({ id: In(ids) });
+  }
+
+  async changeExerciseName(updateData: UpdateExerciseNameRequestDto): Promise<any> {
+    const { originExerciseName, newExerciseName } = updateData;
+    const exercise = await this.exerciseRepository.findOne({ where: { exerciseName: originExerciseName } });
+    if (!exercise) {
+      throw new NotFoundException(`Exercise '${originExerciseName}' not found.`);
+    }
+    exercise.exerciseName = newExerciseName;
+
+    return await this.exerciseRepository.save(exercise);
   }
 }

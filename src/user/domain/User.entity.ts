@@ -1,4 +1,4 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Timestamps } from '../../TimeStamp.entity';
 import { WorkoutLog } from '../../workoutLog/domain/WorkoutLog.entity';
 import { Routine } from '../../routine/domain/Routine.entity';
@@ -6,6 +6,7 @@ import { IsNotEmpty, Matches, MaxLength, MinLength, validateOrReject } from 'cla
 import { NoWhitespace } from '../../common/validation/NoWhitespace.validation';
 
 @Entity()
+@Index('idx_user_deleted', ['deletedAt', 'id'])
 export class User extends Timestamps {
   @PrimaryGeneratedColumn()
   id: number;

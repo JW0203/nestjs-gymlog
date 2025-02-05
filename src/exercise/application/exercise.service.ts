@@ -10,6 +10,7 @@ import { GetExercisesRequestDto } from '../dto/getExercises.request.dto';
 import { Transactional } from 'typeorm-transactional';
 import { LockConfigManager } from '../../common/infrastructure/typeormMysql.lock';
 import { FilteredExerciseDto } from '../dto/filteredExercise.dto';
+import { UpdateExerciseNameRequestDto } from '../dto/updateExerciseName.request.dto';
 
 @Injectable()
 export class ExerciseService {
@@ -94,5 +95,9 @@ export class ExerciseService {
       throw new BadRequestException(`Some exercises do not exist in the exercise entity.`);
     }
     await this.exerciseRepository.bulkSoftDelete(ids);
+  }
+
+  async changeExerciseName(updateData: UpdateExerciseNameRequestDto) {
+    return await this.exerciseRepository.changeExerciseName(updateData);
   }
 }

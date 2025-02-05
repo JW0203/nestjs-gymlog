@@ -1,4 +1,4 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Timestamps } from '../../TimeStamp.entity';
 import { WorkoutLog } from '../../workoutLog/domain/WorkoutLog.entity';
 import { IsEnum, IsNotEmpty, validate } from 'class-validator';
@@ -8,6 +8,7 @@ import { Routine } from '../../routine/domain/Routine.entity';
 import { Logger } from '@nestjs/common';
 
 @Entity()
+@Index('idx_exercise_deleted', ['deletedAt', 'id'])
 export class Exercise extends Timestamps {
   @PrimaryGeneratedColumn()
   id: number;

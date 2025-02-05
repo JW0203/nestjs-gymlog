@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Index, JoinColumn } from 'typeorm';
 import { Timestamps } from '../../TimeStamp.entity';
 import { User } from '../../user/domain/User.entity';
 import { Exercise } from '../../exercise/domain/Exercise.entity';
@@ -6,6 +6,9 @@ import { IsNotEmpty, IsNumber, Max, Min, validateOrReject } from 'class-validato
 import { Logger } from '@nestjs/common';
 
 @Entity()
+@Index('idx_user_id', ['user'])
+@Index('idx_exercise_id', ['exercise'])
+@Index('idx_exercise_weight_created', ['exercise', 'weight', 'createdAt'])
 export class WorkoutLog extends Timestamps {
   @PrimaryGeneratedColumn()
   id: number;
@@ -34,6 +37,7 @@ export class WorkoutLog extends Timestamps {
   public exercise: Exercise;
 
   @ManyToOne(() => User, (user) => user.workoutLogs)
+  @JoinColumn({ name: 'user_id' })
   public user: User;
 
   constructor(params: {
