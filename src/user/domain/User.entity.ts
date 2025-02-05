@@ -4,6 +4,7 @@ import { WorkoutLog } from '../../workoutLog/domain/WorkoutLog.entity';
 import { Routine } from '../../routine/domain/Routine.entity';
 import { IsNotEmpty, Matches, MaxLength, MinLength, validateOrReject } from 'class-validator';
 import { NoWhitespace } from '../../common/validation/NoWhitespace.validation';
+import { IsEmailCustom } from '../../common/validation/isEmail.validation.custom';
 
 @Entity()
 @Index('idx_user_deleted', ['deletedAt', 'id'])
@@ -12,6 +13,7 @@ export class User extends Timestamps {
   id: number;
 
   @IsNotEmpty()
+  @IsEmailCustom()
   @Column()
   email: string;
 
