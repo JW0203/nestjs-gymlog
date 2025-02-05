@@ -12,6 +12,7 @@ import { SignInResponseDto } from '../dto/signIn.response.dto';
 import { GetMyInfoResponseDto } from '../dto/getMyInfo.response.dto';
 import { PasswordHasher } from './passwordHasher.interface';
 import { UpdateNickNameRequestDto } from '../dto/updateNickName.request.dto';
+import { UpdateEmailRequestDto } from '../dto/updateEmail.request.dto';
 
 @Injectable()
 export class UserService {
@@ -82,14 +83,20 @@ export class UserService {
   }
 
   @Transactional()
-  async updateEmail(userId: number, email: { email: string }): Promise<User | null> {
+  async updateEmail(userId: number, updateEmail: UpdateEmailRequestDto): Promise<string> {
+    const { email } = updateEmail;
     const user = await this.userRepository.findOneUserById(userId);
 
     if (!user) {
       throw new NotFoundException('The user does not exist');
     }
-    await this.userRepository.updateEmail(userId, email.email);
-    return await this.userRepository.findOneUserByEmail(email.email);
+    await this.userRepository.updateEmail(userId, email);
+
+    const updatedUser = await this.userRepository.findOneUserById(userId);
+    if (!updatedUser || updatedUser.email !== email) {
+      throw new Error('Failed to update the email');
+    }
+    return `Email updated successfully to [ ${updatedUser.email} ]`;
   }
 
   @Transactional()
