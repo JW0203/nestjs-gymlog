@@ -15,6 +15,7 @@ import { JwtPassportModule } from './common/jwtPassport.module';
 import { addTransactionalDataSource } from 'typeorm-transactional';
 import { DataSource } from 'typeorm';
 import { UserSubscriber } from './user/infrastructure/typeormUser.subscriber';
+import { ExerciseSubscriber } from './exercise/infrastructure/typeormExercise.subscriber';
 
 @Module({
   imports: [
@@ -39,7 +40,7 @@ import { UserSubscriber } from './user/infrastructure/typeormUser.subscriber';
         synchronize: true,
         logging: true,
         namingStrategy: new SnakeNamingStrategy(),
-        subscribers: [UserSubscriber],
+        subscribers: [UserSubscriber, ExerciseSubscriber],
       }),
       async dataSourceFactory(options) {
         if (!options) {

@@ -6,10 +6,16 @@ import { ExerciseController } from './presentation/exercise.controller';
 import { LoggerModule } from '../common/Logger/logger.module';
 import { EXERCISE_REPOSITORY } from '../common/const/inject.constant';
 import { TypeOrmExerciseRepository } from './infrastructure/typeormExercise.repository';
+import { ExerciseSubscriber } from './infrastructure/typeormExercise.subscriber';
+import { WorkoutLog } from '../workoutLog/domain/WorkoutLog.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Exercise, LoggerModule])],
-  providers: [ExerciseService, { provide: EXERCISE_REPOSITORY, useClass: TypeOrmExerciseRepository }],
+  imports: [TypeOrmModule.forFeature([Exercise, LoggerModule, WorkoutLog])],
+  providers: [
+    ExerciseService,
+    ExerciseSubscriber,
+    { provide: EXERCISE_REPOSITORY, useClass: TypeOrmExerciseRepository },
+  ],
   controllers: [ExerciseController],
   exports: [ExerciseService],
 })
