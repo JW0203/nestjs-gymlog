@@ -2,8 +2,9 @@ import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Index, JoinColumn } 
 import { Timestamps } from '../../TimeStamp.entity';
 import { User } from '../../user/domain/User.entity';
 import { Exercise } from '../../exercise/domain/Exercise.entity';
-import { IsNotEmpty, IsNumber, Max, Min, validateOrReject } from 'class-validator';
+import { IsNotEmpty, IsNumber, Matches, Max, MaxLength, Min, MinLength, validateOrReject } from 'class-validator';
 import { Logger } from '@nestjs/common';
+import { IsExerciseName } from '../../common/validation/isExerciseName.validation';
 
 @Entity()
 @Index('idx_user_id', ['user'])
@@ -33,6 +34,18 @@ export class WorkoutLog extends Timestamps {
   @Column()
   repeatCount: number;
 
+  @IsNotEmpty()
+  @MinLength(2)
+  @MaxLength(15)
+  @Matches(/^[a-zA-Z\uAC00-\uD7A3][a-zA-Z0-9\uAC00-\uD7A3]*$/) //문자는 영어나 한글로 시작하고 공백을 허용하지 않는다.,
+  @Column()
+  userNickName: string;
+
+  @IsNotEmpty()
+  @Column()
+  @IsExerciseName()
+  exerciseName: string;
+
   @ManyToOne(() => Exercise, (exercise) => exercise.workoutLogs)
   public exercise: Exercise;
 
@@ -47,6 +60,8 @@ export class WorkoutLog extends Timestamps {
     repeatCount: number;
     exercise: Exercise;
     user: User;
+    userNickName: string;
+    exerciseName: string;
   }) {
     super();
     if (params) {
@@ -55,6 +70,8 @@ export class WorkoutLog extends Timestamps {
       this.repeatCount = params.repeatCount;
       this.exercise = params.exercise;
       this.user = params.user;
+      this.userNickName = params.userNickName;
+      this.exerciseName = params.exerciseName;
 
       validateOrReject(this).catch((errors) => {
         const logger = new Logger('WorkoutLog Entity');
@@ -63,12 +80,22 @@ export class WorkoutLog extends Timestamps {
     }
   }
 
-  update(params: { setCount: number; weight: number; repeatCount: number; user: User; exercise: Exercise }) {
+  update(params: {
+    setCount: number;
+    weight: number;
+    repeatCount: number;
+    user: User;
+    exercise: Exercise;
+    userNickName: string;
+    exerciseName: string;
+  }) {
     this.setCount = params.setCount;
     this.weight = params.weight;
     this.repeatCount = params.repeatCount;
     this.exercise = params.exercise;
     this.user = params.user;
+    this.userNickName = params.userNickName;
+    this.exerciseName = params.exerciseName;
 
     validateOrReject(this).catch((errors) => {
       const logger = new Logger('WorkoutLog Entity Update');
