@@ -30,6 +30,9 @@ const mockUserRepository: jest.Mocked<UserRepository> = {
   findOneUserByEmail: jest.fn(),
   findOneUserById: jest.fn(),
   softDeleteUser: jest.fn(),
+  findOneUserByNickName: jest.fn(),
+  updateNickName: jest.fn(),
+  updateEmail: jest.fn(),
 };
 
 const mockJwtService: Partial<jest.Mocked<JwtService>> = {
@@ -75,9 +78,9 @@ describe('UserRepository', () => {
   describe('signUp', () => {
     it('should throw ConflictException if email is already in use', async () => {
       const usedEmail = 'useremail@email.com';
-      const signUpRequestDto: SignUpRequestDto = { name: 'tester', email: usedEmail, password: '12345678' };
-      const { email, name, password } = signUpRequestDto;
-      const user: User = new User({ email, name, password });
+      const signUpRequestDto: SignUpRequestDto = { nickName: 'tester', email: usedEmail, password: '12345678' };
+      const { email, nickName, password } = signUpRequestDto;
+      const user: User = new User({ email, nickName, password });
       user.id = 1;
 
       userRepository.findOneUserByEmailLockMode.mockResolvedValue(user);
@@ -87,9 +90,9 @@ describe('UserRepository', () => {
 
     it('should throw Error if saltRounds is not set in configService', async () => {
       const usedEmail = 'useremail@email.com';
-      const signUpRequestDto: SignUpRequestDto = { name: 'tester', email: usedEmail, password: '12345678' };
-      const { email, name, password } = signUpRequestDto;
-      const user: User = new User({ email, name, password });
+      const signUpRequestDto: SignUpRequestDto = { nickName: 'tester', email: usedEmail, password: '12345678' };
+      const { email, nickName, password } = signUpRequestDto;
+      const user: User = new User({ email, nickName, password });
       user.id = 1;
 
       userRepository.findOneUserByEmailLockMode.mockResolvedValue(null);
@@ -99,12 +102,12 @@ describe('UserRepository', () => {
     });
 
     it('should sign up a new user ', async () => {
-      const signUpRequestDto: SignUpRequestDto = { name: 'tester', email: 'test@email.com', password: '12345678' };
-      const { email, name, password } = signUpRequestDto;
-      const newUser: User = new User({ email, name, password });
+      const signUpRequestDto: SignUpRequestDto = { nickName: 'tester', email: 'test@email.com', password: '12345678' };
+      const { email, nickName, password } = signUpRequestDto;
+      const newUser: User = new User({ email, nickName, password });
       newUser.id = 1;
       const saltRounds = '10';
-      const signUpResponseDto: SignUpResponseDto = { id: 1, email: 'test@email.com', name: 'tester' };
+      const signUpResponseDto: SignUpResponseDto = { id: 1, email: 'test@email.com', nickName: 'tester' };
 
       userRepository.findOneUserByEmailLockMode.mockResolvedValue(null);
       configService.get.mockReturnValue(saltRounds);
@@ -132,7 +135,7 @@ describe('UserRepository', () => {
       const wrongPassword = '12345678w';
       const signInRequestDto: SignInRequestDto = { email, password: wrongPassword };
 
-      const user: User = new User({ email, password, name: 'tester' });
+      const user: User = new User({ email, password, nickName: 'tester' });
       user.id = 1;
 
       userRepository.findOneUserByEmail.mockResolvedValue(user);
@@ -145,7 +148,7 @@ describe('UserRepository', () => {
     it('Should return accessToken if the password match and user is exist', async () => {
       const signInRequestDto: SignInRequestDto = { email: 'user@email.com', password: '12345678' };
       const user: User = new User({
-        name: 'tester',
+        nickName: 'tester',
         email: signInRequestDto.email,
         password: signInRequestDto.password,
       });
@@ -171,7 +174,7 @@ describe('UserRepository', () => {
     });
 
     it('Should return user information if it find user using user id', async () => {
-      const user: User = new User({ name: 'tester', email: 'user@email.com', password: '12345678' });
+      const user: User = new User({ nickName: 'tester', email: 'user@email.com', password: '12345678' });
       user.id = 1;
       user.createdAt = new Date();
       user.updatedAt = new Date();
@@ -195,7 +198,7 @@ describe('UserRepository', () => {
     });
 
     it('Should return user if it  find user using user id', async () => {
-      const user: User = new User({ name: 'tester', email: 'user@email.com', password: '12345678' });
+      const user: User = new User({ nickName: 'tester', email: 'user@email.com', password: '12345678' });
       user.id = 1;
 
       userRepository.findOneUserById.mockResolvedValue(user);
@@ -211,7 +214,7 @@ describe('UserRepository', () => {
       await expect(userService.softDeleteUser(1)).rejects.toThrow(NotFoundException);
     });
     it('Should return undefined if a user is deleted using a id of the user', async () => {
-      const user: User = new User({ name: 'tester', email: 'user@email.com', password: '12345678' });
+      const user: User = new User({ nickName: 'tester', email: 'user@email.com', password: '12345678' });
       user.id = 1;
 
       userRepository.findOneUserById.mockResolvedValue(user);

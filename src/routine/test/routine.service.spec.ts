@@ -85,7 +85,7 @@ describe('Test RoutineService', () => {
         },
       ];
 
-      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
+      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
       const routinesData: SaveRoutinesRequestDto = { routines };
       const newRoutines = routines.map(
         (routine) =>
@@ -129,7 +129,7 @@ describe('Test RoutineService', () => {
         },
       ];
 
-      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
+      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
       const newRoutines = routines.map(
         (routine) =>
           new Routine({
@@ -151,7 +151,7 @@ describe('Test RoutineService', () => {
     it('should return an empty array when searching for a routine not registered by the user', async () => {
       const routineNameDto = { name: 'non-existent-name' };
       const name: string = routineNameDto.name;
-      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
+      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
       routineRepository.findRoutinesByName.mockResolvedValue([]);
 
       await expect(routineService.getRoutineByName({ name }, mockUser)).rejects.toThrow(NotFoundException);
@@ -160,7 +160,7 @@ describe('Test RoutineService', () => {
 
   describe('bulkUpdateRoutines service', () => {
     it('should return a updated routine if the routine is updated', async () => {
-      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
+      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
       mockUser.id = 1;
 
       const routineName: string = '하체 뒤';
@@ -223,7 +223,7 @@ describe('Test RoutineService', () => {
     });
 
     it('should handle routine not found during update', async () => {
-      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
+      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
       mockUser.id = 1;
       const mockExercise: Exercise = new Exercise({ exerciseName: '레그 프레스', bodyPart: BodyPart.LEGS });
       const updateRoutinesDto: UpdateRoutinesRequestDto = {
@@ -245,7 +245,7 @@ describe('Test RoutineService', () => {
     });
 
     it('should handle exercise not found during update', async () => {
-      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
+      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
       mockUser.id = 1;
 
       const updateRoutinesDto: UpdateRoutinesRequestDto = {
@@ -270,7 +270,7 @@ describe('Test RoutineService', () => {
   describe('Test softDeleteRoutines', () => {
     it('should return no content if routines are deleted', async () => {
       const mockRoutineIds: DeleteRoutineRequestDto = { ids: [1, 2] };
-      const mockUser = new User({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
+      const mockUser = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
       mockUser.id = 1;
 
       const routineName = '하체 루틴';
@@ -301,7 +301,7 @@ describe('Test RoutineService', () => {
 
     it('should throw BadRequestException when no routines found', async () => {
       const mockRoutineIds: DeleteRoutineRequestDto = { ids: [1, 2] };
-      const mockUser = new User({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
+      const mockUser = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
       mockUser.id = 1;
 
       routineRepository.findRoutinesByIds.mockResolvedValue([]);
@@ -311,7 +311,7 @@ describe('Test RoutineService', () => {
 
   describe('Test getAllRoutinesByUser', () => {
     it('should return all routines', async () => {
-      const mockUser = new User({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
+      const mockUser = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
       mockUser.id = 1;
 
       const routineName = '하체 루틴';
@@ -337,7 +337,7 @@ describe('Test RoutineService', () => {
     });
 
     it('should return empty array, when a logged in user has no routine', async () => {
-      const mockUser = new User({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
+      const mockUser = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
       mockUser.id = 1;
       routineRepository.findAllByUserId.mockResolvedValue([]);
       const result = await routineService.getAllRoutinesByUser(mockUser);

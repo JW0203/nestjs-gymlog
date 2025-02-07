@@ -38,6 +38,9 @@ function makeWorkoutLogEntities(workoutLogs: SaveWorkoutLogFormatDto[], user: Us
       repeatCount: workoutLog.repeatCount,
       exercise,
       user,
+      bodyPart: exercise.bodyPart,
+      userNickName: user.nickName,
+      exerciseName: exercise.exerciseName,
     });
     workoutLogEntity.id = i + 1;
     workoutLogEntity.createdAt = new Date();
@@ -73,7 +76,7 @@ describe('WorkoutLogRepository', () => {
     });
 
     it('should save new workoutLogs at once', async () => {
-      const user: User = new User({ name: 'test', password: 'password123', email: 'test@example.com' });
+      const user: User = new User({ nickName: 'test', password: 'password123', email: 'test@example.com' });
       await dataSource.getRepository(User).save(user);
 
       const newWorkoutLogs = [
@@ -113,7 +116,7 @@ describe('WorkoutLogRepository', () => {
     });
 
     it('should update workoutLogs at once', async () => {
-      const user: User = new User({ name: 'tester', email: 'user@email.com', password: 'password123' });
+      const user: User = new User({ nickName: 'tester', email: 'user@email.com', password: 'password123' });
       await dataSource.getRepository(User).save(user);
 
       const originWorkoutLogsData = [
@@ -154,7 +157,7 @@ describe('WorkoutLogRepository', () => {
     });
 
     it('it should find workout logs for a specific date', async () => {
-      const user: User = new User({ name: 'tester', email: 'user@email.com', password: 'password123' });
+      const user: User = new User({ nickName: 'tester', email: 'user@email.com', password: 'password123' });
       await dataSource.getRepository(User).save(user);
 
       const workoutLogsData = [
@@ -189,7 +192,7 @@ describe('WorkoutLogRepository', () => {
     });
 
     it('should soft delete workout logs', async () => {
-      const user: User = new User({ name: 'tester', email: 'user@email.com', password: 'password123' });
+      const user: User = new User({ nickName: 'tester', email: 'user@email.com', password: 'password123' });
       await dataSource.getRepository(User).save(user);
 
       const workoutLogsData = [
@@ -221,7 +224,7 @@ describe('WorkoutLogRepository', () => {
     });
 
     it('should find all routines correspond with a user id', async () => {
-      const user: User = new User({ name: 'tester', email: 'user@email.com', password: 'password123' });
+      const user: User = new User({ nickName: 'tester', email: 'user@email.com', password: 'password123' });
       await dataSource.getRepository(User).save(user);
 
       const workoutLogsData = [
@@ -252,7 +255,7 @@ describe('WorkoutLogRepository', () => {
     });
 
     it('should find workoutLogs using their id in the lock mode', async () => {
-      const user: User = new User({ name: 'tester', email: 'user@email.com', password: 'password123' });
+      const user: User = new User({ nickName: 'tester', email: 'user@email.com', password: 'password123' });
       await dataSource.getRepository(User).save(user);
 
       const workoutLogsData = [

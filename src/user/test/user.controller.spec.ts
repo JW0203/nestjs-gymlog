@@ -35,7 +35,7 @@ describe('Test User controller', () => {
 
   describe('signUp', () => {
     it('should call signIn service with correct parameters', async () => {
-      const signUpRequestDto: SignUpRequestDto = { email: 'test@email.com', password: 'test12345', name: 'tester' };
+      const signUpRequestDto: SignUpRequestDto = { email: 'test@email.com', password: 'test12345', nickName: 'tester' };
       await userService.signUp(signUpRequestDto);
       expect(userService.signUp).toHaveBeenCalledWith(signUpRequestDto);
     });
