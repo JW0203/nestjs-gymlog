@@ -1,4 +1,11 @@
-import { ConflictException, Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PASSWORD_HASHER, USER_REPOSITORY } from '../../common/const/inject.constant';
 import { UserRepository } from '../domain/user.repository';
 import { ConfigService } from '@nestjs/config';
@@ -13,6 +20,8 @@ import { GetMyInfoResponseDto } from '../dto/getMyInfo.response.dto';
 import { PasswordHasher } from './passwordHasher.interface';
 import { UpdateNickNameRequestDto } from '../dto/updateNickName.request.dto';
 import { UpdateEmailRequestDto } from '../dto/updateEmail.request.dto';
+import { WorkoutLogService } from '../../workoutLog/application/workoutLog.service';
+import { UpdateUserNickNameInWorkOutLogRequestDto } from '../../workoutLog/dto/updateUserNickNameInWorkoutLog.request.dto';
 
 @Injectable()
 export class UserService {
@@ -21,6 +30,8 @@ export class UserService {
     @Inject(PASSWORD_HASHER) readonly passwordHasher: PasswordHasher,
     private readonly configService: ConfigService,
     private readonly authService: AuthService,
+    @Inject(forwardRef(() => WorkoutLogService))
+    private readonly workoutLogService: WorkoutLogService,
   ) {}
 
   @Transactional()
@@ -114,6 +125,8 @@ export class UserService {
     if (!updatedUser || updatedUser.nickName !== nickName) {
       throw new Error('Failed to update the nickname');
     }
+    const updateNickNameInWorkoutLog = new UpdateUserNickNameInWorkOutLogRequestDto({ nickName, userId });
+    await this.workoutLogService.updateUserNickName(updateNickNameInWorkoutLog);
     return `Nickname updated successfully to [ ${updatedUser.nickName} ]`;
   }
 }
