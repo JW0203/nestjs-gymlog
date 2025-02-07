@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { User } from './domain/User.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserController } from './presentation/user.controller';
@@ -7,15 +7,13 @@ import { AuthModule } from '../auth/application/auth.module';
 import { PASSWORD_HASHER, USER_REPOSITORY } from '../common/const/inject.constant';
 import { TypeormUserRepository } from './infrastructure/typeormUser.repository';
 import { BycptHasher } from './application/bcryptHasher.service';
-import { UserSubscriber } from './infrastructure/typeormUser.subscriber';
-import { WorkoutLog } from '../workoutLog/domain/WorkoutLog.entity';
+import { WorkoutLogModule } from '../workoutLog/workoutLog.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, WorkoutLog]), AuthModule],
+  imports: [TypeOrmModule.forFeature([User]), AuthModule, forwardRef(() => WorkoutLogModule)],
   controllers: [UserController],
   providers: [
     UserService,
-    UserSubscriber,
     { provide: USER_REPOSITORY, useClass: TypeormUserRepository },
     { provide: PASSWORD_HASHER, useClass: BycptHasher },
   ],
