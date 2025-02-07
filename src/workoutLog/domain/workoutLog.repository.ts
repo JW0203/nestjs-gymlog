@@ -3,6 +3,8 @@ import { WorkoutLog } from './WorkoutLog.entity';
 import { BestWorkoutLog } from '../dto/findBestWorkoutLogs.response.dto';
 import { FindWorkoutLogsByYearMonthResponseDto } from '../dto/findWorkoutLogsByYearMonth.response.dto';
 import { FindWorkoutLogsByYearResponseDto } from '../dto/findWorkoutLogsByYear.response.dto';
+import { UpdateExerciseNameRequestDto } from '../../exercise/dto/updateExerciseName.request.dto';
+import { UpdateUserNickNameInWorkOutLogRequestDto } from '../dto/updateUserNickNameInWorkoutLog.request.dto';
 
 export interface WorkoutLogRepository {
   bulkInsertWorkoutLogs(newWorkoutLogs: WorkoutLog[]): Promise<WorkoutLog[]>;
@@ -14,4 +16,6 @@ export interface WorkoutLogRepository {
   findWorkoutLogsByYear(user: User, year: string): Promise<FindWorkoutLogsByYearResponseDto[]>;
   findWorkoutLogsByYearMonth(user: User, year: string, month: string): Promise<FindWorkoutLogsByYearMonthResponseDto[]>;
   findBestWorkoutLogs(): Promise<BestWorkoutLog[]>;
+  updateExerciseNameInWorkoutLog(updateData: UpdateExerciseNameRequestDto): Promise<any>;
+  updateUserNickNameInWorkoutLog(updateData: UpdateUserNickNameInWorkOutLogRequestDto): Promise<any>;
 }

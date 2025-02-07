@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, forwardRef } from '@nestjs/common';
 import { SoftDeleteWorkoutLogRequestDto } from '../dto/softDeleteWorkoutLog.request.dto';
 import { User } from '../../user/domain/User.entity';
 import { SaveWorkoutLogsRequestDto } from '../dto/saveWorkoutLogs.request.dto';
@@ -13,6 +13,8 @@ import { UserService } from '../../user/application/user.service';
 import { GetWorkoutLogByUserResponseDto } from '../dto/getWorkoutLogByUser.response.dto';
 import { Exercise } from '../../exercise/domain/Exercise.entity';
 import { BestWorkoutLog } from '../dto/findBestWorkoutLogs.response.dto';
+import { UpdateExerciseNameRequestDto } from '../../exercise/dto/updateExerciseName.request.dto';
+import { UpdateUserNickNameInWorkOutLogRequestDto } from '../dto/updateUserNickNameInWorkoutLog.request.dto';
 
 interface UpdateWorkoutLogsParams {
   workoutLogMap: Map<number, WorkoutLog>;
@@ -56,6 +58,9 @@ export async function updateWorkoutLogsWithValidation({
         repeatCount,
         user,
         exercise,
+        bodyPart: exercise.bodyPart,
+        userNickName: user.nickName,
+        exerciseName: exercise.exerciseName,
       });
 
       return foundWorkoutLog;
@@ -68,7 +73,9 @@ export class WorkoutLogService {
   constructor(
     @Inject(WORKOUTLOG_REPOSITORY)
     readonly workoutLogRepository: WorkoutLogRepository,
+    @Inject(forwardRef(() => ExerciseService))
     private readonly exerciseService: ExerciseService,
+    @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
   ) {}
 
@@ -106,6 +113,9 @@ export class WorkoutLogService {
           repeatCount,
           exercise,
           user,
+          bodyPart: exercise.bodyPart,
+          userNickName: user.nickName,
+          exerciseName: exercise.exerciseName,
         });
       }),
     );
@@ -205,8 +215,21 @@ export class WorkoutLogService {
     return await this.workoutLogRepository.findBestWorkoutLogs();
   }
 
-  // aync getWorkoutLogsByYear(user: User, year:number): Promise<object> {
-  //   const result = await this.workoutLogRepository.findWorkoutLogsByYear()
-  //
-  // }
+  @Transactional()
+  async updateExerciseNameInWorkoutLog(updateData: UpdateExerciseNameRequestDto): Promise<any> {
+    const result = await this.workoutLogRepository.updateExerciseNameInWorkoutLog(updateData);
+    if (result.affected > 0) {
+      return 'Exercise name updated successfully';
+    }
+    return 'No records updated.';
+  }
+
+  @Transactional()
+  async updateUserNickName(updateUserNickNameRequestDto: UpdateUserNickNameInWorkOutLogRequestDto): Promise<any> {
+    const result = await this.workoutLogRepository.updateUserNickNameInWorkoutLog(updateUserNickNameRequestDto);
+    if (result.affected > 0) {
+      return 'Exercise name updated successfully';
+    }
+    return 'No records updated.';
+  }
 }

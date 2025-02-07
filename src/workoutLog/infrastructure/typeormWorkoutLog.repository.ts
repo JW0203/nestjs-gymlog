@@ -7,6 +7,8 @@ import { WorkoutLogRepository } from '../domain/workoutLog.repository';
 import { FindWorkoutLogsByYearResponseDto } from '../dto/findWorkoutLogsByYear.response.dto';
 import { BestWorkoutLog } from '../dto/findBestWorkoutLogs.response.dto';
 import { FindWorkoutLogsByYearMonthResponseDto } from '../dto/findWorkoutLogsByYearMonth.response.dto';
+import { UpdateExerciseNameRequestDto } from '../../exercise/dto/updateExerciseName.request.dto';
+import { UpdateUserNickNameInWorkOutLogRequestDto } from '../dto/updateUserNickNameInWorkoutLog.request.dto';
 
 @Injectable()
 export class TypeormWorkoutLogRepository implements WorkoutLogRepository {
@@ -53,6 +55,28 @@ export class TypeormWorkoutLogRepository implements WorkoutLogRepository {
       where: { user: { id: user.id } },
       relations: ['exercise'],
     });
+  }
+
+  async updateExerciseNameInWorkoutLog(updateData: UpdateExerciseNameRequestDto): Promise<any> {
+    const { originExerciseName, newExerciseName } = updateData;
+    return await this.workoutLogRepository
+      .createQueryBuilder('wl')
+      .update()
+      .set({ exerciseName: newExerciseName })
+      .where({ exerciseName: originExerciseName })
+      .execute();
+  }
+
+  async updateUserNickNameInWorkoutLog(
+    updateUserNickNameRequestDto: UpdateUserNickNameInWorkOutLogRequestDto,
+  ): Promise<any> {
+    const { nickName, userId } = updateUserNickNameRequestDto;
+    return await this.workoutLogRepository
+      .createQueryBuilder()
+      .update()
+      .set({ userNickName: nickName })
+      .where({ user: { id: userId } })
+      .execute();
   }
 
   async findWorkoutLogsByYear(user: User, year: string): Promise<FindWorkoutLogsByYearResponseDto[]> {
@@ -130,6 +154,8 @@ export class TypeormWorkoutLogRepository implements WorkoutLogRepository {
   }
 */
 
+  /*
+  // denormalize 하기 전
   async findBestWorkoutLogs(): Promise<BestWorkoutLog[]> {
     const maxWeightSubQuery = this.workoutLogRepository
       .createQueryBuilder('wl')
@@ -175,5 +201,42 @@ export class TypeormWorkoutLogRepository implements WorkoutLogRepository {
       .getRawMany();
 
     return result;
+  }
+ */
+
+  async findBestWorkoutLogs(): Promise<BestWorkoutLog[]> {
+    return await this.workoutLogRepository
+      .createQueryBuilder('wl1')
+      .select('wl1.body_part', 'body_part')
+      .addSelect('wl1.exercise_name', 'exercise_name')
+      .addSelect('wl1.user_nick_name', 'user_nick_name')
+      .addSelect('wl1.weight', 'weight')
+      .where((qb) => {
+        // 각 운동별 최대 무게와 일치하는지 확인
+        const subQuery = qb
+          .subQuery()
+          .select('wl2.body_part', 'body_part')
+          .addSelect('wl2.exercise_name', 'exercise_name')
+          .addSelect('MAX(wl2.weight)', 'max_weight')
+          .from(WorkoutLog, 'wl2')
+          .groupBy('wl2.body_part')
+          .addGroupBy('wl2.exercise_name');
+        return `(wl1.body_part, wl1.exercise_name, wl1.weight) IN ${subQuery.getQuery()}`;
+      })
+      .andWhere((qb) => {
+        // 같은 무게 중에서 더 일찍 달성한 기록이 있는지 확인
+        const subQuery = qb
+          .subQuery()
+          .select('1')
+          .from(WorkoutLog, 'wl3')
+          .where('wl3.body_part = wl1.body_part')
+          .andWhere('wl3.exercise_name = wl1.exercise_name')
+          .andWhere('wl3.weight = wl1.weight')
+          .andWhere('wl3.created_at < wl1.created_at');
+        return 'NOT EXISTS ' + subQuery.getQuery();
+      })
+      .orderBy('wl1.body_part')
+      .addOrderBy('wl1.exercise_name')
+      .getRawMany();
   }
 }
