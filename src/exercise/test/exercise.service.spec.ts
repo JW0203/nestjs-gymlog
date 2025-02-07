@@ -25,6 +25,7 @@ const mockExerciseRepository: jest.Mocked<ExerciseRepository> = {
   bulkInsertExercises: jest.fn(),
   bulkSoftDelete: jest.fn(),
   findExercisesByIds: jest.fn(),
+  changeExerciseName: jest.fn(),
 };
 
 describe('Test ExerciseService', () => {

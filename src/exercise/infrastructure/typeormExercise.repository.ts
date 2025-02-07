@@ -43,7 +43,7 @@ export class TypeOrmExerciseRepository implements ExerciseRepository {
     await this.exerciseRepository.softDelete({ id: In(ids) });
   }
 
-  async changeExerciseName(updateData: UpdateExerciseNameRequestDto): Promise<any> {
+  async changeExerciseName(updateData: UpdateExerciseNameRequestDto): Promise<Exercise> {
     const { originExerciseName, newExerciseName } = updateData;
     const exercise = await this.exerciseRepository.findOne({ where: { exerciseName: originExerciseName } });
     if (!exercise) {
