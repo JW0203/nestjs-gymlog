@@ -1,4 +1,11 @@
-import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Exercise } from '../domain/Exercise.entity';
 import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
 import { SaveExercisesRequestDto } from '../dto/saveExercises.request.dto';
@@ -11,12 +18,15 @@ import { Transactional } from 'typeorm-transactional';
 import { LockConfigManager } from '../../common/infrastructure/typeormMysql.lock';
 import { FilteredExerciseDto } from '../dto/filteredExercise.dto';
 import { UpdateExerciseNameRequestDto } from '../dto/updateExerciseName.request.dto';
+import { WorkoutLogService } from '../../workoutLog/application/workoutLog.service';
 
 @Injectable()
 export class ExerciseService {
   constructor(
     @Inject(EXERCISE_REPOSITORY)
     private readonly exerciseRepository: ExerciseRepository,
+    @Inject(forwardRef(() => WorkoutLogService))
+    private readonly workoutLogService: WorkoutLogService,
   ) {}
 
   async findOneByExerciseNameAndBodyPart(findByExerciseNameAndBodyPart: ExerciseDataFormatDto) {
@@ -97,7 +107,8 @@ export class ExerciseService {
     await this.exerciseRepository.bulkSoftDelete(ids);
   }
 
-  async changeExerciseName(updateData: UpdateExerciseNameRequestDto) {
-    return await this.exerciseRepository.changeExerciseName(updateData);
+  async changeExerciseName(updateData: UpdateExerciseNameRequestDto): Promise<string> {
+    await this.exerciseRepository.changeExerciseName(updateData);
+    return await this.workoutLogService.updateExerciseNameInWorkoutLog(updateData);
   }
 }
