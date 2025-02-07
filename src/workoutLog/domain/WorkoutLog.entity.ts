@@ -77,6 +77,7 @@ export class WorkoutLog extends Timestamps {
     exercise: Exercise;
     user: User;
     userNickName: string;
+    bodyPart: BodyPart;
     exerciseName: string;
   }) {
     super();
@@ -86,6 +87,7 @@ export class WorkoutLog extends Timestamps {
       this.repeatCount = params.repeatCount;
       this.exercise = params.exercise;
       this.user = params.user;
+      this.bodyPart = params.bodyPart;
       this.userNickName = params.userNickName;
       this.exerciseName = params.exerciseName;
 
@@ -103,6 +105,7 @@ export class WorkoutLog extends Timestamps {
     user: User;
     exercise: Exercise;
     userNickName: string;
+    bodyPart: BodyPart;
     exerciseName: string;
   }) {
     this.setCount = params.setCount;
@@ -111,6 +114,7 @@ export class WorkoutLog extends Timestamps {
     this.exercise = params.exercise;
     this.user = params.user;
     this.userNickName = params.userNickName;
+    this.bodyPart = params.bodyPart;
     this.exerciseName = params.exerciseName;
 
     validateOrReject(this).catch((errors) => {
