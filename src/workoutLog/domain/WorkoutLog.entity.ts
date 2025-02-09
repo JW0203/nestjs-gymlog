@@ -20,7 +20,6 @@ import { BodyPart } from '../../common/bodyPart.enum';
 @Entity()
 @Index('idx_user_id', ['user'])
 @Index('idx_exercise_id', ['exercise'])
-@Index('idx_exercise_weight_created', ['exercise', 'weight', 'createdAt'])
 export class WorkoutLog extends Timestamps {
   @PrimaryGeneratedColumn()
   id: number;
