@@ -25,4 +25,21 @@ export class BestWorkoutLog {
 
   @IsDate()
   achieveDate: Date;
+
+  constructor(params: {
+    exerciseName: string;
+    bodyPart: BodyPart;
+    maxWeight: number;
+    achieveDate: Date;
+    userNickName: string;
+  }) {
+    if (params) {
+      this.exerciseName = params.exerciseName;
+      this.bodyPart = params.bodyPart;
+      this.maxWeight = params.maxWeight;
+      this.userNickName = params.userNickName;
+      this.achieveDate = params.achieveDate;
+      this.userNickName = params.userNickName;
+    }
+  }
 }
