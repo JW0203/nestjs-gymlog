@@ -5,8 +5,8 @@ import { MaxWeightPerExerciseRepository } from '../domain/maxWeightPerExercise.r
 import { FindMaxWeightRequestDto } from '../dto/findMaxWeight.request.dto';
 import { UpdateExerciseNameRequestDto } from '../../exercise/dto/updateExerciseName.request.dto';
 import { UpdateUserNickNameInMaxWeightRequestDto } from '../dto/updateUserNickNameInMaxWeight.request.dto';
-import { WorkoutLog } from '../../workoutLog/domain/WorkoutLog.entity';
 import { WorkoutLogService } from '../../workoutLog/application/workoutLog.service';
+import { BestWorkoutLog } from '../../workoutLog/dto/findBestWorkoutLogs.response.dto';
 
 @Injectable()
 export class MaxWeightPerExerciseService {
@@ -40,5 +40,19 @@ export class MaxWeightPerExerciseService {
     await this.maxWeightPerExerciseRepository.clearTable();
     const renewalData = await this.workoutLogService.getBestWorkoutLogs();
     return await this.maxWeightPerExerciseRepository.renewalMaxWeightPerExercise(renewalData);
+  }
+
+  async getBestWorkoutLogs(): Promise<BestWorkoutLog[]> {
+    const result = await this.maxWeightPerExerciseRepository.getBestWorkoutLogs();
+    return result.map(
+      (data) =>
+        new BestWorkoutLog({
+          exerciseName: data.exerciseName,
+          bodyPart: data.bodyPart,
+          maxWeight: data.maxWeight,
+          achieveDate: data.achieveDate,
+          userNickName: data.userNickName,
+        }),
+    );
   }
 }

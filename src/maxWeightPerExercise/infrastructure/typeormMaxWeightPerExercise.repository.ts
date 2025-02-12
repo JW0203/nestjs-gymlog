@@ -51,4 +51,10 @@ export class TypeormMaxWeightPerExerciseRepository implements MaxWeightPerExerci
   async clearTable(): Promise<void> {
     await this.maxWeightPerExerciseRepository.query('TRUNCATE TABLE max_weight_per_exercise');
   }
+
+  async getBestWorkoutLogs(): Promise<MaxWeightPerExercise[]> {
+    return await this.maxWeightPerExerciseRepository.find({
+      order: { bodyPart: 'DESC' },
+    });
+  }
 }
