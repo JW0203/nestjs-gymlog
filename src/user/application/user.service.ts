@@ -20,18 +20,20 @@ import { GetMyInfoResponseDto } from '../dto/getMyInfo.response.dto';
 import { PasswordHasher } from './passwordHasher.interface';
 import { UpdateNickNameRequestDto } from '../dto/updateNickName.request.dto';
 import { UpdateEmailRequestDto } from '../dto/updateEmail.request.dto';
-import { WorkoutLogService } from '../../workoutLog/application/workoutLog.service';
-import { UpdateUserNickNameInWorkOutLogRequestDto } from '../../workoutLog/dto/updateUserNickNameInWorkoutLog.request.dto';
+import { MaxWeightPerExerciseService } from '../../maxWeightPerExercise/application/maxWeightPerExercise.service';
+import { UpdateUserNickNameInMaxWeightRequestDto } from '../../maxWeightPerExercise/dto/updateUserNickNameInMaxWeight.request.dto';
 
 @Injectable()
 export class UserService {
   constructor(
     @Inject(USER_REPOSITORY) readonly userRepository: UserRepository,
+
     @Inject(PASSWORD_HASHER) readonly passwordHasher: PasswordHasher,
     private readonly configService: ConfigService,
     private readonly authService: AuthService,
-    @Inject(forwardRef(() => WorkoutLogService))
-    private readonly workoutLogService: WorkoutLogService,
+
+    @Inject(forwardRef(() => MaxWeightPerExerciseService))
+    private readonly maxWeightPerExerciseService: MaxWeightPerExerciseService,
   ) {}
 
   @Transactional()
@@ -125,8 +127,12 @@ export class UserService {
     if (!updatedUser || updatedUser.nickName !== nickName) {
       throw new Error('Failed to update the nickname');
     }
-    const updateNickNameInWorkoutLog = new UpdateUserNickNameInWorkOutLogRequestDto({ nickName, userId });
-    await this.workoutLogService.updateUserNickName(updateNickNameInWorkoutLog);
-    return `Nickname updated successfully to [ ${updatedUser.nickName} ]`;
+
+    const updateNickNameInMaxWeight = new UpdateUserNickNameInMaxWeightRequestDto({
+      oldNickName: user.nickName,
+      newNickName: nickName,
+    });
+    await this.maxWeightPerExerciseService.updateUserNickNameInMaxWeight(updateNickNameInMaxWeight);
+    return `Nickname in "max weight per exercise" updated successfully to [ ${updatedUser.nickName} ]`;
   }
 }
