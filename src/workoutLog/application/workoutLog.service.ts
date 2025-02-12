@@ -99,32 +99,6 @@ export class WorkoutLogService {
 
     const exerciseEntities = await this.exerciseService.findExercisesByExerciseNameAndBodyPartLockMode(exercises);
 
-    // const promisedWorkoutLogs = await Promise.all(
-    //   workoutLogs.map(async (workoutLog) => {
-    //     const { exerciseName, bodyPart, setCount, weight, repeatCount } = workoutLog;
-    //
-    //     const exercise = exerciseEntities.find(
-    //       (exercise) => exercise.exerciseName === exerciseName && exercise.bodyPart === bodyPart,
-    //     );
-    //     if (!exercise) {
-    //       throw new NotFoundException('Exercise not found');
-    //     }
-    //
-    //     return new WorkoutLog({
-    //       setCount,
-    //       weight,
-    //       repeatCount,
-    //       exercise,
-    //       user,
-    //       bodyPart: exercise.bodyPart,
-    //       userNickName: user.nickName,
-    //       exerciseName: exercise.exerciseName,
-    //     });
-    //   }),
-    // );
-    //
-    // const savedWorkoutLogs = await this.workoutLogRepository.bulkInsertWorkoutLogs(promisedWorkoutLogs);
-
     const workoutLogEntities: WorkoutLog[] = []; // 모든 WorkoutLog를 저장할 배열
     const maxWeightPerExerciseMap: { [key: string]: MaxWeightPerExercise } = {}; // 최대 무게 정보를 중복 없이 저장할 Map
 
