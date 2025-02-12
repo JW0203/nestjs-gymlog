@@ -150,9 +150,6 @@ describe('WorkoutLogService', () => {
           repeatCount,
           exercise,
           user,
-          bodyPart: exercise.bodyPart,
-          userNickName: user.nickName,
-          exerciseName: exercise.exerciseName,
         });
         workoutLogEntity.id = i + 1;
         workoutLogEntity.createdAt = new Date();
@@ -221,9 +218,6 @@ describe('WorkoutLogService', () => {
           repeatCount,
           exercise,
           user,
-          bodyPart,
-          exerciseName,
-          userNickName: user.nickName,
         });
         workoutLogEntity.id = i + 1;
         workoutLogEntity.createdAt = new Date('2024-12-06');
@@ -301,9 +295,6 @@ describe('WorkoutLogService', () => {
           repeatCount,
           exercise,
           user,
-          bodyPart,
-          exerciseName,
-          userNickName: user.nickName,
         });
         workoutLogEntity.id = id;
         return workoutLogEntity;
@@ -354,9 +345,6 @@ describe('WorkoutLogService', () => {
           repeatCount,
           exercise,
           user,
-          bodyPart,
-          exerciseName,
-          userNickName: user.nickName,
         });
         workoutLogEntity.id = id;
         workoutLogEntity.createdAt = new Date();
@@ -374,9 +362,6 @@ describe('WorkoutLogService', () => {
           repeatCount,
           exercise,
           user,
-          bodyPart,
-          exerciseName,
-          userNickName: user.nickName,
         });
         workoutLogEntity.id = id;
         workoutLogEntity.createdAt = new Date();
@@ -448,9 +433,6 @@ describe('WorkoutLogService', () => {
             repeatCount,
             exercise,
             user,
-            bodyPart,
-            exerciseName,
-            userNickName: user.nickName,
           });
           workoutLogEntity.id = workoutLogIds[i];
           return workoutLogEntity;
@@ -487,9 +469,6 @@ describe('WorkoutLogService', () => {
             repeatCount,
             exercise,
             user,
-            bodyPart,
-            exerciseName,
-            userNickName: user.nickName,
           });
           workoutLogEntity.id = i + 1;
           return workoutLogEntity;

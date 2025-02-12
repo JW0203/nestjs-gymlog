@@ -38,9 +38,6 @@ function makeWorkoutLogEntities(workoutLogs: SaveWorkoutLogFormatDto[], user: Us
       repeatCount: workoutLog.repeatCount,
       exercise,
       user,
-      bodyPart: exercise.bodyPart,
-      userNickName: user.nickName,
-      exerciseName: exercise.exerciseName,
     });
     workoutLogEntity.id = i + 1;
     workoutLogEntity.createdAt = new Date();
