@@ -1,25 +1,14 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Index, JoinColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Index } from 'typeorm';
 import { Timestamps } from '../../TimeStamp.entity';
 import { User } from '../../user/domain/User.entity';
 import { Exercise } from '../../exercise/domain/Exercise.entity';
-import {
-  IsEnum,
-  IsNotEmpty,
-  IsNumber,
-  Matches,
-  Max,
-  MaxLength,
-  Min,
-  MinLength,
-  validateOrReject,
-} from 'class-validator';
+import { IsNotEmpty, IsNumber, Max, Min, validateOrReject } from 'class-validator';
 import { Logger } from '@nestjs/common';
-import { IsExerciseName } from '../../common/validation/isExerciseName.validation';
-import { BodyPart } from '../../common/bodyPart.enum';
 
 @Entity()
-@Index('idx_user_id', ['user'])
-@Index('idx_exercise_id', ['exercise'])
+@Index('idx_workout_log_user_id', ['user'])
+@Index('idx_workout_log_exercise_id', ['exercise'])
+@Index('idx_workout_log_deleted_exercise_weight', ['deletedAt', 'exercise', 'weight'])
 export class WorkoutLog extends Timestamps {
   @PrimaryGeneratedColumn()
   id: number;
@@ -44,28 +33,10 @@ export class WorkoutLog extends Timestamps {
   @Column()
   repeatCount: number;
 
-  @IsNotEmpty()
-  @MinLength(2)
-  @MaxLength(15)
-  @Matches(/^[a-zA-Z\uAC00-\uD7A3][a-zA-Z0-9\uAC00-\uD7A3]*$/) //문자는 영어나 한글로 시작하고 공백을 허용하지 않는다.,
-  @Column()
-  userNickName: string;
-
-  @IsNotEmpty()
-  @IsEnum(BodyPart)
-  @Column({ type: 'enum', enum: BodyPart })
-  bodyPart: BodyPart;
-
-  @IsNotEmpty()
-  @Column()
-  @IsExerciseName()
-  exerciseName: string;
-
   @ManyToOne(() => Exercise, (exercise) => exercise.workoutLogs)
   public exercise: Exercise;
 
   @ManyToOne(() => User, (user) => user.workoutLogs)
-  @JoinColumn({ name: 'user_id' })
   public user: User;
 
   constructor(params: {
@@ -75,9 +46,6 @@ export class WorkoutLog extends Timestamps {
     repeatCount: number;
     exercise: Exercise;
     user: User;
-    userNickName: string;
-    bodyPart: BodyPart;
-    exerciseName: string;
   }) {
     super();
     if (params) {
@@ -86,9 +54,9 @@ export class WorkoutLog extends Timestamps {
       this.repeatCount = params.repeatCount;
       this.exercise = params.exercise;
       this.user = params.user;
-      this.bodyPart = params.bodyPart;
-      this.userNickName = params.userNickName;
-      this.exerciseName = params.exerciseName;
+      // this.bodyPart = params.bodyPart;
+      // this.userNickName = params.userNickName;
+      // this.exerciseName = params.exerciseName;
 
       validateOrReject(this).catch((errors) => {
         const logger = new Logger('WorkoutLog Entity');
@@ -103,18 +71,18 @@ export class WorkoutLog extends Timestamps {
     repeatCount: number;
     user: User;
     exercise: Exercise;
-    userNickName: string;
-    bodyPart: BodyPart;
-    exerciseName: string;
+    // userNickName: string;
+    // bodyPart: BodyPart;
+    // exerciseName: string;
   }) {
     this.setCount = params.setCount;
     this.weight = params.weight;
     this.repeatCount = params.repeatCount;
     this.exercise = params.exercise;
     this.user = params.user;
-    this.userNickName = params.userNickName;
-    this.bodyPart = params.bodyPart;
-    this.exerciseName = params.exerciseName;
+    // this.userNickName = params.userNickName;
+    // this.bodyPart = params.bodyPart;
+    // this.exerciseName = params.exerciseName;
 
     validateOrReject(this).catch((errors) => {
       const logger = new Logger('WorkoutLog Entity Update');
