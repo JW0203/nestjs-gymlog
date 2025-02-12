@@ -18,15 +18,16 @@ import { Transactional } from 'typeorm-transactional';
 import { LockConfigManager } from '../../common/infrastructure/typeormMysql.lock';
 import { FilteredExerciseDto } from '../dto/filteredExercise.dto';
 import { UpdateExerciseNameRequestDto } from '../dto/updateExerciseName.request.dto';
-import { WorkoutLogService } from '../../workoutLog/application/workoutLog.service';
+import { MaxWeightPerExerciseService } from '../../maxWeightPerExercise/application/maxWeightPerExercise.service';
 
 @Injectable()
 export class ExerciseService {
   constructor(
     @Inject(EXERCISE_REPOSITORY)
     private readonly exerciseRepository: ExerciseRepository,
-    @Inject(forwardRef(() => WorkoutLogService))
-    private readonly workoutLogService: WorkoutLogService,
+
+    @Inject(forwardRef(() => MaxWeightPerExerciseService))
+    private readonly maxWeightPerExerciseService: MaxWeightPerExerciseService,
   ) {}
 
   async findOneByExerciseNameAndBodyPart(findByExerciseNameAndBodyPart: ExerciseDataFormatDto) {
@@ -109,6 +110,6 @@ export class ExerciseService {
 
   async changeExerciseName(updateData: UpdateExerciseNameRequestDto): Promise<string> {
     await this.exerciseRepository.changeExerciseName(updateData);
-    return await this.workoutLogService.updateExerciseNameInWorkoutLog(updateData);
+    return await this.maxWeightPerExerciseService.updateExerciseNameInMaxWeight(updateData);
   }
 }
