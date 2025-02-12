@@ -7,7 +7,7 @@ import { NoWhitespace } from '../../common/validation/NoWhitespace.validation';
 import { IsEmailCustom } from '../../common/validation/isEmail.validation.custom';
 
 @Entity()
-@Index('idx_user_deleted', ['deletedAt', 'id'])
+@Index('idx_user_deleted_id', ['deletedAt', 'id'])
 export class User extends Timestamps {
   @PrimaryGeneratedColumn()
   id: number;
