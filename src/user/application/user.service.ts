@@ -143,6 +143,6 @@ export class UserService {
       throw new Error('Failed to update the nickname');
     }
 
-    return `Nickname in "max weight per exercise" updated successfully to [ ${updatedUser.nickName} ]`;
+    return `Nickname is updated successfully to [ ${updatedUser.nickName} ]`;
   }
 }
