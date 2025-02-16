@@ -96,13 +96,13 @@ export class UserService {
     return await this.userRepository.findOneUserById(id);
   }
 
+  @Transactional()
   async softDeleteUser(userId: number): Promise<void> {
     const user = await this.userRepository.findOneUserById(userId);
 
     if (!user) {
       throw new NotFoundException('The user does not exist');
     }
-    await this.userRepository.softDeleteUser(userId);
 
     const userWorkoutLogs = await this.workoutLogService.findWorkoutLogsByUser(user);
     const ids = userWorkoutLogs.map((workoutLog) => workoutLog.id);
@@ -113,6 +113,8 @@ export class UserService {
     await this.routineService.softDeleteRoutines(deleteRoutineRequestDto, user);
 
     await this.maxWeightPerExerciseService.renewalMaxWeightPerExercise();
+
+    await this.userRepository.softDeleteUser(userId);
   }
 
   @Transactional()
