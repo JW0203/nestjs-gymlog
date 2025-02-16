@@ -8,9 +8,17 @@ import { PASSWORD_HASHER, USER_REPOSITORY } from '../common/const/inject.constan
 import { TypeormUserRepository } from './infrastructure/typeormUser.repository';
 import { BycptHasher } from './application/bcryptHasher.service';
 import { MaxWeightPerExerciseModule } from '../maxWeightPerExercise/maxWeightPerExercise.module';
+import { WorkoutLogModule } from '../workoutLog/workoutLog.module';
+import { RoutineModule } from '../routine/routine.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User]), AuthModule, forwardRef(() => MaxWeightPerExerciseModule)],
+  imports: [
+    TypeOrmModule.forFeature([User]),
+    AuthModule,
+    forwardRef(() => MaxWeightPerExerciseModule),
+    forwardRef(() => WorkoutLogModule),
+    forwardRef(() => RoutineModule),
+  ],
   controllers: [UserController],
   providers: [
     UserService,
