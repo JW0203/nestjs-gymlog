@@ -450,7 +450,7 @@ describe('WorkoutLogService', () => {
     });
   });
 
-  describe('getWorkoutLogsByUser', () => {
+  describe('getAggregatedWorkoutLogsByUser', () => {
     it('should return all workoutLogs by users', async () => {
       const user: User = new User({ email: 'test@email.com', password: '12345678', nickName: 'tester' });
       user.id = 1;
@@ -478,7 +478,7 @@ describe('WorkoutLogService', () => {
       const expectedResult: object = GetWorkoutLogByUserResponseDto(workoutLogEntities);
       workoutLogRepository.findWorkoutLogsByUser.mockResolvedValue(workoutLogEntities);
 
-      const result = await workoutLogService.getWorkoutLogsByUser(user);
+      const result = await workoutLogService.getAggregatedWorkoutLogsByUser(user);
       expect(result).toEqual(expectedResult);
       expect(workoutLogRepository.findWorkoutLogsByUser).toHaveBeenCalledWith(user);
     });
