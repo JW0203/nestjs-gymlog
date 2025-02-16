@@ -90,7 +90,7 @@ export class RoutineService {
         }
         const foundRoutine = await this.routineRepository.findOneRoutineById(id, user);
         if (!foundRoutine) {
-          throw new BadRequestException(`Routine with id ${id} not found.`);
+          throw new NotFoundException(`Routine with id ${id} not found.`);
         }
         foundRoutine.update({
           name: routineName,
@@ -110,7 +110,7 @@ export class RoutineService {
     const { ids } = deleteRoutineRequestDto;
     const routines = await this.routineRepository.findRoutinesByIds(ids, user);
     if (routines.length === 0) {
-      throw new BadRequestException(`Routines not found`);
+      return;
     }
     const routineIds = routines.map((routine) => {
       return routine.id;

@@ -46,7 +46,7 @@ describe('Test UserRepository', () => {
     });
 
     it('Should sign up a new user', async () => {
-      const newUser: User = new User({ email: 'test@example.com', name: 'tester', password: 'test1234' });
+      const newUser: User = new User({ email: 'test@example.com', nickName: 'tester', password: 'test1234' });
       newUser.id = 1;
 
       const result = await userRepository.signUp(newUser);
@@ -62,7 +62,7 @@ describe('Test UserRepository', () => {
     });
 
     it('Should fine one user by the user email', async () => {
-      const newUser: User = new User({ email: 'test@example.com', name: 'tester', password: 'test1234' });
+      const newUser: User = new User({ email: 'test@example.com', nickName: 'tester', password: 'test1234' });
       newUser.id = 1;
       await userRepository.signUp(newUser);
 
@@ -88,7 +88,7 @@ describe('Test UserRepository', () => {
     });
 
     it('Should fine one user by the user email', async () => {
-      const newUser: User = new User({ email: 'test@example.com', name: 'tester', password: 'test1234' });
+      const newUser: User = new User({ email: 'test@example.com', nickName: 'tester', password: 'test1234' });
       newUser.id = 1;
       await userRepository.signUp(newUser);
 
@@ -124,7 +124,7 @@ describe('Test UserRepository', () => {
     });
 
     it('Should fine one user by their id using findOneUserById', async () => {
-      const newUser: User = new User({ email: 'test@example.com', name: '테스터', password: 'test1234' });
+      const newUser: User = new User({ email: 'test@example.com', nickName: '테스터', password: 'test1234' });
       newUser.id = 1;
       await userRepository.signUp(newUser);
 
@@ -149,7 +149,7 @@ describe('Test UserRepository', () => {
       await dataSource.synchronize();
     });
     it('Should soft delete a user when using softDeleteUser', async () => {
-      const user: User = new User({ email: 'test@example.com', name: 'tester', password: 'test1234' });
+      const user: User = new User({ email: 'test@example.com', nickName: 'tester', password: 'test1234' });
       user.id = 1;
       await userRepository.signUp(user);
 

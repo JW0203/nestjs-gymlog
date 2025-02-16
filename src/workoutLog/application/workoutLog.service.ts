@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, forwardRef } from '@nestjs/common';
 import { SoftDeleteWorkoutLogRequestDto } from '../dto/softDeleteWorkoutLog.request.dto';
 import { User } from '../../user/domain/User.entity';
 import { SaveWorkoutLogsRequestDto } from '../dto/saveWorkoutLogs.request.dto';
@@ -13,6 +13,10 @@ import { UserService } from '../../user/application/user.service';
 import { GetWorkoutLogByUserResponseDto } from '../dto/getWorkoutLogByUser.response.dto';
 import { Exercise } from '../../exercise/domain/Exercise.entity';
 import { BestWorkoutLog } from '../dto/findBestWorkoutLogs.response.dto';
+import { MaxWeightPerExerciseService } from '../../maxWeightPerExercise/application/maxWeightPerExercise.service';
+import { FindMaxWeightRequestDto } from '../../maxWeightPerExercise/dto/findMaxWeight.request.dto';
+import { MaxWeightPerExercise } from '../../maxWeightPerExercise/domain/MaxWeightPerExercise.entity';
+import { BodyPart } from '../../common/bodyPart.enum';
 
 interface UpdateWorkoutLogsParams {
   workoutLogMap: Map<number, WorkoutLog>;
@@ -23,7 +27,7 @@ interface UpdateWorkoutLogsParams {
     repeatCount: number;
     weight: number;
     exerciseName: string;
-    bodyPart: string;
+    bodyPart: BodyPart;
   }[];
   user: User;
 }
@@ -68,8 +72,15 @@ export class WorkoutLogService {
   constructor(
     @Inject(WORKOUTLOG_REPOSITORY)
     readonly workoutLogRepository: WorkoutLogRepository,
+
+    @Inject(forwardRef(() => ExerciseService))
     private readonly exerciseService: ExerciseService,
+
+    @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
+
+    @Inject(forwardRef(() => MaxWeightPerExerciseService))
+    private readonly maxWeightService: MaxWeightPerExerciseService,
   ) {}
 
   @Transactional()
@@ -81,7 +92,6 @@ export class WorkoutLogService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-
     const newExercises = await this.exerciseService.findNewExercises({ exercises });
     if (newExercises.length > 0) {
       await this.exerciseService.bulkInsertExercises({ exercises: newExercises });
@@ -89,28 +99,69 @@ export class WorkoutLogService {
 
     const exerciseEntities = await this.exerciseService.findExercisesByExerciseNameAndBodyPartLockMode(exercises);
 
-    const promisedWorkoutLogs = await Promise.all(
-      workoutLogs.map(async (workoutLog) => {
-        const { exerciseName, bodyPart, setCount, weight, repeatCount } = workoutLog;
+    const workoutLogEntities: WorkoutLog[] = []; // 모든 WorkoutLog를 저장할 배열
+    const maxWeightPerExerciseMap: { [key: string]: MaxWeightPerExercise } = {}; // 최대 무게 정보를 중복 없이 저장할 Map
 
-        const exercise = exerciseEntities.find(
-          (exercise) => exercise.exerciseName === exerciseName && exercise.bodyPart === bodyPart,
-        );
-        if (!exercise) {
-          throw new NotFoundException('Exercise not found');
-        }
+    workoutLogs.forEach((workoutLog) => {
+      const { exerciseName, bodyPart, setCount, weight, repeatCount } = workoutLog;
 
-        return new WorkoutLog({
-          setCount,
-          weight,
-          repeatCount,
-          exercise,
-          user,
+      const exercise = exerciseEntities.find(
+        (exercise) => exercise.exerciseName === exerciseName && exercise.bodyPart === bodyPart,
+      );
+
+      if (!exercise) {
+        throw new NotFoundException('Exercise not found');
+      }
+
+      const newWorkoutLog = new WorkoutLog({
+        setCount,
+        weight,
+        repeatCount,
+        exercise,
+        user,
+      });
+
+      // WorkoutLog를 보관
+      workoutLogEntities.push(newWorkoutLog);
+    });
+
+    const savedWorkoutLogs = await this.workoutLogRepository.bulkInsertWorkoutLogs(workoutLogEntities);
+    console.log('saved workout logs');
+
+    const maxWeightMap: { [key: string]: WorkoutLog } = {};
+    savedWorkoutLogs.map((data) => {
+      const exerciseE = data.exercise;
+      const userE = data.user;
+
+      if (!maxWeightMap[exerciseE.exerciseName] || data.weight > maxWeightMap[exerciseE.exerciseName].weight) {
+        maxWeightMap[exerciseE.exerciseName] = data;
+
+        maxWeightPerExerciseMap[exerciseE.exerciseName] = new MaxWeightPerExercise({
+          exerciseName: exerciseE.exerciseName,
+          bodyPart: exerciseE.bodyPart,
+          maxWeight: data.weight,
+          userNickName: userE.nickName,
+          achieveDate: data.createdAt,
         });
-      }),
-    );
+      }
+    });
 
-    const savedWorkoutLogs = await this.workoutLogRepository.bulkInsertWorkoutLogs(promisedWorkoutLogs);
+    const maxWeightPerExerciseEntities = Object.values(maxWeightPerExerciseMap);
+    const maxWeightDataArray = [];
+
+    for (const entityData of maxWeightPerExerciseEntities) {
+      const requestData = new FindMaxWeightRequestDto({
+        exerciseName: entityData.exerciseName,
+        bodyPart: entityData.bodyPart,
+      });
+      const maxWeightData = await this.maxWeightService.findMaxWeight(requestData);
+
+      if (!maxWeightData || (maxWeightData && entityData.maxWeight > maxWeightData.maxWeight)) {
+        maxWeightDataArray.push(entityData);
+      }
+    }
+
+    await this.maxWeightService.bulkSaveMaxWeightPerExercise(maxWeightDataArray);
 
     return savedWorkoutLogs.map((workoutLog) => new WorkoutLogResponseDto(workoutLog));
   }
@@ -186,7 +237,11 @@ export class WorkoutLogService {
     await this.workoutLogRepository.softDeleteWorkoutLogs(ids, user);
   }
 
-  async getWorkoutLogsByUser(user: User): Promise<object> {
+  async findWorkoutLogsByUser(user: User): Promise<WorkoutLogResponseDto[]> {
+    return await this.workoutLogRepository.findWorkoutLogsByUser(user);
+  }
+
+  async getAggregatedWorkoutLogsByUser(user: User): Promise<object> {
     const result = await this.workoutLogRepository.findWorkoutLogsByUser(user);
     return GetWorkoutLogByUserResponseDto(result);
   }
@@ -204,9 +259,4 @@ export class WorkoutLogService {
   async getBestWorkoutLogs(): Promise<BestWorkoutLog[]> {
     return await this.workoutLogRepository.findBestWorkoutLogs();
   }
-
-  // aync getWorkoutLogsByYear(user: User, year:number): Promise<object> {
-  //   const result = await this.workoutLogRepository.findWorkoutLogsByYear()
-  //
-  // }
 }

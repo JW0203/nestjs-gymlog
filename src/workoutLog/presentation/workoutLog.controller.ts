@@ -40,8 +40,8 @@ export class WorkoutLogController {
   @Get('user')
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
-  getWorkoutLogsByUser(@Request() req: any) {
-    return this.workoutLogService.getWorkoutLogsByUser(req.user);
+  getAggregatedWorkoutLogsByUser(@Request() req: any) {
+    return this.workoutLogService.getAggregatedWorkoutLogsByUser(req.user);
   }
 
   @Get('year')

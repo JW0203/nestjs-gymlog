@@ -15,5 +15,5 @@ export interface ExerciseRepository {
   findExercisesByIds(ids: number[]): Promise<Exercise[]>;
   bulkInsertExercises(exercises: ExerciseDataFormatDto[]): Promise<Exercise[]>;
   bulkSoftDelete(ids: number[]): Promise<void>;
-  changeExerciseName(updateData: UpdateExerciseNameRequestDto): Promise<any>;
+  changeExerciseName(updateData: UpdateExerciseNameRequestDto): Promise<Exercise>;
 }
