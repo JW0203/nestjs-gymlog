@@ -1,7 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '../common/Logger/logger.module';
-import { Max_Weight_PerExercise_REPOSITORY } from '../common/const/inject.constant';
+import { Max_Weight_Per_Exercise_REPOSITORY } from '../common/const/inject.constant';
 import { MaxWeightPerExercise } from './domain/MaxWeightPerExercise.entity';
 import { TypeormMaxWeightPerExerciseRepository } from './infrastructure/typeormMaxWeightPerExercise.repository';
 import { MaxWeightPerExerciseService } from './application/maxWeightPerExercise.service';
@@ -17,7 +17,7 @@ import { MaxWeightPerExerciseController } from './presentation/maxWeightPerExerc
   ],
   providers: [
     MaxWeightPerExerciseService,
-    { provide: Max_Weight_PerExercise_REPOSITORY, useClass: TypeormMaxWeightPerExerciseRepository },
+    { provide: Max_Weight_Per_Exercise_REPOSITORY, useClass: TypeormMaxWeightPerExerciseRepository },
   ],
   controllers: [MaxWeightPerExerciseController],
   exports: [MaxWeightPerExerciseService],
