@@ -22,6 +22,10 @@ import { UpdateNickNameRequestDto } from '../dto/updateNickName.request.dto';
 import { UpdateEmailRequestDto } from '../dto/updateEmail.request.dto';
 import { MaxWeightPerExerciseService } from '../../maxWeightPerExercise/application/maxWeightPerExercise.service';
 import { UpdateUserNickNameInMaxWeightRequestDto } from '../../maxWeightPerExercise/dto/updateUserNickNameInMaxWeight.request.dto';
+import { WorkoutLogService } from '../../workoutLog/application/workoutLog.service';
+import { RoutineService } from '../../routine/application/routine.service';
+import { SoftDeleteWorkoutLogRequestDto } from '../../workoutLog/dto/softDeleteWorkoutLog.request.dto';
+import { DeleteRoutineRequestDto } from '../../routine/dto/deleteRoutine.request.dto';
 
 @Injectable()
 export class UserService {
@@ -34,6 +38,12 @@ export class UserService {
 
     @Inject(forwardRef(() => MaxWeightPerExerciseService))
     private readonly maxWeightPerExerciseService: MaxWeightPerExerciseService,
+
+    @Inject(forwardRef(() => WorkoutLogService))
+    private readonly workoutLogService: WorkoutLogService,
+
+    @Inject(forwardRef(() => RoutineService))
+    private readonly routineService: RoutineService,
   ) {}
 
   @Transactional()
@@ -93,6 +103,16 @@ export class UserService {
       throw new NotFoundException('The user does not exist');
     }
     await this.userRepository.softDeleteUser(userId);
+
+    const userWorkoutLogs = await this.workoutLogService.findWorkoutLogsByUser(user);
+    const ids = userWorkoutLogs.map((workoutLog) => workoutLog.id);
+    const softDeleteWorkoutLogRequestDto: SoftDeleteWorkoutLogRequestDto = { ids };
+    await this.workoutLogService.softDeleteWorkoutLogs(softDeleteWorkoutLogRequestDto, user);
+
+    const deleteRoutineRequestDto: DeleteRoutineRequestDto = { ids };
+    await this.routineService.softDeleteRoutines(deleteRoutineRequestDto, user);
+
+    await this.maxWeightPerExerciseService.renewalMaxWeightPerExercise();
   }
 
   @Transactional()
