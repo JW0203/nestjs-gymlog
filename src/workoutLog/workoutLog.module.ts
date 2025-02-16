@@ -8,6 +8,7 @@ import { WorkoutLogService } from './application/workoutLog.service';
 import { LoggerModule } from '../common/Logger/logger.module';
 import { WORKOUTLOG_REPOSITORY } from '../common/const/inject.constant';
 import { TypeormWorkoutLogRepository } from './infrastructure/typeormWorkoutLog.repository';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { TypeormWorkoutLogRepository } from './infrastructure/typeormWorkoutLog.
     forwardRef(() => ExerciseModule),
     forwardRef(() => UserModule),
     LoggerModule,
+    CacheModule.register(),
   ],
   controllers: [WorkoutLogController],
   providers: [WorkoutLogService, { provide: WORKOUTLOG_REPOSITORY, useClass: TypeormWorkoutLogRepository }],
