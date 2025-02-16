@@ -8,15 +8,12 @@ import { WorkoutLogService } from './application/workoutLog.service';
 import { LoggerModule } from '../common/Logger/logger.module';
 import { WORKOUTLOG_REPOSITORY } from '../common/const/inject.constant';
 import { TypeormWorkoutLogRepository } from './infrastructure/typeormWorkoutLog.repository';
-import { MaxWeightPerExerciseModule } from '../maxWeightPerExercise/maxWeightPerExercise.module';
-import { MaxWeightPerExercise } from '../maxWeightPerExercise/domain/MaxWeightPerExercise.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([WorkoutLog, MaxWeightPerExercise]),
+    TypeOrmModule.forFeature([WorkoutLog]),
     forwardRef(() => ExerciseModule),
     forwardRef(() => UserModule),
-    forwardRef(() => MaxWeightPerExerciseModule),
     LoggerModule,
   ],
   controllers: [WorkoutLogController],

@@ -14,7 +14,6 @@ import { ExerciseModule } from './exercise/excercise.module';
 import { JwtPassportModule } from './common/jwtPassport.module';
 import { addTransactionalDataSource } from 'typeorm-transactional';
 import { DataSource } from 'typeorm';
-import { MaxWeightPerExerciseModule } from './maxWeightPerExercise/maxWeightPerExercise.module';
 
 @Module({
   imports: [
@@ -52,7 +51,6 @@ import { MaxWeightPerExerciseModule } from './maxWeightPerExercise/maxWeightPerE
     WorkoutLogModule,
     ExerciseModule,
     JwtPassportModule,
-    MaxWeightPerExerciseModule,
   ],
   controllers: [AppController],
   providers: [AppService],
