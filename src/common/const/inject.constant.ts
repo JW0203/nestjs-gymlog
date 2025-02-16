@@ -3,4 +3,4 @@ export const ROUTINE_REPOSITORY = 'ROUTINE_REPOSITORY';
 export const USER_REPOSITORY = 'USER_REPOSITORY';
 export const WORKOUTLOG_REPOSITORY = 'WORKOUTLOG_REPOSITORY';
 export const PASSWORD_HASHER = 'PASSWORD_HASHER';
-export const Max_Weight_PerExercise_REPOSITORY = 'Max_Weight_PerExercise_REPOSITORY';
+export const Max_Weight_Per_Exercise_REPOSITORY = 'Max_Weight_PerExercise_REPOSITORY';

@@ -1,17 +1,17 @@
 import { MaxWeightPerExercise } from '../domain/MaxWeightPerExercise.entity';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { Max_Weight_PerExercise_REPOSITORY } from '../../common/const/inject.constant';
 import { MaxWeightPerExerciseRepository } from '../domain/maxWeightPerExercise.repository';
 import { FindMaxWeightRequestDto } from '../dto/findMaxWeight.request.dto';
 import { UpdateExerciseNameRequestDto } from '../../exercise/dto/updateExerciseName.request.dto';
 import { UpdateUserNickNameInMaxWeightRequestDto } from '../dto/updateUserNickNameInMaxWeight.request.dto';
 import { WorkoutLogService } from '../../workoutLog/application/workoutLog.service';
 import { BestWorkoutLog } from '../../workoutLog/dto/findBestWorkoutLogs.response.dto';
+import { Max_Weight_Per_Exercise_REPOSITORY } from '../../common/const/inject.constant';
 
 @Injectable()
 export class MaxWeightPerExerciseService {
   constructor(
-    @Inject(Max_Weight_PerExercise_REPOSITORY)
+    @Inject(Max_Weight_Per_Exercise_REPOSITORY)
     readonly maxWeightPerExerciseRepository: MaxWeightPerExerciseRepository,
 
     @Inject(forwardRef(() => WorkoutLogService))
