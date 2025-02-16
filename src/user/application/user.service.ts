@@ -20,8 +20,6 @@ import { GetMyInfoResponseDto } from '../dto/getMyInfo.response.dto';
 import { PasswordHasher } from './passwordHasher.interface';
 import { UpdateNickNameRequestDto } from '../dto/updateNickName.request.dto';
 import { UpdateEmailRequestDto } from '../dto/updateEmail.request.dto';
-import { MaxWeightPerExerciseService } from '../../maxWeightPerExercise/application/maxWeightPerExercise.service';
-import { UpdateUserNickNameInMaxWeightRequestDto } from '../../maxWeightPerExercise/dto/updateUserNickNameInMaxWeight.request.dto';
 import { WorkoutLogService } from '../../workoutLog/application/workoutLog.service';
 import { RoutineService } from '../../routine/application/routine.service';
 import { SoftDeleteWorkoutLogRequestDto } from '../../workoutLog/dto/softDeleteWorkoutLog.request.dto';
@@ -35,9 +33,6 @@ export class UserService {
     @Inject(PASSWORD_HASHER) readonly passwordHasher: PasswordHasher,
     private readonly configService: ConfigService,
     private readonly authService: AuthService,
-
-    @Inject(forwardRef(() => MaxWeightPerExerciseService))
-    private readonly maxWeightPerExerciseService: MaxWeightPerExerciseService,
 
     @Inject(forwardRef(() => WorkoutLogService))
     private readonly workoutLogService: WorkoutLogService,
@@ -112,8 +107,6 @@ export class UserService {
     const deleteRoutineRequestDto: DeleteRoutineRequestDto = { ids };
     await this.routineService.softDeleteRoutines(deleteRoutineRequestDto, user);
 
-    await this.maxWeightPerExerciseService.renewalMaxWeightPerExercise();
-
     await this.userRepository.softDeleteUser(userId);
   }
 
@@ -150,11 +143,6 @@ export class UserService {
       throw new Error('Failed to update the nickname');
     }
 
-    const updateNickNameInMaxWeight = new UpdateUserNickNameInMaxWeightRequestDto({
-      oldNickName: user.nickName,
-      newNickName: nickName,
-    });
-    await this.maxWeightPerExerciseService.updateUserNickNameInMaxWeight(updateNickNameInMaxWeight);
     return `Nickname in "max weight per exercise" updated successfully to [ ${updatedUser.nickName} ]`;
   }
 }
