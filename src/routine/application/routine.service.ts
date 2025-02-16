@@ -110,7 +110,7 @@ export class RoutineService {
     const { ids } = deleteRoutineRequestDto;
     const routines = await this.routineRepository.findRoutinesByIds(ids, user);
     if (routines.length === 0) {
-      throw new NotFoundException(`Routines not found.`);
+      return;
     }
     const routineIds = routines.map((routine) => {
       return routine.id;
