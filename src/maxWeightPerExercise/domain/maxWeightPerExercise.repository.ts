@@ -12,6 +12,4 @@ export interface MaxWeightPerExerciseRepository {
   renewalMaxWeightPerExercise(renewalData: BestWorkoutLog[]): Promise<MaxWeightPerExercise[]>;
   clearTable(): Promise<void>;
   getBestWorkoutLogs(): Promise<MaxWeightPerExercise[]>;
-  // updateMaxWeightAfterUserDeletion(userData: dto): Promise<?[]>; // 발생하는 경우... ? 1.유저가 사라 졌을 때? 2. 운동이름이 지워졌을때 이 두경우를 사용하면 dto 가 문제네 -> 따로 만들자.
-  // updateMaxWeightAfterExerciseDeletion(exerciseData: dto): Promise<?[]>;
 }
