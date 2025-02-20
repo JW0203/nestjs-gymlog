@@ -14,9 +14,7 @@ import { ExerciseModule } from './exercise/excercise.module';
 import { JwtPassportModule } from './common/jwtPassport.module';
 import { addTransactionalDataSource } from 'typeorm-transactional';
 import { DataSource } from 'typeorm';
-import { CacheModule } from '@nestjs/cache-manager';
-import * as redisStore from 'cache-manager-ioredis';
-import { WorkoutLog } from './workoutLog/domain/WorkoutLog.entity';
+import { RedisModule } from './cache/redis.module';
 
 @Module({
   imports: [
@@ -39,7 +37,7 @@ import { WorkoutLog } from './workoutLog/domain/WorkoutLog.entity';
         database: configService.get<string>('DB_NAME'),
         autoLoadEntities: true,
         synchronize: true,
-        logging: true,
+        logging: false,
         namingStrategy: new SnakeNamingStrategy(),
       }),
       async dataSourceFactory(options) {
@@ -49,17 +47,7 @@ import { WorkoutLog } from './workoutLog/domain/WorkoutLog.entity';
         return addTransactionalDataSource(new DataSource(options));
       },
     }),
-    TypeOrmModule.forFeature([WorkoutLog]),
-    CacheModule.registerAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
-        store: redisStore,
-        host: configService.get<string>('CACHE_HOST'),
-        port: configService.get<number>('CACHE_PORT'),
-        ttl: configService.get<number>('CACHE_TTL'),
-      }),
-    }),
+    RedisModule,
     UserModule,
     RoutineModule,
     WorkoutLogModule,
