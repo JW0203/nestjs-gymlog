@@ -14,7 +14,7 @@ import { GetWorkoutLogByUserResponseDto } from '../dto/getWorkoutLogByUser.respo
 import { Exercise } from '../../exercise/domain/Exercise.entity';
 import { BestWorkoutLog } from '../dto/findBestWorkoutLogs.response.dto';
 import { BodyPart } from '../../common/bodyPart.enum';
-import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
+import { RedisService } from '../../cache/redis.service';
 
 interface UpdateWorkoutLogsParams {
   workoutLogMap: Map<number, WorkoutLog>;
@@ -77,8 +77,7 @@ export class WorkoutLogService {
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
 
-    @Inject(CACHE_MANAGER)
-    private readonly cacheManager: Cache,
+    private readonly redisService: RedisService,
   ) {}
 
   @Transactional()
@@ -118,7 +117,6 @@ export class WorkoutLogService {
         user,
       });
 
-      // WorkoutLog를 보관
       workoutLogEntities.push(newWorkoutLog);
     });
 
@@ -217,14 +215,18 @@ export class WorkoutLogService {
     return result;
   }
 
-  async getBestWorkoutLogs(): Promise<BestWorkoutLog[]> {
-    const cacheKey = 'bestWorkoutLogs';
-    const cachedData = await this.cacheManager.get<BestWorkoutLog[]>(cacheKey);
-    if (cachedData) {
+  async getBestWorkoutLogs(): Promise<any> {
+    const cacheKey: string = 'best:workout:logs';
+
+    const cachedData = await this.redisService.getBestWorkoutLogs(cacheKey);
+    if (cachedData.length > 0) {
       return cachedData;
     }
+
     const bestWorkoutLogs: BestWorkoutLog[] = await this.workoutLogRepository.findBestWorkoutLogs();
-    await this.cacheManager.set(cacheKey, bestWorkoutLogs);
+
+    await this.redisService.insertBestWorkout(cacheKey, bestWorkoutLogs);
+
     return bestWorkoutLogs;
   }
 }
