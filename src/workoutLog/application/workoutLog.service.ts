@@ -222,7 +222,6 @@ export class WorkoutLogService {
     if (cachedData.length > 0) {
       return cachedData;
     }
-
     const bestWorkoutLogs: BestWorkoutLog[] = await this.workoutLogRepository.findBestWorkoutLogs();
 
     await this.redisService.insertBestWorkout(cacheKey, bestWorkoutLogs);
