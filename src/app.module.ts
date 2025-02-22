@@ -15,6 +15,10 @@ import { JwtPassportModule } from './common/jwtPassport.module';
 import { addTransactionalDataSource } from 'typeorm-transactional';
 import { DataSource } from 'typeorm';
 import { MaxWeightPerExerciseModule } from './maxWeightPerExercise/maxWeightPerExercise.module';
+import { CacheModule } from '@nestjs/cache-manager';
+// import { redisStore } from 'cache-manager-redis-store';
+import * as redisStore from 'cache-manager-redis-store';
+// import { RedisCacheModule } from './cache/redisCache.module';
 
 @Module({
   imports: [
@@ -37,7 +41,7 @@ import { MaxWeightPerExerciseModule } from './maxWeightPerExercise/maxWeightPerE
         database: configService.get<string>('DB_NAME'),
         autoLoadEntities: true,
         synchronize: true,
-        logging: true,
+        logging: false,
         namingStrategy: new SnakeNamingStrategy(),
       }),
       async dataSourceFactory(options) {
@@ -53,6 +57,14 @@ import { MaxWeightPerExerciseModule } from './maxWeightPerExercise/maxWeightPerE
     ExerciseModule,
     JwtPassportModule,
     MaxWeightPerExerciseModule,
+    CacheModule.register({
+      ttl: 60,
+      store: redisStore,
+      host: '172.27.0.2',
+      port: 6379,
+      isGlobal: true,
+      redisOptions: { showFriendlyErrorStack: true },
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],
