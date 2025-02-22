@@ -17,6 +17,9 @@ import { MaxWeightPerExerciseService } from '../../maxWeightPerExercise/applicat
 import { FindMaxWeightRequestDto } from '../../maxWeightPerExercise/dto/findMaxWeight.request.dto';
 import { MaxWeightPerExercise } from '../../maxWeightPerExercise/domain/MaxWeightPerExercise.entity';
 import { BodyPart } from '../../common/bodyPart.enum';
+import { RedisCacheService } from '../../cache/redisCache.service';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 interface UpdateWorkoutLogsParams {
   workoutLogMap: Map<number, WorkoutLog>;
@@ -81,6 +84,9 @@ export class WorkoutLogService {
 
     @Inject(forwardRef(() => MaxWeightPerExerciseService))
     private readonly maxWeightService: MaxWeightPerExerciseService,
+
+    // private redisCacheService: RedisCacheService,
+    @Inject(CACHE_MANAGER) private redisCacheService: Cache,
   ) {}
 
   @Transactional()
@@ -257,6 +263,19 @@ export class WorkoutLogService {
   }
 
   async getBestWorkoutLogs(): Promise<BestWorkoutLog[]> {
-    return await this.workoutLogRepository.findBestWorkoutLogs();
+    const cacheKey = 'workoutLogs:bestlogs';
+    const cacheData = await this.redisCacheService.get<BestWorkoutLog[]>(cacheKey);
+    console.log('Retrieved cacheData: ', cacheData);
+    if (cacheData) {
+      console.log('Cache hit!');
+
+      return cacheData;
+    }
+
+    const bestLogs = await this.workoutLogRepository.findBestWorkoutLogs();
+    const cachedData = await this.redisCacheService.set(cacheKey, JSON.stringify(bestLogs));
+    console.log('Cache miss, stored in cache.');
+
+    return bestLogs;
   }
 }
