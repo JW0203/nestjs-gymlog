@@ -43,7 +43,8 @@
  
 
 ## 데이터베이스 ERD
-![ERD  설명] (gymLog-erd.png)
+![ERD 설명](gymLog-erd.png)
+
 
 ## Stack
 ### **Development**
