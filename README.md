@@ -27,9 +27,10 @@
 
 ### 1. 운동 일지 관리
 - 여러 운동 기록을 한번에 저장/수정/삭제 하는 기능
-- 기록된 각 운동이름 마다 최대 기록을 낸 유저를 찾아 내는 기능
+- 기록된 각 운동이름 마다 최대 무게 기록을 낸 유저를 찾아 내는 기능
+  - 유저들의 성취감및 경쟁을 위해 마이페이지에 표시
 - 특정 날짜, 년도를 기준으로 운동한 기록을 검색하여 반환하는 기능
-  - 마이 페이지에서 선택한 특정 날짜, 년도에 운동을 한 기록을 확인 가능
+  - 운동기록 확인 페이지에서 선택한 특정 날짜, 년도에 운동을 한 기록을 확인 가능
 - 유저가 현재까지 운동한 기록을 통합하여 볼수 있는 기능
   - 마이 페이지에 들어가면 자동으로 보여주기 위한 기능   
 
@@ -66,5 +67,82 @@
   - GitHub Actions (Workflow Automation)
   - Docker (Containerization)
   - AWS ECR (Container Registry)
+ 
+## Project Structure
+```
+├── Dockerfile
+├── README.md
+├── commitlint.config.js
+├── gym-logs-architecture.png
+├── nest-cli.json
+├── package-lock.json
+├── package.json
+├── src
+│   ├── TimeStamp.entity.ts
+│   ├── app.controller.ts
+│   ├── app.module.ts
+│   ├── app.service.ts
+│   ├── auth
+│   │   └── application
+│   ├── cache
+│   │   ├── radis.constant.ts
+│   │   ├── redis.module.ts
+│   │   └── redis.service.ts
+│   ├── common
+│   │   ├── Logger
+│   │   ├── bodyPart.enum.ts
+│   │   ├── const
+│   │   ├── dto
+│   │   ├── infrastructure
+│   │   ├── jwtPassport
+│   │   ├── jwtPassport.module.ts
+│   │   ├── type
+│   │   └── validation
+│   ├── exercise
+│   │   ├── application
+│   │   ├── domain
+│   │   ├── dto
+│   │   ├── excercise.module.ts
+│   │   ├── infrastructure
+│   │   ├── presentation
+│   │   └── test
+│   ├── main.ts
+│   ├── routine
+│   │   ├── application
+│   │   ├── domain
+│   │   ├── dto
+│   │   ├── functions
+│   │   ├── infrastructure
+│   │   ├── presentation
+│   │   ├── routine.module.ts
+│   │   └── test
+│   ├── user
+│   │   ├── application
+│   │   ├── domain
+│   │   ├── dto
+│   │   ├── infrastructure
+│   │   ├── presentation
+│   │   ├── test
+│   │   └── user.module.ts
+│   └── workoutLog
+│       ├── application
+│       ├── domain
+│       ├── dto
+│       ├── infrastructure
+│       ├── presentation
+│       ├── test
+│       └── workoutLog.module.ts
+├── test
+│   ├── app.e2e-spec.ts
+│   ├── jest-e2e.json
+│   ├── jest-layer.json
+│   └── utils
+│       ├── dbUtils.ts
+│       ├── getMySql.TypeOrm.config.ts
+│       └── userUtils.ts
+├── tsconfig.build.json
+└── tsconfig.json
+
+```
 
 
