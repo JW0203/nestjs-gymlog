@@ -14,7 +14,7 @@ import { ExerciseModule } from './exercise/excercise.module';
 import { JwtPassportModule } from './common/jwtPassport.module';
 import { addTransactionalDataSource } from 'typeorm-transactional';
 import { DataSource } from 'typeorm';
-import { MaxWeightPerExerciseModule } from './maxWeightPerExercise/maxWeightPerExercise.module';
+import { RedisModule } from './cache/redis.module';
 
 @Module({
   imports: [
@@ -37,7 +37,7 @@ import { MaxWeightPerExerciseModule } from './maxWeightPerExercise/maxWeightPerE
         database: configService.get<string>('DB_NAME'),
         autoLoadEntities: true,
         synchronize: true,
-        logging: true,
+        logging: false,
         namingStrategy: new SnakeNamingStrategy(),
       }),
       async dataSourceFactory(options) {
@@ -47,12 +47,12 @@ import { MaxWeightPerExerciseModule } from './maxWeightPerExercise/maxWeightPerE
         return addTransactionalDataSource(new DataSource(options));
       },
     }),
+    RedisModule,
     UserModule,
     RoutineModule,
     WorkoutLogModule,
     ExerciseModule,
     JwtPassportModule,
-    MaxWeightPerExerciseModule,
   ],
   controllers: [AppController],
   providers: [AppService],
