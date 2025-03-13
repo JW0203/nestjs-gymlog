@@ -12,14 +12,20 @@ import { SignUpResponseDto } from '../dto/signUp.response.dto';
 import { SignInRequestDto } from '../dto/signIn.request.dto';
 import { SignInResponseDto } from '../dto/signIn.response.dto';
 import { GetMyInfoResponseDto } from '../dto/getMyInfo.response.dto';
-import { PasswordHasher } from '../application/passwordHasher.interface';
+import { BcryptHasherService } from '../application/bcryptHasher.service';
+import { WorkoutLogService } from '../../workoutLog/application/workoutLog.service';
+import { RoutineService } from '../../routine/application/routine.service';
+import { WorkoutLog } from '../../workoutLog/domain/WorkoutLog.entity';
+import { WorkoutLogResponseDto } from '../../workoutLog/dto/workoutLog.response.dto';
+import { Exercise } from '../../exercise/domain/Exercise.entity';
+import { BodyPart } from '../../common/bodyPart.enum';
 
 jest.mock('typeorm-transactional', () => ({
   Transactional: () => jest.fn(),
   initializeTransactionalContext: jest.fn(),
 }));
 
-const mockPasswordHasher: jest.Mocked<PasswordHasher> = {
+const mockPasswordHasher: jest.Mocked<BcryptHasherService> = {
   hash: jest.fn().mockReturnValue('hashedPassword'),
   compare: jest.fn(),
 };
@@ -47,6 +53,14 @@ const mockConfigService = {
   get: jest.fn(),
 };
 
+const mockWorkoutLogService = {
+  findWorkoutLogsByUser: jest.fn(),
+};
+
+const mockRoutineService = {
+  findAllRoutinesByUserId: jest.fn(),
+};
+
 describe('UserRepository', () => {
   let userRepository: jest.Mocked<typeof mockUserRepository>;
   let userService: UserService;
@@ -54,6 +68,8 @@ describe('UserRepository', () => {
   let configService: jest.Mocked<typeof mockConfigService>;
   let authService: jest.Mocked<typeof mockAuthService>;
   let passwordHasher: jest.Mocked<typeof mockPasswordHasher>;
+  let workoutLogService: jest.Mocked<typeof mockWorkoutLogService>;
+  let routineService: jest.Mocked<typeof mockRoutineService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -64,15 +80,19 @@ describe('UserRepository', () => {
         { provide: ConfigService, useValue: mockConfigService },
         { provide: AuthService, useValue: mockAuthService },
         { provide: PASSWORD_HASHER, useValue: mockPasswordHasher },
+        { provide: WorkoutLogService, useValue: mockWorkoutLogService },
+        { provide: RoutineService, useValue: mockRoutineService },
       ],
     }).compile();
 
     userService = module.get<UserService>(UserService);
-    passwordHasher = module.get(PASSWORD_HASHER);
+    passwordHasher = module.get(BcryptHasherService);
     configService = module.get(ConfigService);
     jwtService = module.get(JwtService);
     userRepository = module.get(USER_REPOSITORY);
     authService = module.get(AuthService);
+    workoutLogService = module.get(WorkoutLogService);
+    routineService = module.get(RoutineService);
   });
 
   describe('signUp', () => {
@@ -216,11 +236,32 @@ describe('UserRepository', () => {
     it('Should return undefined if a user is deleted using a id of the user', async () => {
       const user: User = new User({ nickName: 'tester', email: 'user@email.com', password: '12345678' });
       user.id = 1;
+      const WorkoutLogResponse1 = new WorkoutLogResponseDto(
+        new WorkoutLog({
+          id: 1,
+          setCount: 1,
+          weight: 10,
+          repeatCount: 15,
+          exercise: new Exercise({ bodyPart: BodyPart.BACK, exerciseName: 'Dead lift' }),
+          user: user,
+        }),
+      );
+      const WorkoutLogResponse2 = new WorkoutLogResponseDto(
+        new WorkoutLog({
+          id: 2,
+          setCount: 2,
+          weight: 10,
+          repeatCount: 15,
+          exercise: new Exercise({ bodyPart: BodyPart.BACK, exerciseName: 'Dead lift' }),
+          user: user,
+        }),
+      );
 
       userRepository.findOneUserById.mockResolvedValue(user);
+      workoutLogService.findWorkoutLogsByUser.mockResolvedValue([WorkoutLogResponse1, WorkoutLogResponse2]);
+      routineService.findAllRoutinesByUserId.mockResolvedValue([]);
 
       const result = await userService.softDeleteUser(user.id);
-
       expect(result).toEqual(undefined);
     });
   });
