@@ -4,7 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserController } from './presentation/user.controller';
 import { UserService } from './application/user.service';
 import { AuthModule } from '../auth/application/auth.module';
-import { USER_REPOSITORY } from '../common/const/inject.constant';
+import { PASSWORD_HASHER, USER_REPOSITORY } from '../common/const/inject.constant';
 import { TypeormUserRepository } from './infrastructure/typeormUser.repository';
 import { BcryptHasherService } from './application/bcryptHasher.service';
 import { WorkoutLogModule } from '../workoutLog/workoutLog.module';
@@ -18,7 +18,11 @@ import { RoutineModule } from '../routine/routine.module';
     forwardRef(() => RoutineModule),
   ],
   controllers: [UserController],
-  providers: [UserService, BcryptHasherService, { provide: USER_REPOSITORY, useClass: TypeormUserRepository }],
+  providers: [
+    UserService,
+    { provide: USER_REPOSITORY, useClass: TypeormUserRepository },
+    { provide: PASSWORD_HASHER, useClass: BcryptHasherService },
+  ],
   exports: [UserService],
 })
 export class UserModule {}
