@@ -241,7 +241,7 @@ describe('Test RoutineService', () => {
       exerciseService.findExercisesByExerciseNameAndBodyPart.mockResolvedValue([mockExercise]);
       routineRepository.findOneRoutineById.mockResolvedValue(null);
 
-      await expect(routineService.bulkUpdateRoutines(updateRoutinesDto, mockUser)).rejects.toThrow(BadRequestException);
+      await expect(routineService.bulkUpdateRoutines(updateRoutinesDto, mockUser)).rejects.toThrow(NotFoundException);
     });
 
     it('should handle exercise not found during update', async () => {
