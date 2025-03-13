@@ -299,13 +299,14 @@ describe('Test RoutineService', () => {
       expect(routineRepository.softDeleteRoutines).toHaveBeenCalledWith([1, 2]);
     });
 
-    it('should throw BadRequestException when no routines found', async () => {
+    it('should do nothing when no routines found', async () => {
       const mockRoutineIds: DeleteRoutineRequestDto = { ids: [1, 2] };
       const mockUser = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
       mockUser.id = 1;
 
       routineRepository.findRoutinesByIds.mockResolvedValue([]);
-      await expect(routineService.softDeleteRoutines(mockRoutineIds, mockUser)).rejects.toThrow(BadRequestException);
+      const result = await routineService.softDeleteRoutines(mockRoutineIds, mockUser);
+      expect(result).toBeUndefined();
     });
   });
 
