@@ -113,7 +113,6 @@ describe('WorkoutLog API (e2e)', () => {
     await createUser(app, testUser);
     token = await getUserAccessToken(app, testUser);
 
-    const workoutLogSavedDate = getTodayDate();
     const workoutLogs: SaveWorkoutLogFormatDto[] = [
       {
         setCount: 1,
@@ -164,12 +163,16 @@ describe('WorkoutLog API (e2e)', () => {
     ];
     const requestData = { workoutLogs, exercises: uniqueExercises };
 
-    await request(app.getHttpServer()).post('/workout-logs').set('Authorization', `Bearer ${token}`).send(requestData);
+    const postedWorkoutLogs = await request(app.getHttpServer())
+      .post('/workout-logs')
+      .set('Authorization', `Bearer ${token}`)
+      .send(requestData);
+    const createdDate = postedWorkoutLogs.body[0].createdAt.split('T')[0];
 
     // When
     const response = await request(app.getHttpServer())
       .get('/workout-logs')
-      .query({ date: workoutLogSavedDate })
+      .query({ date: createdDate })
       .set('Authorization', `Bearer ${token}`);
 
     // Then
