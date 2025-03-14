@@ -1,5 +1,5 @@
 import { WorkoutLogRepository } from '../domain/workoutLog.repository';
-import { DataSource, In, Raw } from 'typeorm';
+import { Between, DataSource, In, Raw } from 'typeorm';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { WorkoutLog } from '../domain/WorkoutLog.entity';
@@ -170,9 +170,13 @@ describe('WorkoutLogRepository', () => {
 
       const date = savedWorkoutLog[0].createdAt.toISOString().split('T')[0];
       const result = await workoutLogRepository.findWorkoutLogsByDay(date, 1);
+
+      const [year, month, day] = date.split('-').map(Number);
+      const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
+      const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59));
       const findQueryResult = await dataSource.getRepository(WorkoutLog).find({
         where: {
-          createdAt: Raw((alias) => `Date(${alias}) = :date`, { date }),
+          createdAt: Between(startOfDay, endOfDay),
           user: { id: 1 },
         },
         relations: ['user', 'exercise'],
