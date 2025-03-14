@@ -19,6 +19,8 @@ import { WorkoutLog } from '../../workoutLog/domain/WorkoutLog.entity';
 import { WorkoutLogResponseDto } from '../../workoutLog/dto/workoutLog.response.dto';
 import { Exercise } from '../../exercise/domain/Exercise.entity';
 import { BodyPart } from '../../common/bodyPart.enum';
+import { Routine } from '../../routine/domain/Routine.entity';
+import { GetAllRoutineByUserResponseDto } from '../../routine/dto/getAllRoutineByUser.response.dto';
 
 jest.mock('typeorm-transactional', () => ({
   Transactional: () => jest.fn(),
@@ -55,10 +57,12 @@ const mockConfigService = {
 
 const mockWorkoutLogService = {
   findWorkoutLogsByUser: jest.fn(),
+  softDeleteWorkoutLogs: jest.fn(),
 };
 
 const mockRoutineService = {
   findAllRoutinesByUserId: jest.fn(),
+  softDeleteRoutines: jest.fn(),
 };
 
 describe('UserRepository', () => {
@@ -86,7 +90,7 @@ describe('UserRepository', () => {
     }).compile();
 
     userService = module.get<UserService>(UserService);
-    passwordHasher = module.get(BcryptHasherService);
+    passwordHasher = module.get(PASSWORD_HASHER);
     configService = module.get(ConfigService);
     jwtService = module.get(JwtService);
     userRepository = module.get(USER_REPOSITORY);
@@ -236,30 +240,33 @@ describe('UserRepository', () => {
     it('Should return undefined if a user is deleted using a id of the user', async () => {
       const user: User = new User({ nickName: 'tester', email: 'user@email.com', password: '12345678' });
       user.id = 1;
-      const WorkoutLogResponse1 = new WorkoutLogResponseDto(
-        new WorkoutLog({
-          id: 1,
-          setCount: 1,
-          weight: 10,
-          repeatCount: 15,
-          exercise: new Exercise({ bodyPart: BodyPart.BACK, exerciseName: 'Dead lift' }),
-          user: user,
-        }),
-      );
-      const WorkoutLogResponse2 = new WorkoutLogResponseDto(
-        new WorkoutLog({
-          id: 2,
-          setCount: 2,
-          weight: 10,
-          repeatCount: 15,
-          exercise: new Exercise({ bodyPart: BodyPart.BACK, exerciseName: 'Dead lift' }),
-          user: user,
-        }),
-      );
+
+      const workoutLog = new WorkoutLog({
+        setCount: 1,
+        weight: 10,
+        repeatCount: 15,
+        exercise: new Exercise({ bodyPart: BodyPart.BACK, exerciseName: 'Dead lift' }),
+        user: user,
+      });
+      workoutLog.id = 1;
+      workoutLog.createdAt = new Date();
+      workoutLog.updatedAt = new Date();
+
+      const WorkoutLogResponse = new WorkoutLogResponseDto(workoutLog);
+
+      const routine = new Routine({
+        name: 'test',
+        user,
+        exercise: new Exercise({ bodyPart: BodyPart.BACK, exerciseName: 'Dead lift' }),
+      });
+      routine.id = 1;
+      const GetAllRoutineByUserResponse = new GetAllRoutineByUserResponseDto(routine);
 
       userRepository.findOneUserById.mockResolvedValue(user);
-      workoutLogService.findWorkoutLogsByUser.mockResolvedValue([WorkoutLogResponse1, WorkoutLogResponse2]);
-      routineService.findAllRoutinesByUserId.mockResolvedValue([]);
+      workoutLogService.findWorkoutLogsByUser.mockResolvedValue([WorkoutLogResponse]);
+      workoutLogService.softDeleteWorkoutLogs.mockResolvedValue(undefined);
+      routineService.findAllRoutinesByUserId.mockResolvedValue([GetAllRoutineByUserResponse]);
+      routineService.softDeleteRoutines.mockResolvedValue(undefined);
 
       const result = await userService.softDeleteUser(user.id);
       expect(result).toEqual(undefined);
