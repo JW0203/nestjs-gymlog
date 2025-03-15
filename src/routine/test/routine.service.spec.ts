@@ -12,7 +12,7 @@ import { Routine } from '../domain/Routine.entity';
 import { RoutineResponseDto } from '../dto/routine.response.dto';
 import { initializeTransactionalContext } from 'typeorm-transactional';
 import { GetRoutineByNameRequestDto } from '../dto/getRoutineByName.request.dto';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { UpdateRoutinesRequestDto } from '../dto/updateRoutines.request.dto';
 import { DeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
 
