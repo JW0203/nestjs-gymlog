@@ -15,6 +15,7 @@ import { GetRoutineByNameRequestDto } from '../dto/getRoutineByName.request.dto'
 import { NotFoundException } from '@nestjs/common';
 import { UpdateRoutinesRequestDto } from '../dto/updateRoutines.request.dto';
 import { DeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
+import { GetAllRoutineByUserResponseDto } from '../dto/getAllRoutineByUser.response.dto';
 
 const mockRoutineRepository = {
   findRoutinesByNameLockMode: jest.fn(),
@@ -344,6 +345,45 @@ describe('Test RoutineService', () => {
       const result = await routineService.getAllRoutinesByUser(mockUser);
       expect(result).toEqual([]);
       expect(routineRepository.findAllByUserId).toHaveBeenCalledWith(mockUser.id);
+    });
+  });
+
+  describe('Test findAllRoutinesByUserId', () => {
+    it('should return all routines', async () => {
+      const user = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
+      user.id = 1;
+      const routineName = '하체 루틴';
+
+      const routine1 = new Routine({
+        name: routineName,
+        user: user,
+        exercise: new Exercise({ bodyPart: BodyPart.LEGS, exerciseName: '레그 프레스' }),
+      });
+      routine1.id = 1;
+
+      const routine2 = new Routine({
+        name: routineName,
+        user: user,
+        exercise: new Exercise({ bodyPart: BodyPart.LEGS, exerciseName: '고블린 스쿼트' }),
+      });
+      routine2.id = 2;
+
+      routineRepository.findAllByUserId.mockResolvedValue([routine1, routine2]);
+
+      const result: GetRoutineByNameRequestDto[] = await routineService.findAllRoutinesByUserId(user);
+      const expectResult: GetRoutineByNameRequestDto[] = [routine1, routine2].map(
+        (routine) => new GetAllRoutineByUserResponseDto(routine),
+      );
+      expect(result).toEqual(expectResult);
+    });
+
+    it('should return empty array, when a logged in user has no routine', async () => {
+      const user = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
+      user.id = 1;
+
+      routineRepository.findAllByUserId.mockResolvedValue([]);
+      const result: GetRoutineByNameRequestDto[] = await routineService.findAllRoutinesByUserId(user);
+      expect(result).toEqual([]);
     });
   });
 });
