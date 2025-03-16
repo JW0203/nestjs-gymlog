@@ -10,7 +10,7 @@ import { Transactional } from 'typeorm-transactional';
 import { WorkoutLog } from '../domain/WorkoutLog.entity';
 import { ExerciseService } from '../../exercise/application/exercise.service';
 import { UserService } from '../../user/application/user.service';
-import { GetWorkoutLogByUserResponseDto } from '../dto/getWorkoutLogByUser.response.dto';
+import { getWorkoutLogByUserResponse, GetWorkoutLogByUserResponseDto } from '../dto/getWorkoutLogByUser.response.dto';
 import { Exercise } from '../../exercise/domain/Exercise.entity';
 import { BestWorkoutLog } from '../dto/findBestWorkoutLogs.response.dto';
 import { BodyPart } from '../../common/bodyPart.enum';
@@ -200,9 +200,9 @@ export class WorkoutLogService {
     return await this.workoutLogRepository.findWorkoutLogsByUser(user);
   }
 
-  async getAggregatedWorkoutLogsByUser(user: User): Promise<object> {
+  async getAggregatedWorkoutLogsByUser(user: User): Promise<GetWorkoutLogByUserResponseDto> {
     const result = await this.workoutLogRepository.findWorkoutLogsByUser(user);
-    return GetWorkoutLogByUserResponseDto(result);
+    return getWorkoutLogByUserResponse(result);
   }
 
   async getWorkoutLogsByYear(user: User, year: string): Promise<object> {
