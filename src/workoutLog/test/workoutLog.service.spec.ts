@@ -12,6 +12,7 @@ import { WorkoutLog } from '../domain/WorkoutLog.entity';
 import { WorkoutLogResponseDto } from '../dto/workoutLog.response.dto';
 import { UpdateWorkoutLogsRequestDto } from '../dto/updateWorkoutLogs.request.dto';
 import { GetWorkoutLogByUserResponseDto } from '../dto/getWorkoutLogByUser.response.dto';
+import { RedisService } from '../../cache/redis.service';
 
 jest.mock('typeorm-transactional', () => ({
   Transactional: () => jest.fn(),
@@ -43,6 +44,8 @@ describe('WorkoutLogService', () => {
     findWorkoutLogsByUser: jest.fn(),
   };
 
+  const mockRediService = {};
+
   beforeEach(async () => {
     console.log('Running beforeEach');
     const module: TestingModule = await Test.createTestingModule({
@@ -51,6 +54,7 @@ describe('WorkoutLogService', () => {
         { provide: UserService, useValue: mockUserService },
         { provide: ExerciseService, useValue: mockExerciseService },
         { provide: WORKOUTLOG_REPOSITORY, useValue: mockWorkoutLogRepository },
+        { provide: RedisService, useValue: mockRediService },
       ],
     }).compile();
 

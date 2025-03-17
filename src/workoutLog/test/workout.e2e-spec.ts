@@ -57,7 +57,7 @@ describe('WorkoutLog API (e2e)', () => {
 
   it('Given a token of a logged-in user and workoutLogs, when saving the workoutLogs, then then the response with status code should be 201.', async () => {
     // Given
-    const testUser: TEST_USER = { email: 'newuser@email.com', name: 'tester', password: '12345678' };
+    const testUser: TEST_USER = { email: 'newuser@email.com', nickName: 'tester', password: '12345678' };
     await createUser(app, testUser);
     token = await getUserAccessToken(app, testUser);
 
@@ -109,11 +109,10 @@ describe('WorkoutLog API (e2e)', () => {
 
   it('Given a token of a logged-in user, workoutLogs and workoutLogSavedDate, when searching workoutLogs using workoutLogSavedDate, then the response status code should be 200 and the response body length should be greater than 0', async () => {
     //Given
-    const testUser: TEST_USER = { email: 'newuser@email.com', name: 'tester', password: '12345678' };
+    const testUser: TEST_USER = { email: 'newuser@email.com', nickName: 'tester', password: '12345678' };
     await createUser(app, testUser);
     token = await getUserAccessToken(app, testUser);
 
-    const workoutLogSavedDate = getTodayDate();
     const workoutLogs: SaveWorkoutLogFormatDto[] = [
       {
         setCount: 1,
@@ -164,12 +163,16 @@ describe('WorkoutLog API (e2e)', () => {
     ];
     const requestData = { workoutLogs, exercises: uniqueExercises };
 
-    await request(app.getHttpServer()).post('/workout-logs').set('Authorization', `Bearer ${token}`).send(requestData);
+    const postedWorkoutLogs = await request(app.getHttpServer())
+      .post('/workout-logs')
+      .set('Authorization', `Bearer ${token}`)
+      .send(requestData);
+    const createdDate = postedWorkoutLogs.body[0].createdAt.split('T')[0];
 
     // When
     const response = await request(app.getHttpServer())
       .get('/workout-logs')
-      .query({ date: workoutLogSavedDate })
+      .query({ date: createdDate })
       .set('Authorization', `Bearer ${token}`);
 
     // Then
@@ -179,7 +182,7 @@ describe('WorkoutLog API (e2e)', () => {
 
   it('Given a token of a logged-in user and workoutLogs, when searching all workoutLogs of the user, then the response status code should be 200', async () => {
     // Given
-    const testUser: TEST_USER = { email: 'newuser@email.com', name: 'tester', password: '12345678' };
+    const testUser: TEST_USER = { email: 'newuser@email.com', nickName: 'tester', password: '12345678' };
     await createUser(app, testUser);
     token = await getUserAccessToken(app, testUser);
 
@@ -217,7 +220,7 @@ describe('WorkoutLog API (e2e)', () => {
 
   it('Given a token of a logged-in user and workoutLogs, when updating the workoutLogs, then the response status code should be 200 and it should successfully reflect the updated information.', async () => {
     // Given
-    const testUser: TEST_USER = { email: 'newuser@email.com', name: 'tester', password: '12345678' };
+    const testUser: TEST_USER = { email: 'newuser@email.com', nickName: 'tester', password: '12345678' };
     await createUser(app, testUser);
     token = await getUserAccessToken(app, testUser);
 
@@ -241,7 +244,7 @@ describe('WorkoutLog API (e2e)', () => {
     const userWorkoutLogs: SaveWorkoutLogsRequestDto = {
       workoutLogs: workoutLogs,
     };
-    
+
     await request(app.getHttpServer())
       .post('/workout-logs')
       .set('Authorization', `Bearer ${token}`)
@@ -284,7 +287,7 @@ describe('WorkoutLog API (e2e)', () => {
 
   it('Given a token of logged-in user and workoutLogs, when the user delete the workoutLogs, then the response status code should be 204 and the workoutLogs should not be searched.', async () => {
     // Given
-    const testUser: TEST_USER = { email: 'newuser@email.com', name: 'tester', password: '12345678' };
+    const testUser: TEST_USER = { email: 'newuser@email.com', nickName: 'tester', password: '12345678' };
     await createUser(app, testUser);
     token = await getUserAccessToken(app, testUser);
 

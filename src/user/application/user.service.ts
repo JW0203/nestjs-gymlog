@@ -100,13 +100,18 @@ export class UserService {
     }
 
     const userWorkoutLogs = await this.workoutLogService.findWorkoutLogsByUser(user);
-    const ids = userWorkoutLogs.map((workoutLog) => workoutLog.id);
-    const softDeleteWorkoutLogRequestDto: SoftDeleteWorkoutLogRequestDto = { ids };
-    await this.workoutLogService.softDeleteWorkoutLogs(softDeleteWorkoutLogRequestDto, user);
+    if (userWorkoutLogs.length !== 0) {
+      const workoutLogIds = userWorkoutLogs.map((workoutLog) => workoutLog.id);
+      const softDeleteWorkoutLogRequestDto: SoftDeleteWorkoutLogRequestDto = { ids: workoutLogIds };
+      await this.workoutLogService.softDeleteWorkoutLogs(softDeleteWorkoutLogRequestDto, user);
+    }
 
-    const deleteRoutineRequestDto: DeleteRoutineRequestDto = { ids };
-    await this.routineService.softDeleteRoutines(deleteRoutineRequestDto, user);
-
+    const userRoutines = await this.routineService.findAllRoutinesByUserId(user);
+    if (userRoutines.length !== 0) {
+      const routineIds = userRoutines.map((routine) => routine.id);
+      const deleteRoutineRequestDto: DeleteRoutineRequestDto = { ids: routineIds };
+      await this.routineService.softDeleteRoutines(deleteRoutineRequestDto, user);
+    }
     await this.userRepository.softDeleteUser(userId);
   }
 

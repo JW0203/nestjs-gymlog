@@ -4,7 +4,7 @@ import * as request from 'supertest';
 export interface TEST_USER {
   email: string;
   password: string;
-  name: string;
+  nickName: string;
 }
 
 export function createUser(app: INestApplication, user: TEST_USER) {

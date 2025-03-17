@@ -117,13 +117,18 @@ export class RoutineService {
     });
     await this.routineRepository.softDeleteRoutines(routineIds);
   }
-
-  async getAllRoutinesByUser(user: User): Promise<GroupedRoutine[]> {
+  async findAllRoutinesByUserId(user: User): Promise<GetAllRoutineByUserResponseDto[]> {
     const userRoutines = await this.routineRepository.findAllByUserId(user.id);
+    if (userRoutines.length === 0) {
+      return Promise.resolve<GetAllRoutineByUserResponseDto[]>([]);
+    }
+    return userRoutines.map((routine) => new GetAllRoutineByUserResponseDto(routine));
+  }
+  async getAllRoutinesByUser(user: User): Promise<GroupedRoutine[]> {
+    const userRoutines = await this.findAllRoutinesByUserId(user);
     if (userRoutines.length === 0) {
       return Promise.resolve<GroupedRoutine[]>([]);
     }
-    const data = userRoutines.map((routine) => new GetAllRoutineByUserResponseDto(routine));
-    return routineGroupByName(data);
+    return routineGroupByName(userRoutines);
   }
 }

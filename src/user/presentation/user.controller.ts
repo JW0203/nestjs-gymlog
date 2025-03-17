@@ -35,7 +35,7 @@ export class UserController {
     return this.userService.softDeleteUser(req.user.id);
   }
 
-  @Post('email-update')
+  @Patch('email-update')
   @UseGuards(JwtAuthGuard)
   @HttpCode(200)
   updateEmail(@Body() email: { email: string }, @Request() req: any) {

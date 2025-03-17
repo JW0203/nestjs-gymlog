@@ -11,10 +11,14 @@ import { SoftDeleteWorkoutLogRequestDto } from '../dto/softDeleteWorkoutLog.requ
 
 const mockWorkoutLogService = {
   bulkInsertWorkoutLogs: jest.fn(),
-  getAggregatedWorkoutLogsByUser: jest.fn(),
   bulkUpdateWorkoutLogs: jest.fn(),
+  getWorkoutLogsByDay: jest.fn(),
   softDeleteWorkoutLogs: jest.fn(),
-  getWorkoutLogsByUser: jest.fn(),
+  findWorkoutLogsByUser: jest.fn(),
+  getAggregatedWorkoutLogsByUser: jest.fn(),
+  getWorkoutLogsByYear: jest.fn(),
+  getWorkoutLogsByYearMonth: jest.fn(),
+  getBestWorkoutLogs: jest.fn(),
 };
 
 describe('Test WorkoutLogController', () => {
@@ -66,34 +70,6 @@ describe('Test WorkoutLogController', () => {
       await workoutLogController.saveWorkoutLogs(saveWorkoutLogs, req);
 
       expect(workoutLogService.bulkInsertWorkoutLogs).toHaveBeenCalledWith(req.user.id, saveWorkoutLogs);
-    });
-  });
-
-  describe('getWorkoutLogs', () => {
-    it('should use JwtAuthGuard', () => {
-      const guards = Reflect.getMetadata(GUARDS_METADATA, workoutLogController.getWorkoutLogs);
-      expect(guards[0]).toBe(JwtAuthGuard);
-    });
-
-    it('should have correct Http status code 200', () => {
-      const httpCode = Reflect.getMetadata(HTTP_CODE_METADATA, workoutLogController.getWorkoutLogs);
-      expect(httpCode).toBe(200);
-    });
-
-    it('should have correct method GET and path "/" ', () => {
-      const path = Reflect.getMetadata(PATH_METADATA, workoutLogController.getWorkoutLogs);
-      const method = Reflect.getMetadata(METHOD_METADATA, workoutLogController.getWorkoutLogs);
-      expect(method).toBe(RequestMethod.GET);
-      expect(path).toBe('/');
-    });
-
-    it('should call service method getAggregatedWorkoutLogsByUser with parameters', async () => {
-      const date = '2024-12-06';
-      const req = { user: { id: 1 } };
-
-      await workoutLogController.getWorkoutLogs(date, req);
-
-      expect(workoutLogService.getAggregatedWorkoutLogsByUser).toHaveBeenCalledWith(date, req.user.id);
     });
   });
 
@@ -180,7 +156,7 @@ describe('Test WorkoutLogController', () => {
       const req = { user: { id: 1 } };
 
       await workoutLogController.getAggregatedWorkoutLogsByUser(req);
-      expect(workoutLogService.getWorkoutLogsByUser).toHaveBeenCalledWith(req.user);
+      expect(workoutLogService.getAggregatedWorkoutLogsByUser).toHaveBeenCalledWith(req.user);
     });
   });
 });

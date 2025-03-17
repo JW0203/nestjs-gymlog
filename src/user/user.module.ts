@@ -6,7 +6,7 @@ import { UserService } from './application/user.service';
 import { AuthModule } from '../auth/application/auth.module';
 import { PASSWORD_HASHER, USER_REPOSITORY } from '../common/const/inject.constant';
 import { TypeormUserRepository } from './infrastructure/typeormUser.repository';
-import { BycptHasher } from './application/bcryptHasher.service';
+import { BcryptHasherService } from './application/bcryptHasher.service';
 import { WorkoutLogModule } from '../workoutLog/workoutLog.module';
 import { RoutineModule } from '../routine/routine.module';
 
@@ -21,7 +21,7 @@ import { RoutineModule } from '../routine/routine.module';
   providers: [
     UserService,
     { provide: USER_REPOSITORY, useClass: TypeormUserRepository },
-    { provide: PASSWORD_HASHER, useClass: BycptHasher },
+    { provide: PASSWORD_HASHER, useClass: BcryptHasherService },
   ],
   exports: [UserService],
 })

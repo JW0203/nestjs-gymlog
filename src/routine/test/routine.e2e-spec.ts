@@ -48,7 +48,7 @@ describe('Routine', () => {
 
   it('Given a token of a logged-in user and a routine containing 4 exercises, when creating the new routine, then the response with status code should be 201 and response body should contain the 4 exercises', async () => {
     // Given
-    const newUser: TEST_USER = { email: 'newuser@email.com', password: '12345678', name: 'tester' };
+    const newUser: TEST_USER = { email: 'newuser@email.com', password: '12345678', nickName: 'tester' };
     await createUser(app, newUser);
     token = await getUserAccessToken(app, newUser);
 
@@ -74,7 +74,7 @@ describe('Routine', () => {
 
   it('Given a token of a logged-in user and an existing routine, when searching routine by routine name, then the response with status code should be 200 and the length of response body should match the number of exercises in found routine ', async () => {
     // Given
-    const newUser: TEST_USER = { email: 'newuser@email.com', password: '12345678', name: 'tester' };
+    const newUser: TEST_USER = { email: 'newuser@email.com', password: '12345678', nickName: 'tester' };
     await createUser(app, newUser);
     token = await getUserAccessToken(app, newUser);
 
@@ -99,7 +99,7 @@ describe('Routine', () => {
 
   it('Given a token of a logged-in user and an existing routine, when updating routine, then the response with status code should be 200 and updated information should be successfully reflected', async () => {
     // Given
-    const newUser: TEST_USER = { email: 'newuser@email.com', password: '12345678', name: 'tester' };
+    const newUser: TEST_USER = { email: 'newuser@email.com', password: '12345678', nickName: 'tester' };
     await createUser(app, newUser);
     token = await getUserAccessToken(app, newUser);
 
@@ -120,7 +120,7 @@ describe('Routine', () => {
     const routineUpdate: UpdateRoutinesRequestDto = {
       updateData: routineExerciseNameUpdate,
     };
-    
+
     const response = await request(app.getHttpServer())
       .patch('/routines/')
       .set('Authorization', `Bearer ${token}`)
@@ -134,7 +134,7 @@ describe('Routine', () => {
 
   it('Given a logged-in user with an existing routine, when deleting a routine, then the response with status code should be 204 and the deleted routine should not be found.', async () => {
     // Given
-    const newUser: TEST_USER = { email: 'newuser@email.com', password: '12345678', name: 'tester' };
+    const newUser: TEST_USER = { email: 'newuser@email.com', password: '12345678', nickName: 'tester' };
     await createUser(app, newUser);
     token = await getUserAccessToken(app, newUser);
 
