@@ -12,6 +12,7 @@ import { WorkoutLog } from '../domain/WorkoutLog.entity';
 import { WorkoutLogResponseDto } from '../dto/workoutLog.response.dto';
 import { UpdateWorkoutLogsRequestDto } from '../dto/updateWorkoutLogs.request.dto';
 import { GetWorkoutLogByUserResponseDto } from '../dto/getWorkoutLogByUser.response.dto';
+import { RedisService } from '../../cache/redis.service';
 
 jest.mock('typeorm-transactional', () => ({
   Transactional: () => jest.fn(),
@@ -43,6 +44,8 @@ describe('WorkoutLogService', () => {
     findWorkoutLogsByUser: jest.fn(),
   };
 
+  const mockRediService = {};
+
   beforeEach(async () => {
     console.log('Running beforeEach');
     const module: TestingModule = await Test.createTestingModule({
@@ -51,6 +54,7 @@ describe('WorkoutLogService', () => {
         { provide: UserService, useValue: mockUserService },
         { provide: ExerciseService, useValue: mockExerciseService },
         { provide: WORKOUTLOG_REPOSITORY, useValue: mockWorkoutLogRepository },
+        { provide: RedisService, useValue: mockRediService },
       ],
     }).compile();
 
@@ -87,7 +91,7 @@ describe('WorkoutLogService', () => {
     });
 
     it('Should throw NotFoundException if exercise in workout can not be found from database', async () => {
-      const user: User = new User({ name: 'test', password: 'password123', email: 'test@example.com' });
+      const user: User = new User({ nickName: 'test', password: 'password123', email: 'test@example.com' });
       user.id = 1;
       const saveWorkoutLogs: SaveWorkoutLogsRequestDto = {
         workoutLogs: [
@@ -118,7 +122,7 @@ describe('WorkoutLogService', () => {
     });
 
     it('Should save new workoutLogs at once', async () => {
-      const user: User = new User({ name: 'test', password: 'password123', email: 'test@example.com' });
+      const user: User = new User({ nickName: 'test', password: 'password123', email: 'test@example.com' });
       user.id = 1;
 
       const saveWorkoutLogs: SaveWorkoutLogsRequestDto = {
@@ -177,7 +181,7 @@ describe('WorkoutLogService', () => {
     });
 
     it('Should return empty array if no workout logs are found on the given date and a user', async () => {
-      const user: User = new User({ name: 'tester', email: 'user@email.com', password: 'password123' });
+      const user: User = new User({ nickName: 'tester', email: 'user@email.com', password: 'password123' });
       user.id = 1;
 
       userService.findOneById.mockResolvedValue(user);
@@ -189,7 +193,7 @@ describe('WorkoutLogService', () => {
     });
 
     it('Should return workout logs for given date and a user', async () => {
-      const user: User = new User({ name: 'tester', email: 'user@email.com', password: 'password123' });
+      const user: User = new User({ nickName: 'tester', email: 'user@email.com', password: 'password123' });
       user.id = 1;
       const workoutLogs = [
         {
@@ -212,7 +216,13 @@ describe('WorkoutLogService', () => {
         const exercise = new Exercise({ bodyPart, exerciseName });
         exercise.id = i + 1;
 
-        const workoutLogEntity: WorkoutLog = new WorkoutLog({ setCount, weight, repeatCount, exercise, user });
+        const workoutLogEntity: WorkoutLog = new WorkoutLog({
+          setCount,
+          weight,
+          repeatCount,
+          exercise,
+          user,
+        });
         workoutLogEntity.id = i + 1;
         workoutLogEntity.createdAt = new Date('2024-12-06');
         workoutLogEntity.updatedAt = new Date('2024-12-06');
@@ -250,7 +260,7 @@ describe('WorkoutLogService', () => {
     it('Should throw NotFoundException if workout logs can not be found using given ids', async () => {
       const userId = 1;
       const workoutLogIds = [1];
-      const user: User = new User({ name: 'tester', email: 'user@email.com', password: 'password123' });
+      const user: User = new User({ nickName: 'tester', email: 'user@email.com', password: 'password123' });
       user.id = userId;
       const updateWorkoutLogRequest: UpdateWorkoutLogsRequestDto = {
         updateWorkoutLogs: [
@@ -270,7 +280,7 @@ describe('WorkoutLogService', () => {
 
     it('Should throw NotFoundException if exercises in workoutLogs can not be found in DB', async () => {
       const userId = 1;
-      const user: User = new User({ name: 'tester', email: 'user@email.com', password: 'password123' });
+      const user: User = new User({ nickName: 'tester', email: 'user@email.com', password: 'password123' });
       user.id = userId;
       const updateWorkoutLogsRequest: UpdateWorkoutLogsRequestDto = {
         updateWorkoutLogs: [
@@ -283,7 +293,13 @@ describe('WorkoutLogService', () => {
         const { id, setCount, weight, repeatCount, bodyPart, exerciseName } = workoutLog;
         const exercise = new Exercise({ bodyPart, exerciseName });
         exercise.id = i + 1;
-        const workoutLogEntity = new WorkoutLog({ setCount, weight, repeatCount, exercise, user });
+        const workoutLogEntity = new WorkoutLog({
+          setCount,
+          weight,
+          repeatCount,
+          exercise,
+          user,
+        });
         workoutLogEntity.id = id;
         return workoutLogEntity;
       });
@@ -302,7 +318,7 @@ describe('WorkoutLogService', () => {
 
     it('Should update workout logs with correct parameters', async () => {
       const userId = 1;
-      const user: User = new User({ name: 'tester', email: 'user@email.com', password: 'password123' });
+      const user: User = new User({ nickName: 'tester', email: 'user@email.com', password: 'password123' });
       user.id = userId;
       const originWorkoutLogs = [
         { id: 1, setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: '런지' },
@@ -327,7 +343,13 @@ describe('WorkoutLogService', () => {
         const exercise = new Exercise({ bodyPart, exerciseName });
         exercise.id = i + 1;
 
-        const workoutLogEntity = new WorkoutLog({ setCount, weight, repeatCount, exercise, user });
+        const workoutLogEntity = new WorkoutLog({
+          setCount,
+          weight,
+          repeatCount,
+          exercise,
+          user,
+        });
         workoutLogEntity.id = id;
         workoutLogEntity.createdAt = new Date();
         workoutLogEntity.updatedAt = new Date();
@@ -338,7 +360,13 @@ describe('WorkoutLogService', () => {
         const { id, setCount, weight, repeatCount, bodyPart, exerciseName } = workoutLog;
         const exercise = new Exercise({ bodyPart, exerciseName });
         exercise.id = i + 1;
-        const workoutLogEntity = new WorkoutLog({ setCount, weight, repeatCount, exercise, user });
+        const workoutLogEntity = new WorkoutLog({
+          setCount,
+          weight,
+          repeatCount,
+          exercise,
+          user,
+        });
         workoutLogEntity.id = id;
         workoutLogEntity.createdAt = new Date();
         workoutLogEntity.updatedAt = new Date();
@@ -381,7 +409,7 @@ describe('WorkoutLogService', () => {
   describe('softDeleteWorkoutLogs', () => {
     it('should throw NotFoundException if workout logs can not be found using given ids', async () => {
       const softDeleteRequestDto = { ids: [1, 2, 3] };
-      const user: User = new User({ email: 'test@email.com', password: '12345678', name: 'tester' });
+      const user: User = new User({ email: 'test@email.com', password: '12345678', nickName: 'tester' });
       user.id = 1;
       workoutLogRepository.findWorkoutLogsByIdsLockMode.mockResolvedValue([]);
 
@@ -392,7 +420,7 @@ describe('WorkoutLogService', () => {
 
     it('should delete workoutLogs based on workoutLog ids and user id', async () => {
       const softDeleteRequestDto = { ids: [1, 2] };
-      const user: User = new User({ email: 'test@email.com', password: '12345678', name: 'tester' });
+      const user: User = new User({ email: 'test@email.com', password: '12345678', nickName: 'tester' });
       user.id = 1;
       const workoutLogIds = [1, 2];
       const workoutLogs = [
@@ -403,7 +431,13 @@ describe('WorkoutLogService', () => {
         ({ setCount, weight, repeatCount, bodyPart, exerciseName }, i) => {
           const exercise = new Exercise({ bodyPart, exerciseName });
           exercise.id = i + 1;
-          const workoutLogEntity = new WorkoutLog({ setCount, weight, repeatCount, exercise, user });
+          const workoutLogEntity = new WorkoutLog({
+            setCount,
+            weight,
+            repeatCount,
+            exercise,
+            user,
+          });
           workoutLogEntity.id = workoutLogIds[i];
           return workoutLogEntity;
         },
@@ -420,9 +454,9 @@ describe('WorkoutLogService', () => {
     });
   });
 
-  describe('getWorkoutLogsByUser', () => {
+  describe('getAggregatedWorkoutLogsByUser', () => {
     it('should return all workoutLogs by users', async () => {
-      const user: User = new User({ email: 'test@email.com', password: '12345678', name: 'tester' });
+      const user: User = new User({ email: 'test@email.com', password: '12345678', nickName: 'tester' });
       user.id = 1;
 
       const workoutLogs = [
@@ -433,7 +467,13 @@ describe('WorkoutLogService', () => {
         ({ setCount, weight, repeatCount, bodyPart, exerciseName }, i) => {
           const exercise = new Exercise({ bodyPart, exerciseName });
           exercise.id = i + 1;
-          const workoutLogEntity = new WorkoutLog({ setCount, weight, repeatCount, exercise, user });
+          const workoutLogEntity = new WorkoutLog({
+            setCount,
+            weight,
+            repeatCount,
+            exercise,
+            user,
+          });
           workoutLogEntity.id = i + 1;
           return workoutLogEntity;
         },
@@ -442,7 +482,7 @@ describe('WorkoutLogService', () => {
       const expectedResult: object = GetWorkoutLogByUserResponseDto(workoutLogEntities);
       workoutLogRepository.findWorkoutLogsByUser.mockResolvedValue(workoutLogEntities);
 
-      const result = await workoutLogService.getWorkoutLogsByUser(user);
+      const result = await workoutLogService.getAggregatedWorkoutLogsByUser(user);
       expect(result).toEqual(expectedResult);
       expect(workoutLogRepository.findWorkoutLogsByUser).toHaveBeenCalledWith(user);
     });

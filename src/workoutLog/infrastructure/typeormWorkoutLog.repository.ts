@@ -101,34 +101,6 @@ export class TypeormWorkoutLogRepository implements WorkoutLogRepository {
       .orderBy('exercise.bodyPart', 'DESC')
       .getRawMany();
   }
-  /*
-
-  // 원본 sql
-  async findBestWorkoutLogs(): Promise<BestWorkoutLog[]> {
-    return await this.workoutLogRepository.query(
-      `
-      WITH max_weight_logs AS (
-      SELECT wl.exercise_id, wl.user_id, wl.weight, MIN(wl.created_at) AS created_at
-      FROM workout_log wl
-      JOIN (
-          SELECT exercise_id, MAX(weight) AS max_weight
-          FROM workout_log
-          GROUP BY exercise_id
-      ) max_wl ON wl.exercise_id = max_wl.exercise_id AND wl.weight = max_wl.max_weight
-      GROUP BY wl.exercise_id, wl.user_id, wl.weight
-      )
-      SELECT
-      ex.body_part AS 운동_부위,
-      ex.exercise_name AS 운동_이름,
-      SUBSTRING(u.email, 1, LOCATE('@', u.email) - 1) AS 유저아이디,
-      mwl.weight AS 무게
-      FROM max_weight_logs mwl
-      JOIN exercise ex ON mwl.exercise_id = ex.id
-      JOIN user u ON mwl.user_id = u.id;
-    `,
-    );
-  }
-*/
 
   async findBestWorkoutLogs(): Promise<BestWorkoutLog[]> {
     const maxWeightSubQuery = this.workoutLogRepository
@@ -142,19 +114,19 @@ export class TypeormWorkoutLogRepository implements WorkoutLogRepository {
       .select('mw.exercise_id', 'exercise_id')
       .addSelect('mw.weight', 'weight')
       .addSelect('MIN(mw.created_at)', 'earliest_created_at')
-      .addSelect('e.body_part', 'body_part') // body_part 추가
-      .addSelect('SUBSTRING(u.email, 1, POSITION("@" IN u.email) - 1)', 'user_id') // 이메일에서 아이디 부분만 추출
+      .addSelect('e.body_part', 'body_part')
+      .addSelect('u.nick_name', 'user_nick_name')
       .innerJoin(
         `(${maxWeightSubQuery.getQuery()})`,
-        'maxWeight',
-        'mw.exercise_id = maxWeight.exercise_id AND mw.weight = maxWeight.max_weight',
+        'maxWeightPerE',
+        'mw.exercise_id = maxWeightPerE.exercise_id AND mw.weight = maxWeightPerE.max_weight',
       )
       .innerJoin('mw.exercise', 'e')
       .innerJoin('mw.user', 'u')
       .groupBy('mw.exercise_id')
       .addGroupBy('mw.weight')
       .addGroupBy('e.body_part')
-      .addGroupBy('u.email');
+      .addGroupBy('u.nick_name');
 
     const parameters = {
       ...maxWeightSubQuery.getParameters(),
@@ -163,17 +135,16 @@ export class TypeormWorkoutLogRepository implements WorkoutLogRepository {
 
     const result = await this.workoutLogRepository.manager
       .createQueryBuilder()
-      .select('sub.body_part', 'body_part')
-      .addSelect('e.exercise_name', 'exercise_name')
-      .addSelect('sub.weight', 'final_weight')
-      // .addSelect('sub.earliest_created_at', 'created_at')
-      .addSelect('sub.user_id', 'user_email_id')
+      .select('sub.body_part', 'bodyPart')
+      .addSelect('e.exercise_name', 'exerciseName')
+      .addSelect('sub.weight', 'maxWeight')
+      .addSelect('sub.earliest_created_at', 'achieveDate')
+      .addSelect('sub.user_nick_name', 'userNickName')
       .from(`(${earliestMaxWeightSubQuery.getQuery()})`, 'sub')
       .innerJoin('exercise', 'e', 'sub.exercise_id = e.id')
       .setParameters(parameters)
       .distinct(true)
       .getRawMany();
-
     return result;
   }
 }

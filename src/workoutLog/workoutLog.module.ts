@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { WorkoutLog } from './domain/WorkoutLog.entity';
 import { ExerciseModule } from '../exercise/excercise.module';
@@ -10,8 +10,14 @@ import { WORKOUTLOG_REPOSITORY } from '../common/const/inject.constant';
 import { TypeormWorkoutLogRepository } from './infrastructure/typeormWorkoutLog.repository';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([WorkoutLog]), ExerciseModule, UserModule, LoggerModule],
+  imports: [
+    TypeOrmModule.forFeature([WorkoutLog]),
+    forwardRef(() => ExerciseModule),
+    forwardRef(() => UserModule),
+    LoggerModule,
+  ],
   controllers: [WorkoutLogController],
   providers: [WorkoutLogService, { provide: WORKOUTLOG_REPOSITORY, useClass: TypeormWorkoutLogRepository }],
+  exports: [WorkoutLogService],
 })
 export class WorkoutLogModule {}

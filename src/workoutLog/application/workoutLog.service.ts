@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, forwardRef } from '@nestjs/common';
 import { SoftDeleteWorkoutLogRequestDto } from '../dto/softDeleteWorkoutLog.request.dto';
 import { User } from '../../user/domain/User.entity';
 import { SaveWorkoutLogsRequestDto } from '../dto/saveWorkoutLogs.request.dto';
@@ -10,9 +10,11 @@ import { Transactional } from 'typeorm-transactional';
 import { WorkoutLog } from '../domain/WorkoutLog.entity';
 import { ExerciseService } from '../../exercise/application/exercise.service';
 import { UserService } from '../../user/application/user.service';
-import { GetWorkoutLogByUserResponseDto } from '../dto/getWorkoutLogByUser.response.dto';
+import { getWorkoutLogByUserResponse, GetWorkoutLogByUserResponseDto } from '../dto/getWorkoutLogByUser.response.dto';
 import { Exercise } from '../../exercise/domain/Exercise.entity';
 import { BestWorkoutLog } from '../dto/findBestWorkoutLogs.response.dto';
+import { BodyPart } from '../../common/bodyPart.enum';
+import { RedisService } from '../../cache/redis.service';
 
 interface UpdateWorkoutLogsParams {
   workoutLogMap: Map<number, WorkoutLog>;
@@ -23,7 +25,7 @@ interface UpdateWorkoutLogsParams {
     repeatCount: number;
     weight: number;
     exerciseName: string;
-    bodyPart: string;
+    bodyPart: BodyPart;
   }[];
   user: User;
 }
@@ -68,8 +70,14 @@ export class WorkoutLogService {
   constructor(
     @Inject(WORKOUTLOG_REPOSITORY)
     readonly workoutLogRepository: WorkoutLogRepository,
+
+    @Inject(forwardRef(() => ExerciseService))
     private readonly exerciseService: ExerciseService,
+
+    @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
+
+    private readonly redisService: RedisService,
   ) {}
 
   @Transactional()
@@ -81,7 +89,6 @@ export class WorkoutLogService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-
     const newExercises = await this.exerciseService.findNewExercises({ exercises });
     if (newExercises.length > 0) {
       await this.exerciseService.bulkInsertExercises({ exercises: newExercises });
@@ -89,28 +96,31 @@ export class WorkoutLogService {
 
     const exerciseEntities = await this.exerciseService.findExercisesByExerciseNameAndBodyPartLockMode(exercises);
 
-    const promisedWorkoutLogs = await Promise.all(
-      workoutLogs.map(async (workoutLog) => {
-        const { exerciseName, bodyPart, setCount, weight, repeatCount } = workoutLog;
+    const workoutLogEntities: WorkoutLog[] = []; // 모든 WorkoutLog를 저장할 배열
 
-        const exercise = exerciseEntities.find(
-          (exercise) => exercise.exerciseName === exerciseName && exercise.bodyPart === bodyPart,
-        );
-        if (!exercise) {
-          throw new NotFoundException('Exercise not found');
-        }
+    workoutLogs.forEach((workoutLog) => {
+      const { exerciseName, bodyPart, setCount, weight, repeatCount } = workoutLog;
 
-        return new WorkoutLog({
-          setCount,
-          weight,
-          repeatCount,
-          exercise,
-          user,
-        });
-      }),
-    );
+      const exercise = exerciseEntities.find(
+        (exercise) => exercise.exerciseName === exerciseName && exercise.bodyPart === bodyPart,
+      );
 
-    const savedWorkoutLogs = await this.workoutLogRepository.bulkInsertWorkoutLogs(promisedWorkoutLogs);
+      if (!exercise) {
+        throw new NotFoundException('Exercise not found');
+      }
+
+      const newWorkoutLog = new WorkoutLog({
+        setCount,
+        weight,
+        repeatCount,
+        exercise,
+        user,
+      });
+
+      workoutLogEntities.push(newWorkoutLog);
+    });
+
+    const savedWorkoutLogs = await this.workoutLogRepository.bulkInsertWorkoutLogs(workoutLogEntities);
 
     return savedWorkoutLogs.map((workoutLog) => new WorkoutLogResponseDto(workoutLog));
   }
@@ -186,9 +196,37 @@ export class WorkoutLogService {
     await this.workoutLogRepository.softDeleteWorkoutLogs(ids, user);
   }
 
-  async getWorkoutLogsByUser(user: User): Promise<object> {
+  async findWorkoutLogsByUser(user: User): Promise<WorkoutLogResponseDto[]> {
+    return await this.workoutLogRepository.findWorkoutLogsByUser(user);
+  }
+
+  async getAggregatedWorkoutLogsByUser(user: User): Promise<GetWorkoutLogByUserResponseDto> {
     const result = await this.workoutLogRepository.findWorkoutLogsByUser(user);
-    return GetWorkoutLogByUserResponseDto(result);
+    return getWorkoutLogByUserResponse(result);
+  }
+
+  async getWorkoutLogsByYear(user: User, year: string): Promise<object> {
+    const result = await this.workoutLogRepository.findWorkoutLogsByYear(user, year);
+    return result;
+  }
+
+  async getWorkoutLogsByYearMonth(user: User, year: string, month: string): Promise<object> {
+    const result = await this.workoutLogRepository.findWorkoutLogsByYearMonth(user, year, month);
+    return result;
+  }
+
+  async getBestWorkoutLogs(): Promise<any> {
+    const cacheKey: string = 'best:workout:logs';
+
+    const cachedData = await this.redisService.getBestWorkoutLogs(cacheKey);
+    if (cachedData.length > 0) {
+      return cachedData;
+    }
+    const bestWorkoutLogs: BestWorkoutLog[] = await this.workoutLogRepository.findBestWorkoutLogs();
+
+    await this.redisService.insertBestWorkout(cacheKey, bestWorkoutLogs);
+
+    return bestWorkoutLogs;
   }
 
   async getWorkoutLogsByYear(user: User, year: string): Promise<object> {

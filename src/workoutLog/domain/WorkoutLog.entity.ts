@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Index, JoinColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn, Index } from 'typeorm';
 import { Timestamps } from '../../TimeStamp.entity';
 import { User } from '../../user/domain/User.entity';
 import { Exercise } from '../../exercise/domain/Exercise.entity';
@@ -6,9 +6,9 @@ import { IsNotEmpty, IsNumber, Max, Min, validateOrReject } from 'class-validato
 import { Logger } from '@nestjs/common';
 
 @Entity()
-@Index('idx_user_id', ['user'])
-@Index('idx_exercise_id', ['exercise'])
-@Index('idx_exercise_weight_created', ['exercise', 'weight', 'createdAt'])
+@Index('idx_workout_log_user_id', ['user'])
+@Index('idx_workout_log_exercise_id', ['exercise'])
+@Index('idx_workout_log_deleted_exercise_weight', ['deletedAt', 'exercise', 'weight'])
 export class WorkoutLog extends Timestamps {
   @PrimaryGeneratedColumn()
   id: number;
@@ -55,6 +55,9 @@ export class WorkoutLog extends Timestamps {
       this.repeatCount = params.repeatCount;
       this.exercise = params.exercise;
       this.user = params.user;
+      // this.bodyPart = params.bodyPart;
+      // this.userNickName = params.userNickName;
+      // this.exerciseName = params.exerciseName;
 
       validateOrReject(this).catch((errors) => {
         const logger = new Logger('WorkoutLog Entity');
@@ -63,12 +66,24 @@ export class WorkoutLog extends Timestamps {
     }
   }
 
-  update(params: { setCount: number; weight: number; repeatCount: number; user: User; exercise: Exercise }) {
+  update(params: {
+    setCount: number;
+    weight: number;
+    repeatCount: number;
+    user: User;
+    exercise: Exercise;
+    // userNickName: string;
+    // bodyPart: BodyPart;
+    // exerciseName: string;
+  }) {
     this.setCount = params.setCount;
     this.weight = params.weight;
     this.repeatCount = params.repeatCount;
     this.exercise = params.exercise;
     this.user = params.user;
+    // this.userNickName = params.userNickName;
+    // this.bodyPart = params.bodyPart;
+    // this.exerciseName = params.exerciseName;
 
     validateOrReject(this).catch((errors) => {
       const logger = new Logger('WorkoutLog Entity Update');

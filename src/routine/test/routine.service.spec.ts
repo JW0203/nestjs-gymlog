@@ -12,9 +12,10 @@ import { Routine } from '../domain/Routine.entity';
 import { RoutineResponseDto } from '../dto/routine.response.dto';
 import { initializeTransactionalContext } from 'typeorm-transactional';
 import { GetRoutineByNameRequestDto } from '../dto/getRoutineByName.request.dto';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { UpdateRoutinesRequestDto } from '../dto/updateRoutines.request.dto';
 import { DeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
+import { GetAllRoutineByUserResponseDto } from '../dto/getAllRoutineByUser.response.dto';
 
 const mockRoutineRepository = {
   findRoutinesByNameLockMode: jest.fn(),
@@ -85,7 +86,7 @@ describe('Test RoutineService', () => {
         },
       ];
 
-      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
+      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
       const routinesData: SaveRoutinesRequestDto = { routines };
       const newRoutines = routines.map(
         (routine) =>
@@ -129,7 +130,7 @@ describe('Test RoutineService', () => {
         },
       ];
 
-      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
+      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
       const newRoutines = routines.map(
         (routine) =>
           new Routine({
@@ -151,7 +152,7 @@ describe('Test RoutineService', () => {
     it('should return an empty array when searching for a routine not registered by the user', async () => {
       const routineNameDto = { name: 'non-existent-name' };
       const name: string = routineNameDto.name;
-      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
+      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
       routineRepository.findRoutinesByName.mockResolvedValue([]);
 
       await expect(routineService.getRoutineByName({ name }, mockUser)).rejects.toThrow(NotFoundException);
@@ -160,7 +161,7 @@ describe('Test RoutineService', () => {
 
   describe('bulkUpdateRoutines service', () => {
     it('should return a updated routine if the routine is updated', async () => {
-      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
+      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
       mockUser.id = 1;
 
       const routineName: string = '하체 뒤';
@@ -223,7 +224,7 @@ describe('Test RoutineService', () => {
     });
 
     it('should handle routine not found during update', async () => {
-      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
+      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
       mockUser.id = 1;
       const mockExercise: Exercise = new Exercise({ exerciseName: '레그 프레스', bodyPart: BodyPart.LEGS });
       const updateRoutinesDto: UpdateRoutinesRequestDto = {
@@ -241,11 +242,11 @@ describe('Test RoutineService', () => {
       exerciseService.findExercisesByExerciseNameAndBodyPart.mockResolvedValue([mockExercise]);
       routineRepository.findOneRoutineById.mockResolvedValue(null);
 
-      await expect(routineService.bulkUpdateRoutines(updateRoutinesDto, mockUser)).rejects.toThrow(BadRequestException);
+      await expect(routineService.bulkUpdateRoutines(updateRoutinesDto, mockUser)).rejects.toThrow(NotFoundException);
     });
 
     it('should handle exercise not found during update', async () => {
-      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
+      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
       mockUser.id = 1;
 
       const updateRoutinesDto: UpdateRoutinesRequestDto = {
@@ -270,7 +271,7 @@ describe('Test RoutineService', () => {
   describe('Test softDeleteRoutines', () => {
     it('should return no content if routines are deleted', async () => {
       const mockRoutineIds: DeleteRoutineRequestDto = { ids: [1, 2] };
-      const mockUser = new User({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
+      const mockUser = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
       mockUser.id = 1;
 
       const routineName = '하체 루틴';
@@ -299,19 +300,20 @@ describe('Test RoutineService', () => {
       expect(routineRepository.softDeleteRoutines).toHaveBeenCalledWith([1, 2]);
     });
 
-    it('should throw BadRequestException when no routines found', async () => {
+    it('should do nothing when no routines found', async () => {
       const mockRoutineIds: DeleteRoutineRequestDto = { ids: [1, 2] };
-      const mockUser = new User({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
+      const mockUser = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
       mockUser.id = 1;
 
       routineRepository.findRoutinesByIds.mockResolvedValue([]);
-      await expect(routineService.softDeleteRoutines(mockRoutineIds, mockUser)).rejects.toThrow(BadRequestException);
+      const result = await routineService.softDeleteRoutines(mockRoutineIds, mockUser);
+      expect(result).toBeUndefined();
     });
   });
 
   describe('Test getAllRoutinesByUser', () => {
     it('should return all routines', async () => {
-      const mockUser = new User({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
+      const mockUser = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
       mockUser.id = 1;
 
       const routineName = '하체 루틴';
@@ -337,12 +339,51 @@ describe('Test RoutineService', () => {
     });
 
     it('should return empty array, when a logged in user has no routine', async () => {
-      const mockUser = new User({ email: 'newuser@email.com', password: '12345678', name: 'tester' });
+      const mockUser = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
       mockUser.id = 1;
       routineRepository.findAllByUserId.mockResolvedValue([]);
       const result = await routineService.getAllRoutinesByUser(mockUser);
       expect(result).toEqual([]);
       expect(routineRepository.findAllByUserId).toHaveBeenCalledWith(mockUser.id);
+    });
+  });
+
+  describe('Test findAllRoutinesByUserId', () => {
+    it('should return all routines', async () => {
+      const user = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
+      user.id = 1;
+      const routineName = '하체 루틴';
+
+      const routine1 = new Routine({
+        name: routineName,
+        user: user,
+        exercise: new Exercise({ bodyPart: BodyPart.LEGS, exerciseName: '레그 프레스' }),
+      });
+      routine1.id = 1;
+
+      const routine2 = new Routine({
+        name: routineName,
+        user: user,
+        exercise: new Exercise({ bodyPart: BodyPart.LEGS, exerciseName: '고블린 스쿼트' }),
+      });
+      routine2.id = 2;
+
+      routineRepository.findAllByUserId.mockResolvedValue([routine1, routine2]);
+
+      const result: GetRoutineByNameRequestDto[] = await routineService.findAllRoutinesByUserId(user);
+      const expectResult: GetRoutineByNameRequestDto[] = [routine1, routine2].map(
+        (routine) => new GetAllRoutineByUserResponseDto(routine),
+      );
+      expect(result).toEqual(expectResult);
+    });
+
+    it('should return empty array, when a logged in user has no routine', async () => {
+      const user = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
+      user.id = 1;
+
+      routineRepository.findAllByUserId.mockResolvedValue([]);
+      const result: GetRoutineByNameRequestDto[] = await routineService.findAllRoutinesByUserId(user);
+      expect(result).toEqual([]);
     });
   });
 });

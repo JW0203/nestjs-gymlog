@@ -8,7 +8,7 @@ import { Routine } from '../../routine/domain/Routine.entity';
 import { Logger } from '@nestjs/common';
 
 @Entity()
-@Index('idx_exercise_deleted', ['deletedAt', 'id'])
+@Index('idx_exercise_deleted_id', ['deletedAt', 'id'])
 export class Exercise extends Timestamps {
   @PrimaryGeneratedColumn()
   id: number;

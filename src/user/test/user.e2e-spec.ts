@@ -35,19 +35,19 @@ describe('User API (e2e)', () => {
 
   it('Given a new user, when the user signs up, then the response status should be 201', async () => {
     // Given
-    const newUser: TEST_USER = { email: 'newuser@email.com', name: 'tester', password: '12345678' };
+    const newUser: TEST_USER = { email: 'newuser@email.com', nickName: 'tester', password: '12345678' };
 
     // When
     const response = await request(app.getHttpServer()).post('/users').send(newUser);
 
     // Then
     expect(response.status).toBe(201);
-    expect(response.body).toMatchObject({ email: newUser.email, name: newUser.name });
+    expect(response.body).toMatchObject({ email: newUser.email, nickName: newUser.nickName });
   });
 
   it('Given an existing user, when the same user tries to sign up again, then the response status should be 409', async () => {
     // Given
-    const existingUser: TEST_USER = { email: 'newuser@email.com', name: 'tester', password: '12345678' };
+    const existingUser: TEST_USER = { email: 'newuser@email.com', nickName: 'tester', password: '12345678' };
     await createUser(app, existingUser);
 
     // When
@@ -59,7 +59,7 @@ describe('User API (e2e)', () => {
 
   it('Given a registered user, when the user logs in, then the response should contain an access token and status should be 200', async () => {
     // Given
-    const registeredUser: TEST_USER = { email: 'newuser@email.com', name: 'tester', password: '12345678' };
+    const registeredUser: TEST_USER = { email: 'newuser@email.com', nickName: 'tester', password: '12345678' };
     await createUser(app, registeredUser);
     // When
     const response = await request(app.getHttpServer())
@@ -73,7 +73,7 @@ describe('User API (e2e)', () => {
 
   it('Given a logged-in user, when the user requests their info, then the response status should be 200 and the response should contain user info', async () => {
     // Given
-    const registeredUser: TEST_USER = { email: 'newuser@email.com', name: 'tester', password: '12345678' };
+    const registeredUser: TEST_USER = { email: 'newuser@email.com', nickName: 'tester', password: '12345678' };
     await createUser(app, registeredUser);
     const token = await getUserAccessToken(app, registeredUser);
 
@@ -83,12 +83,12 @@ describe('User API (e2e)', () => {
     // Then
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('email', registeredUser.email);
-    expect(response.body).toHaveProperty('name', registeredUser.name);
+    expect(response.body).toHaveProperty('nickName', registeredUser.nickName);
   });
 
   it('Given a logged-in user, when the user requests to delete their account, then the response status should be 204', async () => {
     // Given
-    const registeredUser: TEST_USER = { email: 'newuser@email.com', name: 'tester', password: '12345678' };
+    const registeredUser: TEST_USER = { email: 'newuser@email.com', nickName: 'tester', password: '12345678' };
     await createUser(app, registeredUser);
     const token = await getUserAccessToken(app, registeredUser);
     // When

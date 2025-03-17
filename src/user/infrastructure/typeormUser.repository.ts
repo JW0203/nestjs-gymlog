@@ -35,4 +35,17 @@ export class TypeormUserRepository implements UserRepository {
     user.email = email;
     await this.userRepository.save(user);
   }
+
+  async findOneUserByNickName(nickName: string): Promise<User | null> {
+    return await this.userRepository.findOne({ where: { nickName } });
+  }
+
+  async updateNickName(userId: number, updateNickName: string): Promise<void> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new ConflictException('The user does not exist');
+    }
+    user.nickName = updateNickName;
+    await this.userRepository.save(user);
+  }
 }

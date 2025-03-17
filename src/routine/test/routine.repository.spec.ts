@@ -78,7 +78,7 @@ describe('Test RoutineRepository', () => {
       const user: User = await createUser(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
-        name: 'Test User',
+        nickName: 'Test User',
       });
       const exerciseInfo: ExerciseDataFormatDto[] = [
         { exerciseName: 'Push-up', bodyPart: BodyPart.CHEST },
@@ -109,7 +109,7 @@ describe('Test RoutineRepository', () => {
       const user: User = await createUser(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
-        name: 'Test User',
+        nickName: 'Test User',
       });
 
       const notExistRoutineName: string = '등데이';
@@ -126,7 +126,7 @@ describe('Test RoutineRepository', () => {
       const user: User = await createUser(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
-        name: 'Test User',
+        nickName: 'Test User',
       });
       const exerciseInfo: ExerciseDataFormatDto[] = [
         { exerciseName: 'Push-up', bodyPart: BodyPart.CHEST },
@@ -158,7 +158,7 @@ describe('Test RoutineRepository', () => {
       const user: User = await createUser(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
-        name: 'Test User',
+        nickName: 'Test User',
       });
       const exerciseInfo: ExerciseDataFormatDto[] = [{ exerciseName: 'Push-up', bodyPart: BodyPart.CHEST }];
       const Exercise = await createExercises(dataSource, exerciseInfo);
@@ -179,7 +179,7 @@ describe('Test RoutineRepository', () => {
       const user: User = await createUser(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
-        name: 'Test User',
+        nickName: 'Test User',
       });
 
       const result = await routineRepository.findOneRoutineById(999, user);
@@ -201,7 +201,7 @@ describe('Test RoutineRepository', () => {
       const user: User = await createUser(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
-        name: 'Test User',
+        nickName: 'Test User',
       });
 
       const exerciseInfo: ExerciseDataFormatDto[] = [
@@ -225,7 +225,7 @@ describe('Test RoutineRepository', () => {
       const user: User = await createUser(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
-        name: 'Test User',
+        nickName: 'Test User',
       });
 
       const exerciseInfo: ExerciseDataFormatDto[] = [
@@ -249,7 +249,7 @@ describe('Test RoutineRepository', () => {
       const user: User = await createUser(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
-        name: 'Test User',
+        nickName: 'Test User',
       });
 
       const exerciseInfo: ExerciseDataFormatDto[] = [
@@ -273,7 +273,7 @@ describe('Test RoutineRepository', () => {
       const user: User = await createUser(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
-        name: 'Test User',
+        nickName: 'Test User',
       });
 
       const result = await routineRepository.findRoutinesByIds([1000, 102, 999], user);
@@ -295,7 +295,7 @@ describe('Test RoutineRepository', () => {
       const user: User = await createUser(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
-        name: 'Test User',
+        nickName: 'Test User',
       });
       const exerciseInfo: ExerciseDataFormatDto[] = [
         { exerciseName: 'Push-up', bodyPart: BodyPart.CHEST },
@@ -366,7 +366,7 @@ describe('Test RoutineRepository', () => {
       const user: User = await createUser(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
-        name: 'Test User',
+        nickName: 'Test User',
       });
       const exerciseInfo: ExerciseDataFormatDto[] = [
         { exerciseName: 'Push-up', bodyPart: BodyPart.CHEST },
@@ -405,7 +405,7 @@ describe('Test RoutineRepository', () => {
       const user: User = await createUser(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
-        name: 'Test User',
+        nickName: 'Test User',
       });
       const exerciseInfo: ExerciseDataFormatDto[] = [
         { exerciseName: 'Push-up', bodyPart: BodyPart.CHEST },
@@ -427,7 +427,7 @@ describe('Test RoutineRepository', () => {
       const user: User = await createUser(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
-        name: 'Test User',
+        nickName: 'Test User',
       });
 
       const result = await routineRepository.findAllByUserId(user.id);

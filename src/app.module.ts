@@ -14,6 +14,7 @@ import { ExerciseModule } from './exercise/excercise.module';
 import { JwtPassportModule } from './common/jwtPassport.module';
 import { addTransactionalDataSource } from 'typeorm-transactional';
 import { DataSource } from 'typeorm';
+import { RedisModule } from './cache/redis.module';
 
 @Module({
   imports: [
@@ -36,7 +37,7 @@ import { DataSource } from 'typeorm';
         database: configService.get<string>('DB_NAME'),
         autoLoadEntities: true,
         synchronize: true,
-        logging: true,
+        logging: false,
         namingStrategy: new SnakeNamingStrategy(),
       }),
       async dataSourceFactory(options) {
@@ -46,6 +47,7 @@ import { DataSource } from 'typeorm';
         return addTransactionalDataSource(new DataSource(options));
       },
     }),
+    RedisModule,
     UserModule,
     RoutineModule,
     WorkoutLogModule,

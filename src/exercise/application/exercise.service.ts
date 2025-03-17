@@ -97,7 +97,7 @@ export class ExerciseService {
     await this.exerciseRepository.bulkSoftDelete(ids);
   }
 
-  async changeExerciseName(updateData: UpdateExerciseNameRequestDto) {
+  async changeExerciseName(updateData: UpdateExerciseNameRequestDto): Promise<Exercise> {
     return await this.exerciseRepository.changeExerciseName(updateData);
   }
 }
