@@ -228,4 +228,23 @@ export class WorkoutLogService {
 
     return bestWorkoutLogs;
   }
+
+  async getWorkoutLogsByYear(user: User, year: string): Promise<object> {
+    const result = await this.workoutLogRepository.findWorkoutLogsByYear(user, year);
+    return result;
+  }
+
+  async getWorkoutLogsByYearMonth(user: User, year: string, month: string): Promise<object> {
+    const result = await this.workoutLogRepository.findWorkoutLogsByYearMonth(user, year, month);
+    return result;
+  }
+
+  async getBestWorkoutLogs(): Promise<BestWorkoutLog[]> {
+    return await this.workoutLogRepository.findBestWorkoutLogs();
+  }
+
+  // aync getWorkoutLogsByYear(user: User, year:number): Promise<object> {
+  //   const result = await this.workoutLogRepository.findWorkoutLogsByYear()
+  //
+  // }
 }

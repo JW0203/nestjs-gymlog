@@ -37,6 +37,7 @@ export class WorkoutLog extends Timestamps {
   public exercise: Exercise;
 
   @ManyToOne(() => User, (user) => user.workoutLogs)
+  @JoinColumn({ name: 'user_id' })
   public user: User;
 
   constructor(params: {
