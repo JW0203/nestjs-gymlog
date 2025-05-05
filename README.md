@@ -1,72 +1,77 @@
-# My Project : 운동기록 서비스
-![TypeScript](https://img.shields.io/badge/Language-TypeScript-blue?logo=typescript)
-![Node.js](https://img.shields.io/badge/Runtime-Node.js-green?logo=node.js)
-![NestJS](https://img.shields.io/badge/Framework-NestJS-red?logo=nestjs)
-![TypeORM](https://img.shields.io/badge/ORM-TypeORM-yellow?logo=typeorm)
-![MySQL](https://img.shields.io/badge/Database-MySQL-orange?logo=mysql)
-![Redis](https://img.shields.io/badge/Cache-Redis-red?logo=redis)
-![GitHub Actions](https://img.shields.io/badge/CI/CD-GitHub%20Actions-blue?logo=githubactions)
-![Docker](https://img.shields.io/badge/Container-Docker-blue?logo=docker)
-![AWS ECR](https://img.shields.io/badge/Registry-AWS%20ECR-orange?logo=amazonaws)
-![AWS EC2](https://img.shields.io/badge/Deployment-AWS%20EC2-yellow?logo=amazonaws)
+# My Project : A service to log and track your workouts
 
+# Project Stacks
 
-## 프로젝트의 목적
-- 헬스장에서 운동한 내용을 기록할 수 있는 서비스 구현
-- Front-end 는 ChatGPT를 이용하여 구현
-- CI/CD 를 이용하여 배포 자동화 구현
-  - GitHub Actions 
-  - Docker container image
-  - AWS ECR 
-- MySQL 성능 최적화해보기
-  - 멀티 컬럼 인덱스
-  - 반정규화
-  - Redis
- 
-## 구현한 기능 목록
+### Backend
+![Node.js](https://img.shields.io/badge/Node.js-23.6.1-339933?logo=node.js&logoColor=white)
+![NestJS](https://img.shields.io/badge/NestJS-red?logo=nestjs)
+![TypeScript](https://img.shields.io/badge/TypeScript-blue?logo=typescript&logoColor=white)
 
-### 1. 운동 일지 관리
-- 여러 운동 기록을 한번에 저장/수정/삭제 하는 기능
-- 기록된 각 운동이름 마다 최대 무게 기록을 낸 유저를 찾아 내는 기능
-  - 유저들의 성취감및 경쟁을 위해 마이페이지에 표시
-- 특정 날짜, 년도를 기준으로 운동한 기록을 검색하여 반환하는 기능
-  - 운동기록 확인 페이지에서 선택한 특정 날짜, 년도에 운동을 한 기록을 확인 가능
-- 유저가 현재까지 운동한 기록을 통합하여 볼수 있는 기능
-  - 마이 페이지에 들어가면 자동으로 보여주기 위한 기능   
+### Database & ORM  
+![MySQL](https://img.shields.io/badge/MySQL-8.4.2-4479A1?logo=mysql&logoColor=white)
+![TypeORM](https://img.shields.io/badge/TypeORM-grey?logo=typeorm&logoColor=white)
 
-### 2. 루틴 관리
-- 루틴을 저장/수정/삭제 하는 기능
-- 유저가 기록한 루틴을 검색 및 호출하는 기능
-  - 운동 일지를 기록할때 루틴을 가져올때 사용하기 위한 기능 
+### Cache  
+![Redis](https://img.shields.io/badge/Redis-7.2.7-DC382D?logo=redis&logoColor=white) 
 
-### 3. 운동 이름 관리
-- 몸의 부위별 운동 이름을 등록/수정/삭제 하는 기능
-- 운동 이름 찾기 기능 
+### Deployment & DevOps 
+![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-grey?logo=githubactions&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-27.4-blue?logo=docker&logoColor=white)
+![AWS ECR](https://img.shields.io/badge/AWS_ECR-grey?logo=amazonwebservices&logoColor=orange)
+![AWS EC2](https://img.shields.io/badge/AWS_EC2-grey?logo=amazonwebservices&logoColor=orange)
+![AWS RDS](https://img.shields.io/badge/AWS_RDS-grey?logo=amazonwebservices&logoColor=orange)
 
-### 3. 사용자 계정 관리
-- 회원가입/로그인
-  - jwt token 이용
-- 회원 정보 수정
+### Testing 
+![Jest](https://img.shields.io/badge/Jest-grey?logo=jest&logoColor=white) 
+
+### Tools  
+![WebStorm](https://img.shields.io/badge/WebStorm-2024.2.4-000000?logo=webstorm&logoColor=white)
+![Postman](https://img.shields.io/badge/Postman-grey?logo=postman&logoColor=white)
+
+# Project Goals
+- Implement a service for logging and tracking gym workout activities
+- Create a fully automated CI/CD pipeline to accelerate releases and ensure consistent deployments
+- Optimize MySQL performance through
+  - Multi‑column indexes
+  - Denormalization
+  - Redis caching
+
+# Git Flow
+master: The main branch for managing release versions
+
+develop: The integration branch where ongoing development takes place
+
+feature: The branch used for developing new features
  
 
-## 데이터베이스 ERD
-![ERD 설명](gymLog-erd.png)
+# Features
+### CI/CD pipeline built with GitHub Actions, Docker, AWS ECR, and AWS EC2
+<img src="./docs/ci-cd-pipeline.png" width="500px" alt="CI/CD Pipeline Diagram" />
+
+### MySQL Performance Optimization
+I evaluated three strategies:
+- Multi‑column indexes, 
+- Denormalization
+- Redis caching
+In the end, **multi‑column indexes + Redis caching** were selcted to acheieve fast query performance while preserving schema flexibilty
+ 
+### Notable API Endpoints
+
+Yearly Exercise Summary (workout-logs/year?)
+- Retrieves a breakdown of all exercises performed by a given user in a specified year.
+
+Monthly Exercise Summary(workout-logs/year-month?)
+- Retrieves a breakdown of all exercises performed by a given user in a specified month of a specified year.
+
+Top Lift Record Lookup (workout-logs/best)
+- Finds the user and details for the heaviest recorded weight for each exercise name.
 
 
-## Stack
-### **Development**
-- **Language**: TypeScript
-- **Runtime**: Node.js
-- **Framework**: NestJS
-- **Database**: MySQL, Redis
-- **ORM**: TypeORM
 
-### **Infrastructure**
-- **Cloud**: AWS EC2
-- **CI/CD**: 
-  - GitHub Actions (Workflow Automation)
-  - Docker (Containerization)
-  - AWS ECR (Container Registry)
+# DataBase ERD
+
+<img src="./gymLog-erd.png" width="500px" alt="databse ERD" />
+
  
 ## Project Structure
 ```
