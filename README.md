@@ -24,6 +24,31 @@
 ### Testing 
 ![Jest](https://img.shields.io/badge/Jest-grey?logo=jest&logoColor=white) 
 
+
+## 🛠️ Tech Stack
+
+### 📦 Backend
+![Node.js](https://img.shields.io/badge/Node.js-v23.6.1-339933?logo=node.js&logoColor=white)
+![NestJS](https://img.shields.io/badge/NestJS-v10-red?logo=nestjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-v5-blue?logo=typescript&logoColor=white)
+
+### 🗄️ Database & ORM  
+![MySQL](https://img.shields.io/badge/MySQL-v8.4.2-4479A1?logo=mysql&logoColor=white)
+![TypeORM](https://img.shields.io/badge/TypeORM-v0.3-grey?logo=typeorm&logoColor=white)
+
+### ⚡ Cache  
+![Redis](https://img.shields.io/badge/Redis-v7.2.7-DC382D?logo=redis&logoColor=white) 
+
+### 🚀 Deployment & DevOps  
+![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-enabled-2088FF?logo=githubactions&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-v27.4-blue?logo=docker&logoColor=white)
+![AWS ECR](https://img.shields.io/badge/AWS_ECR-used-FF9900?logo=amazonaws&logoColor=white)
+![AWS EC2](https://img.shields.io/badge/AWS_EC2-used-FF9900?logo=amazonaws&logoColor=white)
+![AWS RDS](https://img.shields.io/badge/AWS_RDS-used-FF9900?logo=amazonaws&logoColor=white)
+
+### ✅ Testing  
+![Jest](https://img.shields.io/badge/Jest-integrated-C21325?logo=jest&logoColor=white)
+
 ### Tools  
 ![WebStorm](https://img.shields.io/badge/WebStorm-2024.2.4-000000?logo=webstorm&logoColor=white)
 ![Postman](https://img.shields.io/badge/Postman-grey?logo=postman&logoColor=white)
@@ -66,7 +91,7 @@ Monthly Exercise Summary(workout-logs/year-month?)
 Top Lift Record Lookup (workout-logs/best)
 - Finds the user and details for the heaviest recorded weight for each exercise name.
 
-
+### Running Tests
 
 # DataBase ERD
 
@@ -75,78 +100,19 @@ Top Lift Record Lookup (workout-logs/best)
  
 ## Project Structure
 ```
+Gymlog
 ├── Dockerfile
 ├── README.md
-├── commitlint.config.js
-├── gym-logs-architecture.png
-├── nest-cli.json
-├── package-lock.json
-├── package.json
-├── src
-│   ├── TimeStamp.entity.ts
-│   ├── app.controller.ts
-│   ├── app.module.ts
-│   ├── app.service.ts
-│   ├── auth
-│   │   └── application
-│   ├── cache
-│   │   ├── radis.constant.ts
-│   │   ├── redis.module.ts
-│   │   └── redis.service.ts
-│   ├── common
-│   │   ├── Logger
-│   │   ├── bodyPart.enum.ts
-│   │   ├── const
-│   │   ├── dto
-│   │   ├── infrastructure
-│   │   ├── jwtPassport
-│   │   ├── jwtPassport.module.ts
-│   │   ├── type
-│   │   └── validation
-│   ├── exercise
-│   │   ├── application
-│   │   ├── domain
-│   │   ├── dto
-│   │   ├── excercise.module.ts
-│   │   ├── infrastructure
-│   │   ├── presentation
-│   │   └── test
-│   ├── main.ts
-│   ├── routine
-│   │   ├── application
-│   │   ├── domain
-│   │   ├── dto
-│   │   ├── functions
-│   │   ├── infrastructure
-│   │   ├── presentation
-│   │   ├── routine.module.ts
-│   │   └── test
-│   ├── user
-│   │   ├── application
-│   │   ├── domain
-│   │   ├── dto
-│   │   ├── infrastructure
-│   │   ├── presentation
-│   │   ├── test
-│   │   └── user.module.ts
-│   └── workoutLog
-│       ├── application
-│       ├── domain
-│       ├── dto
-│       ├── infrastructure
-│       ├── presentation
-│       ├── test
-│       └── workoutLog.module.ts
-├── test
-│   ├── app.e2e-spec.ts
-│   ├── jest-e2e.json
-│   ├── jest-layer.json
-│   └── utils
-│       ├── dbUtils.ts
-│       ├── getMySql.TypeOrm.config.ts
-│       └── userUtils.ts
-├── tsconfig.build.json
-└── tsconfig.json
+├── .github/workflows
+│   └── deploy.yml
+└── src
+    ├── auth/
+    ├── cache/
+    ├── common/
+    ├── user/
+    ├── exercise/
+    ├── routine/
+    └── workoutLog/
 
 ```
 
