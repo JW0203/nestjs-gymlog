@@ -27,8 +27,8 @@
 ![WebStorm](https://img.shields.io/badge/WebStorm-2024.2.4-000000?logo=webstorm&logoColor=white)
 ![Postman](https://img.shields.io/badge/Postman-used-FF6C37?logo=postman&logoColor=white)
 
-
-# Project Goals
+---
+## 🎯 Project Goals
 - Implement a service for logging and tracking gym workout activities
 - Create a fully automated CI/CD pipeline to accelerate releases and ensure consistent deployments
 - Optimize MySQL performance through
@@ -36,44 +36,47 @@
   - Denormalization
   - Redis caching
 
-# Git Flow
-master: The main branch for managing release versions
+---
 
-develop: The integration branch where ongoing development takes place
-
-feature: The branch used for developing new features
+## ⚙️ Git Flow
+- `master`: Main branch for release-ready code  
+- `develope`: Integration branch for ongoing development  
+- `feature`: Feature development branches
  
+---
+## ✨ Features
+### 🔄️ CI/CD pipeline
+CI/CD pipeline built with GitHub Actions, Docker, AWS ECR, and AWS EC2  
+<img src="./ci-cd-pipeline.png" width="500px" alt="CI/CD Pipeline Diagram" />
 
-# Features
-### CI/CD pipeline built with GitHub Actions, Docker, AWS ECR, and AWS EC2
-<img src="./docs/ci-cd-pipeline.png" width="500px" alt="CI/CD Pipeline Diagram" />
 
-### MySQL Performance Optimization
+### 📈 MySQL Performance Optimization
 I evaluated three strategies:
-- Multi‑column indexes, 
+- Multi‑column indexes
 - Denormalization
 - Redis caching
-In the end, **multi‑column indexes + Redis caching** were selcted to acheieve fast query performance while preserving schema flexibilty
- 
-### Notable API Endpoints
+In the end, **multi‑column indexes + Redis caching** were selected to achieve fast query performance while preserving schema flexibilty
 
-Yearly Exercise Summary (workout-logs/year?)
-- Retrieves a breakdown of all exercises performed by a given user in a specified year.
+### 🔍 Notable API Endpoints
 
-Monthly Exercise Summary(workout-logs/year-month?)
-- Retrieves a breakdown of all exercises performed by a given user in a specified month of a specified year.
+- **Yearly Exercise Summary** (`GET /workout-logs/year?`)  
+  Retrieves a breakdown of all exercises performed by a user in a given year.
 
-Top Lift Record Lookup (workout-logs/best)
-- Finds the user and details for the heaviest recorded weight for each exercise name.
+- **Monthly Exercise Summary** (`GET /workout-logs/year-month?`)  
+  Retrieves a breakdown of exercises for a given user in a specific month.
 
-### Running Tests
+- **Top Lift Record Lookup** (`GET /workout-logs/best`)  
+  Finds the user with the heaviest recorded weight per exercise name.
 
-# DataBase ERD
+### ✅ Running Tests
+
+---
+## ⛓️ DataBase ERD
 
 <img src="./gymLog-erd.png" width="500px" alt="databse ERD" />
 
- 
-## Project Structure
+---
+## 🗂️ Project Structure
 ```
 Gymlog
 ├── Dockerfile
