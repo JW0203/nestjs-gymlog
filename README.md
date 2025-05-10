@@ -55,6 +55,7 @@ I evaluated three strategies:
 - Multi‑column indexes
 - Denormalization
 - Redis caching
+  
 In the end, **multi‑column indexes + Redis caching** were selected to achieve fast query performance while preserving schema flexibilty
 
 ### 🔍 Notable API Endpoints
