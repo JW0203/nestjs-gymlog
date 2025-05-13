@@ -71,6 +71,33 @@ In the end, **multi‑column indexes + Redis caching** were selected to achieve 
 
 ### ✅ Running Tests
 
+Create a `.env.test` file in the root directory with the following content:
+
+```
+JWT_SECRET=your_jwt_secret_key     # ← Replace with your actual JWT secret key
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=your_database_name         # ← Replace with your actual database name
+DB_USERNAME=your_mysql_username    # ← Replace with your actual MySQL username
+DB_PASSWORD=your_password          # ← Replace with your actual MySQL password
+SALT_ROUNDS=xxx                    # ← Replace with the number of salt rounds to use (e.g., 10)
+PORT=3000
+HOST_IP=127.0.0.1
+JWT_EXPIRESIN=1h
+DB_SYNCHRONIZE=false
+
+```
+
+#### E2E tests
+```bash
+npm run start:e2e
+```
+
+#### Layer tests
+```bash
+npm run start:layer
+```
+
 ---
 ## ⛓️ DataBase ERD
 
