@@ -121,5 +121,3 @@ Gymlog
     └── workoutLog/
 
 ```
-
-
