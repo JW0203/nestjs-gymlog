@@ -11,7 +11,7 @@ import { User } from '../../user/domain/User.entity';
 import { WorkoutLog } from '../domain/WorkoutLog.entity';
 import { WorkoutLogResponseDto } from '../dto/workoutLog.response.dto';
 import { UpdateWorkoutLogsRequestDto } from '../dto/updateWorkoutLogs.request.dto';
-import { GetWorkoutLogByUserResponseDto } from '../dto/getWorkoutLogByUser.response.dto';
+import { getWorkoutLogByUserResponse } from '../dto/getWorkoutLogByUser.response.dto';
 import { RedisService } from '../../cache/redis.service';
 
 jest.mock('typeorm-transactional', () => ({
@@ -479,7 +479,7 @@ describe('WorkoutLogService', () => {
         },
       );
 
-      const expectedResult: object = GetWorkoutLogByUserResponseDto(workoutLogEntities);
+      const expectedResult: object = getWorkoutLogByUserResponse(workoutLogEntities);
       workoutLogRepository.findWorkoutLogsByUser.mockResolvedValue(workoutLogEntities);
 
       const result = await workoutLogService.getAggregatedWorkoutLogsByUser(user);
