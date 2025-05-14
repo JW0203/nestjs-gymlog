@@ -20,7 +20,7 @@ import { RedisModule } from './cache/redis.module';
   imports: [
     ConfigModule.forRoot({
       validationSchema: Joi.object({
-        NODE_ENV: Joi.string().valid('dev', 'prod', 'local', 'debug', 'e2e').default('local'),
+        NODE_ENV: Joi.string().valid('dev', 'prod', 'local', 'debug', 'test').default('local'),
       }),
       isGlobal: true,
       envFilePath: `.env.${process.env.NODE_ENV}`,
