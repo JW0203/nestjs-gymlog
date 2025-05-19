@@ -97,11 +97,67 @@ npm run start:e2e
 ```bash
 npm run start:layer
 ```
+---
+
+## Infrastructure (CloudFormation)
+###  Main Components
+
+- **EC2**: Runs the Dockerized NestJS backend
+- **RDS (MySQL)**: Stores user, routine, and workout log data
+- **ALB (Application Load Balancer)**: Routes public traffic to EC2
+- **ECR**: Stores backend Docker images
+- **IAM Role**: Allows EC2 to pull images from ECR
+
+###  Parameters
+
+This template is parameterized to provide flexibility when deploying into different environments. 
+You will be prompted to enter values such as:
+
+- `KeyName` – EC2 SSH key pair
+- `InstanceType`, `VolumeSize` - EC2 compute and storage settings
+- `VpcId`, `Subnet1`, `Subnet2` – VPC and subnet IDs in your region
+- `DBInstanceIdentifier`, `DBName`, `DBUsername`, `DBPassword` – RDS configuration
+
+### Deployment Instructions
+#### **Template location**
+```bash
+template
+└── cloudformation-template.yaml
+````
+#### Deploy via AWS Console
+1. Open AWS CloudFormation
+2. Choose “Create stack → With new resources (standard)”
+3. Upload `cloudformation-template.yaml`
+4. Fill in the parameters and deploy
+
+#### Deploy via AWS CLI
+
+```bash
+aws cloudformation deploy \
+  --stack-name gymlog-infra \
+  --template-file template/cloudformation-template.yaml \
+  --capabilities CAPABILITY_NAMED_IAM \
+  --parameter-overrides \
+    KeyName=my-keypair \
+    VpcId=vpc-xxxxxxxx \
+    Subnet1=subnet-xxxxx \
+    Subnet2=subnet-yyyyy \
+    DBInstanceIdentifier=gymlog-db \
+    DBName=mydata \
+    DBUsername=admin \
+    DBPassword=YourSecurePassword \
+    InstanceType=t3.micro \
+    VolumeSize=20
+```
+##### ⚠️ Make sure to replace each parameter (e.g., KeyName, VpcId, Subnet1, etc.) with the actual values from your AWS environment before executing the command.
+
 
 ---
 ## ⛓️ DataBase ERD
 
 <img src="./gymLog-erd.png" width="500px" alt="databse ERD" />
+
+
 
 ---
 ## 🗂️ Project Structure
@@ -111,6 +167,8 @@ Gymlog
 ├── README.md
 ├── .github/workflows
 │   └── deploy.yml
+├── template
+│   └── cloudformation-template.yml
 └── src
     ├── auth/
     ├── cache/
