@@ -196,11 +196,31 @@ npm run start:layer
 
 <img src= "./docs/gymLog-erd.png" width="500px" alt="database ERD" />
 
-### Many-to-one relations
-- exercise to workout_log
-- exercise to routine
-- user to workout_log
-- user to routine
+`user`: Stores account information such as email, name, and password.
+
+`exercise`: Contains information about each exercise name and body part.
+
+`routine`: Represents each user’s workout plan
+
+`workout_log`: Logs each workout session with weight, repetitions, and set count.
+
+### Entity Relations
+#### user ↔︎ routine (1:N)
+- A user can create multiple routines. 
+
+#### user ↔︎ workout_log (1:N)
+- A user can create multiple workout_logs. 
+
+#### exercise ↔︎ workout_log (1:N)
+- Each log records one exercise session.
+
+#### routine ↔︎ exercise (M:N)
+- A routine consists of multiple exercises. 
+- An exercise can have multiple routines
+- `routineExercise` connects routine and exercise
+
+
+
 
 <hr />
 
@@ -226,11 +246,16 @@ Gymlog
     │   ├── logger/
     │   ├── type/
     │   └── validation/
+    ├── routineExercise/
+    │   ├── application/     # service layer (use cases)
+    │   ├── domain/          # domain entities and repository interfaces
+    │   ├── dto/             # data transfer objects
+    │   ├── infrastructure/  # integration with external resources (e.g., DB, Redis)
+    │   └── test/            # unit and e2e tests
     ├── user/
     ├── exercise/
     ├── routine/
     └── workoutLog/
-    │ 
     └── Each domain module (user, exercise, routine, workoutLog) has the same structure
         ├── application/     # service layer (use cases)
         ├── domain/          # domain entities and repository interfaces
