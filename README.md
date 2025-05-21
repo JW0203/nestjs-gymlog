@@ -48,9 +48,11 @@ while learning and applying real-world technologies and best practices.
 ## ✨Contributions
 ### 🔄️ Implemented CI/CD pipeline
 CI/CD pipeline built with GitHub Actions, Docker, AWS ECR, and AWS EC2  
-- Save AWS credentials to GitHub secrets
+- Add configuration parameters to GitHub secrets
 - Add `deploy.yml` file in `.github/workflows`
-- Automatically deploy the service when code is pushed to the main branch on GitHub.
+- Automatically deploy the service when code is pushed to the `main` branch on GitHub.
+
+This diagram illustrates and explains the CI/CD pipeline used in this project.
 
 <img src= "./docs/ci-cd-pipeline.png" width="500px" alt="CI/CD Pipeline Diagram" />
 
@@ -117,7 +119,9 @@ aws cloudformation deploy \
 ```
 ##### ⚠️ Make sure to replace each parameter (e.g., KeyName, VpcId, Subnet1, etc.) with the actual values from your AWS environment before executing the command.
 
-### 🖼️ AWS Infra Architecture
+### 🖼️ An Overview of AWS Architecture
+
+
 <img src="./docs/gym-logs-architecture.png" width="400px" alt="gymlog-architecture" />
 
 <hr />
@@ -129,11 +133,9 @@ aws cloudformation deploy \
 
 <hr />
 
-## ✅ Deploy Instructions
+## ✅ Deploy Instructions using GitHubActions
 
-Parameters need to add to GitHub secrets
-
-parameter lists:
+Configuration parameters that need to be added to GitHub Secrets
 - AWS_ACCESS_KEY_ID
 - AWS_SECRET_ACCESS_KEY
 - EC2_HOST
@@ -155,7 +157,9 @@ PORT=80
 FE_DOMAIN=https://xxx.com          # ← Replace with actual front-end domain address
 ```
 
+Push the code to the `main` branch to deploy this service using GitHub Actions
 
+<hr />
 
 ## ✅ Test Instructions
 
