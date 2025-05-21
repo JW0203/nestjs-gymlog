@@ -91,7 +91,7 @@ template
 └── cloudformation-template.yaml
 ````
 ##### Deploy via AWS Console
-1. Open AWS CloudFormation
+1. Go to the AWS CloudFormation page on the AWS website.
 2. Choose “Create stack → With new resources (standard)”
 3. Upload `cloudformation-template.yaml`
 4. Fill in the parameters and deploy
