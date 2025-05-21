@@ -61,7 +61,7 @@ This diagram illustrates and explains the CI/CD pipeline used in this project.
 - Multi‑column indexes
 - Denormalization
 - Redis caching
-#### => **`Multi‑column indexes + Redis caching`** were selected to achieve fast query performance while preserving schema flexibility
+#### → **`Multi‑column indexes + Redis caching`** were selected to achieve fast query performance while preserving schema flexibility
 
 <hr />
 
