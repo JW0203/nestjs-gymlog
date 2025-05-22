@@ -9,6 +9,6 @@ export async function clearAndResetTable(queryRunner: QueryRunner, target: strin
 }
 
 function isValidTableName(tableName: string): boolean {
-  const validTables = ['user', 'routine', 'exercise', 'workout_log'];
+  const validTables = ['user', 'routine', 'exercise', 'workout_log', 'routine_exercise'];
   return validTables.includes(tableName);
 }
