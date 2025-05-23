@@ -19,12 +19,11 @@ export class Routine extends Timestamps {
   @OneToMany(() => RoutineExercise, (RoutineExercise) => RoutineExercise.routine)
   public routineExercise: RoutineExercise[];
 
-  constructor(params: { name: string; user: User; routineExercise: RoutineExercise[] }) {
+  constructor(params: { name: string; user: User }) {
     super();
     if (params) {
       this.name = params.name;
       this.user = params.user;
-      this.routineExercise = params.routineExercise;
 
       validateOrReject(this).catch((errors) => {
         console.log('(Routine entity validation failed). Errors: ', errors);

@@ -4,7 +4,6 @@ import { WorkoutLog } from '../../workoutLog/domain/WorkoutLog.entity';
 import { IsEnum, IsNotEmpty, validate } from 'class-validator';
 import { BodyPart } from '../../common/bodyPart.enum';
 import { IsExerciseName } from '../../common/validation/isExerciseName.validation';
-import { Routine } from '../../routine/domain/Routine.entity';
 import { Logger } from '@nestjs/common';
 import { RoutineExercise } from '../../routineExercise/domain/RoutineExercise.entity';
 
