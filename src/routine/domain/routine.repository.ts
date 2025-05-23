@@ -10,4 +10,5 @@ export interface RoutineRepository {
   softDeleteRoutines(routineIds: number[]): Promise<void>;
   findRoutinesByNameLockMode(routineName: string, user: User): Promise<Routine[]>;
   findAllByUserId(userId: number): Promise<Routine[]>;
+  saveRoutine(newRoutine: Routine): Promise<Routine>;
 }

@@ -7,6 +7,10 @@ import { In, Repository } from 'typeorm';
 export class TypeormRoutineRepository implements RoutineRepository {
   constructor(@InjectRepository(Routine) private routineRepository: Repository<Routine>) {}
 
+  async saveRoutine(newRoutine: Routine): Promise<Routine> {
+    return await this.routineRepository.save(newRoutine);
+  }
+
   async findRoutinesByNameLockMode(routineName: string, user: User): Promise<Routine[]> {
     return await this.routineRepository.find({
       where: { name: routineName, user: { id: user.id } },
