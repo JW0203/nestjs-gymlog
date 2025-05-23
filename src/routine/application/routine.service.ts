@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { User } from '../../user/domain/User.entity';
 import { GetRoutineByNameRequestDto } from '../dto/getRoutineByName.request.dto';
 import { UpdateRoutinesRequestDto } from '../dto/updateRoutines.request.dto';
@@ -12,18 +12,46 @@ import { RoutineResponseDto } from '../dto/routine.response.dto';
 import { Transactional } from 'typeorm-transactional';
 import { GetAllRoutineByUserResponseDto } from '../dto/getAllRoutineByUser.response.dto';
 import { GroupedRoutine, routineGroupByName } from '../functions/routineGroupByName';
+import { Exercise } from '../../exercise/domain/Exercise.entity';
+import { BodyPart } from '../../common/bodyPart.enum';
+import { SaveRoutineRequestDto } from '../dto/saveRoutine.request.dto';
+import { SaveRoutineResponseDto } from '../dto/saveRoutine.response.dto';
+import { SaveRoutineExerciseRequestDto } from '../../routineExercise/dto/saveRoutineExercise.request.dto';
+import { RoutineExerciseService } from '../../routineExercise/application/routineExercise.service';
 
+@Injectable()
 export class RoutineService {
   constructor(
     @Inject(ROUTINE_REPOSITORY)
     private readonly routineRepository: RoutineRepository,
+
     readonly exerciseService: ExerciseService,
+
+    readonly routineExerciseService: RoutineExerciseService,
   ) {}
+
+  @Transactional()
+  async saveRoutine(saveRoutineRequestDto: SaveRoutineRequestDto, user: User): Promise<SaveRoutineResponseDto> {
+    const { routineName, exercises } = saveRoutineRequestDto;
+    const newRoutine = new Routine({ user, name: routineName });
+    const savedRoutine = await this.routineRepository.saveRoutine(newRoutine);
+    const saveDataRequestToRoutineExercise: SaveRoutineExerciseRequestDto[] = exercises.map((exercise, index) => {
+      return {
+        order: index + 1,
+        exercise: new Exercise(exercise),
+        routine: newRoutine,
+      };
+    });
+    await this.routineExerciseService.saveRoutineExercises(saveDataRequestToRoutineExercise);
+
+    return new SaveRoutineResponseDto(savedRoutine);
+  }
 
   @Transactional()
   async bulkInsertRoutines(user: User, saveRoutines: SaveRoutinesRequestDto) {
     const { routines } = saveRoutines;
     const routineName = routines[0].routineName;
+
     const isExistRoutine = await this.routineRepository.findRoutinesByNameLockMode(routineName, user);
 
     if (isExistRoutine.length > 0) {
@@ -36,19 +64,19 @@ export class RoutineService {
     }
 
     const exerciseEntities = await this.exerciseService.findExercisesByExerciseNameAndBodyPart(exercises);
-    const newRoutines = await Promise.all(
-      routines.map(async (routine) => {
-        const { routineName, exerciseName, bodyPart } = routine;
-
-        const exercise = exerciseEntities.find(
-          (entity) => entity.exerciseName === exerciseName && entity.bodyPart === bodyPart,
-        );
-        if (!exercise) {
-          throw new NotFoundException(`exercise (${exerciseName}, ${bodyPart}) can not found. `);
-        }
-        return new Routine({ name: routineName, user: user, exercise: exercise });
-      }),
-    );
+    // const newRoutines = await Promise.all(
+    //   routines.map(async (routine) => {
+    //     const { routineName, exerciseName, bodyPart } = routine;
+    //
+    //     const exercise = exerciseEntities.find(
+    //       (entity) => entity.exerciseName === exerciseName && entity.bodyPart === bodyPart,
+    //     );
+    //     if (!exercise) {
+    //       throw new NotFoundException(`exercise (${exerciseName}, ${bodyPart}) can not found. `);
+    //     }
+    //     return new Routine({ name: routineName, user: user });
+    //   }),
+    // );
     const savedRoutines = await this.routineRepository.bulkInsertRoutines(newRoutines);
     return savedRoutines.map((routine) => new RoutineResponseDto(routine));
   }
