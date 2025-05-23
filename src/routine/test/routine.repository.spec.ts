@@ -59,11 +59,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should return an empty array when a user searches for a non-existent routine name', async () => {
-      const user: User = await createTestUserRepo(dataSource, {
-        email: 'testuser@email.com',
-        password: '123456',
-        nickName: 'Test User',
-      });
+      const user: User = await createTestUserRepo(dataSource);
 
       const notExistRoutineName: string = '등데이';
       const result = await routineRepository.findRoutinesByName(notExistRoutineName, user);
@@ -76,11 +72,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should find routines saved by the user when a user searches for a routine name', async () => {
-      const user: User = await createTestUserRepo(dataSource, {
-        email: 'testuser@email.com',
-        password: '123456',
-        nickName: 'Test User',
-      });
+      const user: User = await createTestUserRepo(dataSource);
       const exerciseInfo: ExerciseDataFormatDto[] = [
         { exerciseName: 'Push-up', bodyPart: BodyPart.CHEST },
         { exerciseName: 'Pull-up', bodyPart: BodyPart.BACK },
@@ -88,7 +80,7 @@ describe('Test RoutineRepository', () => {
       const Exercises = await createExercises(dataSource, exerciseInfo);
 
       const routineName = '다리 루틴';
-      const routines = createTestUserRepo(user, Exercises, routineName);
+      const routines = createTestRoutineRepo(dataSource, user);
       await routineRepository.bulkInsertRoutines(routines);
 
       const result = await routineRepository.findRoutinesByName(routineName, user);
@@ -108,15 +100,11 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should find a routine saved by a user when a user searches for a routine id', async () => {
-      const user: User = await createTestUserRepo(dataSource, {
-        email: 'testuser@email.com',
-        password: '123456',
-        nickName: 'Test User',
-      });
+      const user: User = await createTestUserRepo(dataSource);
       const exerciseInfo: ExerciseDataFormatDto[] = [{ exerciseName: 'Push-up', bodyPart: BodyPart.CHEST }];
       const Exercise = await createExercises(dataSource, exerciseInfo);
       const routineName = '다리 루틴';
-      const routines = createTestUserRepo(dataSource, user);
+      const routines = createTestRoutineRepo(dataSource, user);
 
       await routineRepository.bulkInsertRoutines(routines);
       //todo: 유지보수를 위해서 user.id 를 고민해보자
@@ -129,11 +117,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should return null when a user searches for a non-existent routine id', async () => {
-      const user: User = await createTestUserRepo(dataSource, {
-        email: 'testuser@email.com',
-        password: '123456',
-        nickName: 'Test User',
-      });
+      const user: User = await createTestUserRepo(dataSource);
 
       const result = await routineRepository.findOneRoutineById(999, user);
       const findOneQueryResult = await dataSource
@@ -151,11 +135,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should return all routines when a user searches for routine ids', async () => {
-      const user: User = await createTestUserRepo(dataSource, {
-        email: 'testuser@email.com',
-        password: '123456',
-        nickName: 'Test User',
-      });
+      const user: User = await createTestUserRepo(dataSource);
 
       const exerciseInfo: ExerciseDataFormatDto[] = [
         { exerciseName: 'Push-up', bodyPart: BodyPart.CHEST },
@@ -175,11 +155,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should return 2 routines when a user searches for 2 routine ids', async () => {
-      const user: User = await createTestUserRepo(dataSource, {
-        email: 'testuser@email.com',
-        password: '123456',
-        nickName: 'Test User',
-      });
+      const user: User = await createTestUserRepo(dataSource);
 
       const exerciseInfo: ExerciseDataFormatDto[] = [
         { exerciseName: 'Push-up', bodyPart: BodyPart.CHEST },
@@ -199,11 +175,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should return only existence routines when a user searches for routine ids', async () => {
-      const user: User = await createTestUserRepo(dataSource, {
-        email: 'testuser@email.com',
-        password: '123456',
-        nickName: 'Test User',
-      });
+      const user: User = await createTestUserRepo(dataSource);
 
       const exerciseInfo: ExerciseDataFormatDto[] = [
         { exerciseName: 'Push-up', bodyPart: BodyPart.CHEST },
@@ -223,11 +195,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should return an empty array when a user searches for non-existence routine ids', async () => {
-      const user: User = await createTestUserRepo(dataSource, {
-        email: 'testuser@email.com',
-        password: '123456',
-        nickName: 'Test User',
-      });
+      const user: User = await createTestUserRepo(dataSource);
 
       const result = await routineRepository.findRoutinesByIds([1000, 102, 999], user);
       const findQueryResult = await dataSource
@@ -245,11 +213,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should return updated routines when a user update routines', async () => {
-      const user: User = await createTestUserRepo(dataSource, {
-        email: 'testuser@email.com',
-        password: '123456',
-        nickName: 'Test User',
-      });
+      const user: User = await createTestUserRepo(dataSource);
       const exerciseInfo: ExerciseDataFormatDto[] = [
         { exerciseName: 'Push-up', bodyPart: BodyPart.CHEST },
         { exerciseName: 'Pull-up', bodyPart: BodyPart.BACK },
@@ -316,11 +280,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should soft delete routines when user delete routines with their ids', async () => {
-      const user: User = await createTestUserRepo(dataSource, {
-        email: 'testuser@email.com',
-        password: '123456',
-        nickName: 'Test User',
-      });
+      const user: User = await createTestUserRepo(dataSource);
       const exerciseInfo: ExerciseDataFormatDto[] = [
         { exerciseName: 'Push-up', bodyPart: BodyPart.CHEST },
         { exerciseName: 'Pull-up', bodyPart: BodyPart.BACK },
@@ -355,11 +315,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should return all routines saved by a user when a user find their routines with their id', async () => {
-      const user: User = await createTestUserRepo(dataSource, {
-        email: 'testuser@email.com',
-        password: '123456',
-        nickName: 'Test User',
-      });
+      const user: User = await createTestUserRepo(dataSource);
       const exerciseInfo: ExerciseDataFormatDto[] = [
         { exerciseName: 'Push-up', bodyPart: BodyPart.CHEST },
         { exerciseName: 'Pull-up', bodyPart: BodyPart.BACK },
@@ -377,11 +333,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should return all routines save by a user when a user find using findAllByUserId', async () => {
-      const user: User = await createTestUserRepo(dataSource, {
-        email: 'testuser@email.com',
-        password: '123456',
-        nickName: 'Test User',
-      });
+      const user: User = await createTestUserRepo(dataSource);
 
       const result = await routineRepository.findAllByUserId(user.id);
       const findQueryResult = await dataSource
