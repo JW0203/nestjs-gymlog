@@ -19,10 +19,6 @@ export class TypeormRoutineRepository implements RoutineRepository {
     });
   }
 
-  async bulkInsertRoutines(newRoutines: Routine[]): Promise<Routine[]> {
-    return await this.routineRepository.save(newRoutines);
-  }
-
   async findRoutinesByName(name: string, user: User): Promise<Routine[]> {
     return await this.routineRepository.find({
       where: { name, user: { id: user.id } },
