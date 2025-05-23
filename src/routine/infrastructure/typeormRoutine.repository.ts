@@ -33,13 +33,6 @@ export class TypeormRoutineRepository implements RoutineRepository {
     });
   }
 
-  async findRoutinesByIds(ids: number[], user: User): Promise<Routine[]> {
-    return await this.routineRepository.find({
-      where: { id: In(ids), user: { id: user.id } },
-      relations: ['user', 'exercise'],
-    });
-  }
-
   async bulkUpdateRoutines(updateRoutines: Routine[]): Promise<Routine[]> {
     return await this.routineRepository.save(updateRoutines);
   }
