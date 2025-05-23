@@ -11,14 +11,6 @@ export class TypeormRoutineRepository implements RoutineRepository {
     return await this.routineRepository.save(newRoutine);
   }
 
-  async findRoutinesByNameLockMode(routineName: string, user: User): Promise<Routine[]> {
-    return await this.routineRepository.find({
-      where: { name: routineName, user: { id: user.id } },
-      relations: ['user'],
-      lock: { mode: 'pessimistic_write' },
-    });
-  }
-
   async findOneRoutineByName(name: string, user: User): Promise<Routine | null> {
     return await this.routineRepository.findOne({
       where: { name, user: { id: user.id } },
