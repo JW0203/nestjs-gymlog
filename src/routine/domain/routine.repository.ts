@@ -2,7 +2,7 @@ import { User } from '../../user/domain/User.entity';
 import { Routine } from './Routine.entity';
 
 export interface RoutineRepository {
-  findRoutinesByName(name: string, user: User): Promise<Routine[]>;
+  findRoutineByName(name: string, user: User): Promise<Routine | null>;
   findOneRoutineById(id: number, user: User): Promise<Routine | null>;
   findRoutinesByIds(ids: number[], user: User): Promise<Routine[]>;
   bulkUpdateRoutines(updateRoutines: Routine[]): Promise<Routine[]>;
