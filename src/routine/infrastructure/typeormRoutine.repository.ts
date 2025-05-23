@@ -33,7 +33,7 @@ export class TypeormRoutineRepository implements RoutineRepository {
     });
   }
 
-  async bulkUpdateRoutines(updateRoutines: Routine[]): Promise<Routine[]> {
+  async updateRoutine(updateRoutines: Routine): Promise<Routine> {
     return await this.routineRepository.save(updateRoutines);
   }
 
