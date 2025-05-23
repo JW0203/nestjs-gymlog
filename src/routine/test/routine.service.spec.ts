@@ -4,13 +4,14 @@ import { ROUTINE_REPOSITORY } from '../../common/const/inject.constant';
 import { ExerciseService } from '../../exercise/application/exercise.service';
 import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
 import { BodyPart } from '../../common/bodyPart.enum';
-import { SaveRoutinesRequestDto } from '../dto/saveRoutines.request.dto';
 import { SaveRoutineFormatDto } from '../dto/saveRoutine.format.dto';
 import { User } from '../../user/domain/User.entity';
 import { Exercise } from '../../exercise/domain/Exercise.entity';
 import { Routine } from '../domain/Routine.entity';
 import { RoutineResponseDto } from '../dto/routine.response.dto';
 import { initializeTransactionalContext } from 'typeorm-transactional';
+import { SaveRoutineRequestDto } from '../dto/saveRoutine.request.dto';
+import { SaveRoutineResponseDto } from '../dto/saveRoutine.response.dto';
 import { GetRoutineByNameRequestDto } from '../dto/getRoutineByName.request.dto';
 import { NotFoundException } from '@nestjs/common';
 import { UpdateRoutinesRequestDto } from '../dto/updateRoutines.request.dto';
@@ -26,6 +27,7 @@ const mockRoutineRepository = {
   findRoutinesByIds: jest.fn(),
   softDeleteRoutines: jest.fn(),
   findAllByUserId: jest.fn(),
+  saveRoutine: jest.fn(),
 };
 
 const mockExerciseService = {
@@ -66,49 +68,36 @@ describe('Test RoutineService', () => {
     exerciseService = module.get(ExerciseService);
   });
 
-  describe('bulkInsertRoutines service', () => {
-    it('should return new routines if routines are saved', async () => {
-      const routineName: string = '등데이';
+  describe('saveRoutine service', () => {
+    it('should return a new routine if a routine is saved', async () => {
+      //saveRoutineRequestDto: SaveRoutineRequestDto, user: User
+      const testUser: User = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
+      testUser.id = 1;
+      const routineName: string = 'Chest Day';
       const exercises: ExerciseDataFormatDto[] = [
-        { bodyPart: BodyPart.BACK, exerciseName: '케이블 암 풀다운' },
-        { bodyPart: BodyPart.BACK, exerciseName: '어시스트 풀업 머신' },
-      ];
-      const routines: SaveRoutineFormatDto[] = [
-        {
-          routineName,
-          exerciseName: '케이블 암 풀다운',
-          bodyPart: BodyPart.BACK,
-        },
-        {
-          routineName,
-          exerciseName: '어시스트 풀업 머신',
-          bodyPart: BodyPart.BACK,
-        },
+        { bodyPart: BodyPart.BACK, exerciseName: 'cable arm pull down' },
+        { bodyPart: BodyPart.LEGS, exerciseName: 'squart' },
       ];
 
-      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
-      const routinesData: SaveRoutinesRequestDto = { routines };
-      const newRoutines = routines.map(
-        (routine) =>
-          new Routine({
-            name: routine.routineName,
-            user: mockUser,
-            exercise: new Exercise({ bodyPart: routine.bodyPart, exerciseName: routine.exerciseName }),
-          }),
-      );
+      const newRoutine: Routine = new Routine({ name: routineName, user: testUser });
+      newRoutine.id = 1;
+      console.log('newRoutine:', newRoutine);
 
-      const mockExercises = exercises.map(
-        (ex) => new Exercise({ bodyPart: ex.bodyPart, exerciseName: ex.exerciseName }),
-      );
-      const expectedRoutineData = newRoutines.map((routine) => new RoutineResponseDto(routine));
+      routineRepository.saveRoutine.mockImplementation(async (newRoutine) => {
+        console.log('received:', newRoutine);
+        expect(newRoutine.name).toBe('Chest Day');
+        expect(newRoutine.user.id).toBe(1);
+        newRoutine.id = 1;
+        return newRoutine;
+      });
 
-      routineRepository.findRoutinesByNameLockMode.mockResolvedValue([]);
-      exerciseService.findNewExercises.mockResolvedValue([]);
-      exerciseService.findExercisesByExerciseNameAndBodyPart.mockResolvedValue(mockExercises);
-      routineRepository.bulkInsertRoutines.mockResolvedValue(newRoutines);
+      const saveRoutineRequest: SaveRoutineRequestDto = { routineName, exercises };
+      const result: SaveRoutineResponseDto = await routineService.saveRoutine(saveRoutineRequest, testUser);
 
-      const result = await routineService.bulkInsertRoutines(mockUser, routinesData);
-      expect(result).toEqual(expectedRoutineData);
+      expect(result).toEqual(newRoutine);
+      expect(result.id).toBe(1);
+      expect(result.name).toBe('Chest Day');
+      expect(result.userId).toBe(1);
     });
   });
 
@@ -136,7 +125,7 @@ describe('Test RoutineService', () => {
           new Routine({
             name: routine.routineName,
             user: mockUser,
-            exercise: new Exercise({ bodyPart: routine.bodyPart, exerciseName: routine.exerciseName }),
+            // exercise: new Exercise({ bodyPart: routine.bodyPart, exerciseName: routine.exerciseName }),
           }),
       );
 
@@ -174,14 +163,14 @@ describe('Test RoutineService', () => {
       const mockRoutine1 = new Routine({
         name: routineName,
         user: mockUser,
-        exercise: new Exercise({ exerciseName: '스모 데드리프트', bodyPart: BodyPart.LEGS }),
+        // exercise: new Exercise({ exerciseName: '스모 데드리프트', bodyPart: BodyPart.LEGS }),
       });
       mockRoutine1.id = 1;
 
       const mockRoutine2 = new Routine({
         name: routineName,
         user: mockUser,
-        exercise: new Exercise({ exerciseName: '고블린 스쿼트', bodyPart: BodyPart.LEGS }),
+        // exercise: new Exercise({ exerciseName: '고블린 스쿼트', bodyPart: BodyPart.LEGS }),
       });
       mockRoutine2.id = 2;
 
@@ -219,7 +208,7 @@ describe('Test RoutineService', () => {
 
       expect(result).toHaveLength(2);
       expect(mockRoutine1.name).toBe('업데이트 등 루틴');
-      expect(mockRoutine1.exercise).toBe(mockExercise1);
+      // expect(mockRoutine1.exercise).toBe(mockExercise1);
       expect(result).toEqual(expectedResult);
     });
 
@@ -279,14 +268,14 @@ describe('Test RoutineService', () => {
       const mockRoutine1 = new Routine({
         name: routineName,
         user: mockUser,
-        exercise: new Exercise({ bodyPart: BodyPart.LEGS, exerciseName: '레그 프레스' }),
+        // exercise: new Exercise({ bodyPart: BodyPart.LEGS, exerciseName: '레그 프레스' }),
       });
       mockRoutine1.id = 1;
 
       const mockRoutine2 = new Routine({
         name: routineName,
         user: mockUser,
-        exercise: new Exercise({ bodyPart: BodyPart.LEGS, exerciseName: '고블린 스쿼트' }),
+        // exercise: new Exercise({ bodyPart: BodyPart.LEGS, exerciseName: '고블린 스쿼트' }),
       });
       mockRoutine2.id = 2;
 
@@ -321,14 +310,14 @@ describe('Test RoutineService', () => {
       const mockRoutine1 = new Routine({
         name: routineName,
         user: mockUser,
-        exercise: new Exercise({ bodyPart: BodyPart.LEGS, exerciseName: '레그 프레스' }),
+        // exercise: new Exercise({ bodyPart: BodyPart.LEGS, exerciseName: '레그 프레스' }),
       });
       mockRoutine1.id = 1;
 
       const mockRoutine2 = new Routine({
         name: routineName,
         user: mockUser,
-        exercise: new Exercise({ bodyPart: BodyPart.LEGS, exerciseName: '고블린 스쿼트' }),
+        // exercise: new Exercise({ bodyPart: BodyPart.LEGS, exerciseName: '고블린 스쿼트' }),
       });
       mockRoutine2.id = 2;
 
@@ -357,14 +346,14 @@ describe('Test RoutineService', () => {
       const routine1 = new Routine({
         name: routineName,
         user: user,
-        exercise: new Exercise({ bodyPart: BodyPart.LEGS, exerciseName: '레그 프레스' }),
+        // exercise: new Exercise({ bodyPart: BodyPart.LEGS, exerciseName: '레그 프레스' }),
       });
       routine1.id = 1;
 
       const routine2 = new Routine({
         name: routineName,
         user: user,
-        exercise: new Exercise({ bodyPart: BodyPart.LEGS, exerciseName: '고블린 스쿼트' }),
+        // exercise: new Exercise({ bodyPart: BodyPart.LEGS, exerciseName: '고블린 스쿼트' }),
       });
       routine2.id = 2;
 
