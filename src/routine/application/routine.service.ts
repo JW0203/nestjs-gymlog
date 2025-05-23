@@ -47,40 +47,6 @@ export class RoutineService {
     return new SaveRoutineResponseDto(savedRoutine);
   }
 
-  @Transactional()
-  async bulkInsertRoutines(user: User, saveRoutines: SaveRoutinesRequestDto) {
-    const { routines } = saveRoutines;
-    const routineName = routines[0].routineName;
-
-    const isExistRoutine = await this.routineRepository.findRoutinesByNameLockMode(routineName, user);
-
-    if (isExistRoutine.length > 0) {
-      throw new BadRequestException('Routine already exists');
-    }
-    const exercises = routines.map(({ exerciseName, bodyPart }) => ({ exerciseName, bodyPart }));
-    const newExercises = await this.exerciseService.findNewExercises({ exercises });
-    if (newExercises.length > 0) {
-      await this.exerciseService.bulkInsertExercises({ exercises: newExercises });
-    }
-
-    const exerciseEntities = await this.exerciseService.findExercisesByExerciseNameAndBodyPart(exercises);
-    // const newRoutines = await Promise.all(
-    //   routines.map(async (routine) => {
-    //     const { routineName, exerciseName, bodyPart } = routine;
-    //
-    //     const exercise = exerciseEntities.find(
-    //       (entity) => entity.exerciseName === exerciseName && entity.bodyPart === bodyPart,
-    //     );
-    //     if (!exercise) {
-    //       throw new NotFoundException(`exercise (${exerciseName}, ${bodyPart}) can not found. `);
-    //     }
-    //     return new Routine({ name: routineName, user: user });
-    //   }),
-    // );
-    const savedRoutines = await this.routineRepository.bulkInsertRoutines(newRoutines);
-    return savedRoutines.map((routine) => new RoutineResponseDto(routine));
-  }
-
   async getRoutineByName(getRoutineByNameRequest: GetRoutineByNameRequestDto, user: User) {
     const { name } = getRoutineByNameRequest;
     const foundRoutines = await this.routineRepository.findRoutinesByName(name, user);
