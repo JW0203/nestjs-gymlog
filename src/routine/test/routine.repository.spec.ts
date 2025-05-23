@@ -7,43 +7,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ROUTINE_REPOSITORY } from '../../common/const/inject.constant';
 import { TypeormRoutineRepository } from '../infrastructure/typeormRoutine.repository';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { WorkoutLog } from '../../workoutLog/domain/WorkoutLog.entity';
 import { DataSource, In } from 'typeorm';
 import { getMySqlTypeOrmConfig } from '../../../test/utils/getMySql.TypeOrm.config';
-import { TEST_USER } from '../../../test/utils/userUtils';
 import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
 import { UpdateRoutine } from '../dto/updateRoutine.format.dto';
-
-function createRoutines(user: User, exercises: Exercise[], routineName: string) {
-  return exercises.map((exercise) => {
-    return new Routine({
-      name: routineName,
-      user,
-      exercise,
-    });
-  });
-}
-
-async function createUser(dataSource: DataSource, userInfo: TEST_USER) {
-  const userRepository = dataSource.getRepository(User);
-  const user = userRepository.create(userInfo);
-
-  return await userRepository.save(user);
-}
-
-async function createExercise(dataSource: DataSource, exercise: ExerciseDataFormatDto) {
-  const exerciseRepository = dataSource.getRepository(Exercise);
-  const exerciseEntity = exerciseRepository.create(exercise);
-  return await exerciseRepository.save(exerciseEntity);
-}
-
-async function createExercises(dataSource: DataSource, exercises: ExerciseDataFormatDto[]) {
-  const exerciseRepository = dataSource.getRepository(Exercise);
-  const exerciseEntities = exercises.map((exercise) => {
-    return exerciseRepository.create(exercise);
-  });
-  return await exerciseRepository.save(exerciseEntities);
-}
+import { createTestUserRepo } from '../../../test/utils/createTestUser.repo.layer';
+import { createTestRoutineRepo } from '../../../test/utils/createTestRoutine.repo.layer';
 
 describe('Test RoutineRepository', () => {
   let routineRepository: RoutineRepository;
@@ -51,10 +20,7 @@ describe('Test RoutineRepository', () => {
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [
-        TypeOrmModule.forRoot(getMySqlTypeOrmConfig([Routine, User, Exercise, WorkoutLog])),
-        TypeOrmModule.forFeature([Routine, User, Exercise]),
-      ],
+      imports: [TypeOrmModule.forRoot(getMySqlTypeOrmConfig()), TypeOrmModule.forFeature([Routine, User, Exercise])],
       providers: [
         {
           provide: ROUTINE_REPOSITORY,
@@ -68,6 +34,24 @@ describe('Test RoutineRepository', () => {
     await dataSource.synchronize();
   });
 
+  describe('saveRoutine', () => {
+    beforeEach(async () => {
+      await dataSource.dropDatabase();
+      await dataSource.synchronize();
+    });
+    it('should save a routine', async () => {
+      const user = await createTestUserRepo(dataSource);
+      user.id = 1;
+      const routineName = 'testRoutine';
+      const newRoutine = new Routine({ name: routineName, user });
+
+      const result = await routineRepository.saveRoutine(newRoutine);
+      expect(result.user.id).toBe(user.id);
+      expect(result.name).toBe(routineName);
+      expect(result.id).toBe(1);
+    });
+  });
+
   describe('bulkInsertRoutines', () => {
     beforeEach(async () => {
       await dataSource.dropDatabase();
@@ -75,7 +59,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should save new routines for a user at once', async () => {
-      const user: User = await createUser(dataSource, {
+      const user: User = await createTestUserRepo(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
         nickName: 'Test User',
@@ -87,7 +71,7 @@ describe('Test RoutineRepository', () => {
       const Exercises = await createExercises(dataSource, exerciseInfo);
 
       const routineName = '다리 루틴';
-      const routines = createRoutines(user, Exercises, routineName);
+      const routines = createTestRoutineRepo(dataSource, user);
 
       const result = await routineRepository.bulkInsertRoutines(routines);
       const savedResult = await dataSource
@@ -106,7 +90,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should return an empty array when a user searches for a non-existent routine name', async () => {
-      const user: User = await createUser(dataSource, {
+      const user: User = await createTestUserRepo(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
         nickName: 'Test User',
@@ -123,7 +107,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should find routines saved by the user when a user searches for a routine name', async () => {
-      const user: User = await createUser(dataSource, {
+      const user: User = await createTestUserRepo(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
         nickName: 'Test User',
@@ -135,7 +119,7 @@ describe('Test RoutineRepository', () => {
       const Exercises = await createExercises(dataSource, exerciseInfo);
 
       const routineName = '다리 루틴';
-      const routines = createRoutines(user, Exercises, routineName);
+      const routines = createTestUserRepo(user, Exercises, routineName);
       await routineRepository.bulkInsertRoutines(routines);
 
       const result = await routineRepository.findRoutinesByName(routineName, user);
@@ -155,7 +139,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should find a routine saved by a user when a user searches for a routine id', async () => {
-      const user: User = await createUser(dataSource, {
+      const user: User = await createTestUserRepo(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
         nickName: 'Test User',
@@ -163,7 +147,7 @@ describe('Test RoutineRepository', () => {
       const exerciseInfo: ExerciseDataFormatDto[] = [{ exerciseName: 'Push-up', bodyPart: BodyPart.CHEST }];
       const Exercise = await createExercises(dataSource, exerciseInfo);
       const routineName = '다리 루틴';
-      const routines = createRoutines(user, Exercise, routineName);
+      const routines = createTestUserRepo(dataSource, user);
 
       await routineRepository.bulkInsertRoutines(routines);
       //todo: 유지보수를 위해서 user.id 를 고민해보자
@@ -176,7 +160,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should return null when a user searches for a non-existent routine id', async () => {
-      const user: User = await createUser(dataSource, {
+      const user: User = await createTestUserRepo(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
         nickName: 'Test User',
@@ -198,7 +182,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should return all routines when a user searches for routine ids', async () => {
-      const user: User = await createUser(dataSource, {
+      const user: User = await createTestUserRepo(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
         nickName: 'Test User',
@@ -210,7 +194,7 @@ describe('Test RoutineRepository', () => {
         { exerciseName: '', bodyPart: BodyPart.LEGS },
       ];
       const Exercises = await createExercises(dataSource, exerciseInfo);
-      const Routines = createRoutines(user, Exercises, 'all routine');
+      const Routines = createTestRoutineRepo(dataSource, user);
       await routineRepository.bulkInsertRoutines(Routines);
 
       const result = await routineRepository.findRoutinesByIds([1, 2, 3], user);
@@ -222,7 +206,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should return 2 routines when a user searches for 2 routine ids', async () => {
-      const user: User = await createUser(dataSource, {
+      const user: User = await createTestUserRepo(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
         nickName: 'Test User',
@@ -234,7 +218,7 @@ describe('Test RoutineRepository', () => {
         { exerciseName: '', bodyPart: BodyPart.LEGS },
       ];
       const Exercises = await createExercises(dataSource, exerciseInfo);
-      const Routines = createRoutines(user, Exercises, 'all routine');
+      const Routines = createTestRoutineRepo(dataSource, user);
       await routineRepository.bulkInsertRoutines(Routines);
 
       const result = await routineRepository.findRoutinesByIds([1, 2], user);
@@ -246,7 +230,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should return only existence routines when a user searches for routine ids', async () => {
-      const user: User = await createUser(dataSource, {
+      const user: User = await createTestUserRepo(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
         nickName: 'Test User',
@@ -258,7 +242,7 @@ describe('Test RoutineRepository', () => {
         { exerciseName: '', bodyPart: BodyPart.LEGS },
       ];
       const Exercises = await createExercises(dataSource, exerciseInfo);
-      const Routines = createRoutines(user, Exercises, 'all routine');
+      const Routines = createTestRoutineRepo(dataSource, user);
       await routineRepository.bulkInsertRoutines(Routines);
 
       const result = await routineRepository.findRoutinesByIds([1, 2, 999], user);
@@ -270,7 +254,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should return an empty array when a user searches for non-existence routine ids', async () => {
-      const user: User = await createUser(dataSource, {
+      const user: User = await createTestUserRepo(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
         nickName: 'Test User',
@@ -292,7 +276,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should return updated routines when a user update routines', async () => {
-      const user: User = await createUser(dataSource, {
+      const user: User = await createTestUserRepo(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
         nickName: 'Test User',
@@ -303,7 +287,7 @@ describe('Test RoutineRepository', () => {
         { exerciseName: '', bodyPart: BodyPart.LEGS },
       ];
       const Exercises = await createExercises(dataSource, exerciseInfo);
-      const Routines: Routine[] = createRoutines(user, Exercises, 'testroutine');
+      const Routines: Routine = createTestRoutineRepo(dataSource, user);
       await routineRepository.bulkInsertRoutines(Routines);
 
       const existenceRoutines = await dataSource
@@ -363,7 +347,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should soft delete routines when user delete routines with their ids', async () => {
-      const user: User = await createUser(dataSource, {
+      const user: User = await createTestUserRepo(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
         nickName: 'Test User',
@@ -373,7 +357,7 @@ describe('Test RoutineRepository', () => {
         { exerciseName: 'Pull-up', bodyPart: BodyPart.BACK },
       ];
       const Exercises = await createExercises(dataSource, exerciseInfo);
-      const Routines: Routine[] = createRoutines(user, Exercises, 'testroutine');
+      const Routines: Routine = createTestRoutineRepo(dataSource, user);
       await routineRepository.bulkInsertRoutines(Routines);
 
       const result = await routineRepository.softDeleteRoutines([1, 2]);
@@ -402,7 +386,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should return all routines saved by a user when a user find their routines with their id', async () => {
-      const user: User = await createUser(dataSource, {
+      const user: User = await createTestUserRepo(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
         nickName: 'Test User',
@@ -412,7 +396,7 @@ describe('Test RoutineRepository', () => {
         { exerciseName: 'Pull-up', bodyPart: BodyPart.BACK },
       ];
       const Exercises = await createExercises(dataSource, exerciseInfo);
-      const Routines: Routine[] = createRoutines(user, Exercises, 'testroutine');
+      const Routines: Routine = createTestRoutineRepo(dataSource, user);
       await routineRepository.bulkInsertRoutines(Routines);
 
       const result = await routineRepository.findAllByUserId(user.id);
@@ -424,7 +408,7 @@ describe('Test RoutineRepository', () => {
     });
 
     it('should return all routines save by a user when a user find using findAllByUserId', async () => {
-      const user: User = await createUser(dataSource, {
+      const user: User = await createTestUserRepo(dataSource, {
         email: 'testuser@email.com',
         password: '123456',
         nickName: 'Test User',
