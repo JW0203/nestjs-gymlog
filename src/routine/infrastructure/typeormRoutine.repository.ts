@@ -19,10 +19,10 @@ export class TypeormRoutineRepository implements RoutineRepository {
     });
   }
 
-  async findRoutineByName(name: string, user: User): Promise<Routine> {
-    return await this.routineRepository.find({
+  async findOneRoutineByName(name: string, user: User): Promise<Routine | null> {
+    return await this.routineRepository.findOne({
       where: { name, user: { id: user.id } },
-      relations: ['user', 'exercise'],
+      relations: ['user'],
     });
   }
 
