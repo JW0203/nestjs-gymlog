@@ -5,6 +5,7 @@ import { GetRoutineByNameRequestDto } from '../dto/getRoutineByName.request.dto'
 import { UpdateRoutinesRequestDto } from '../dto/updateRoutines.request.dto';
 import { DeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
 import { SaveRoutinesRequestDto } from '../dto/saveRoutines.request.dto';
+import { SaveRoutineRequestDto } from '../dto/saveRoutine.request.dto';
 
 @Controller('routines')
 export class RoutineController {
@@ -13,8 +14,8 @@ export class RoutineController {
   @Post()
   @UseGuards(JwtAuthGuard)
   @HttpCode(201)
-  postRoutine(@Body() saveRoutines: SaveRoutinesRequestDto, @Request() req: any) {
-    return this.routineService.bulkInsertRoutines(req.user, saveRoutines);
+  postRoutine(@Body() saveRoutine: SaveRoutineRequestDto, @Request() req: any) {
+    return this.routineService.saveRoutine(saveRoutine, req.user);
   }
 
   @Get()
