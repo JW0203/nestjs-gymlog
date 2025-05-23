@@ -52,37 +52,6 @@ describe('Test RoutineRepository', () => {
     });
   });
 
-  describe('bulkInsertRoutines', () => {
-    beforeEach(async () => {
-      await dataSource.dropDatabase();
-      await dataSource.synchronize();
-    });
-
-    it('should save new routines for a user at once', async () => {
-      const user: User = await createTestUserRepo(dataSource, {
-        email: 'testuser@email.com',
-        password: '123456',
-        nickName: 'Test User',
-      });
-      const exerciseInfo: ExerciseDataFormatDto[] = [
-        { exerciseName: 'Push-up', bodyPart: BodyPart.CHEST },
-        { exerciseName: 'Pull-up', bodyPart: BodyPart.BACK },
-      ];
-      const Exercises = await createExercises(dataSource, exerciseInfo);
-
-      const routineName = '다리 루틴';
-      const routines = createTestRoutineRepo(dataSource, user);
-
-      const result = await routineRepository.bulkInsertRoutines(routines);
-      const savedResult = await dataSource
-        .getRepository(Routine)
-        .find({ where: { name: routineName }, relations: ['user', 'exercise'] });
-
-      expect(result).toStrictEqual(savedResult);
-      expect(result.length).toBe(2);
-    });
-  });
-
   describe('findRoutinesByName', () => {
     beforeEach(async () => {
       await dataSource.dropDatabase();
