@@ -54,11 +54,12 @@ export class RoutineService {
   ): Promise<FindDataByRoutineIdResponseDto> {
     console.log(getRoutineByNameRequest);
     const { name } = getRoutineByNameRequest;
+
     const foundRoutine = await this.routineRepository.findOneRoutineByName(name, user);
     if (!foundRoutine) {
       throw new NotFoundException(`Routines not found`);
     }
-    const requestDataByRoutineId: FindDataByRoutineIdRequestDto = { id: foundRoutine.id };
+    const requestDataByRoutineId = new FindDataByRoutineIdRequestDto(foundRoutine.id);
     return await this.routineExerciseService.findRoutineExercisesByRoutineId(requestDataByRoutineId);
   }
 
