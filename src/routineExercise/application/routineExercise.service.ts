@@ -5,7 +5,7 @@ import { SaveRoutineExerciseRequestDto } from '../dto/saveRoutineExercise.reques
 import { RoutineExercise } from '../domain/RoutineExercise.entity';
 import { ExerciseService } from '../../exercise/application/exercise.service';
 import { SaveRoutineExerciseResponseDto } from '../dto/saveRoutineExercise.response.dto';
-import { findDataByRoutineIdRequestDto } from '../dto/findDataByRoutineId.request.dto';
+import { FindDataByRoutineIdRequestDto } from '../dto/findDataByRoutineId.request.dto';
 import { FineDataByRoutineIdResponseDto } from '../dto/fineDataByRoutineId.response.dto';
 
 @Injectable()
@@ -67,7 +67,7 @@ export class RoutineExerciseService {
   }
 
   async findRoutineExercisesByRoutineId(
-    requestDataByRoutineId: findDataByRoutineIdRequestDto,
+    requestDataByRoutineId: FindDataByRoutineIdRequestDto,
   ): Promise<FineDataByRoutineIdResponseDto> {
     const { id } = requestDataByRoutineId;
     const foundData = await this.routineExerciseRepository.findRoutineExerciseByRoutineId(id);
