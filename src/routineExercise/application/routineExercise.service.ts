@@ -5,6 +5,8 @@ import { SaveRoutineExerciseRequestDto } from '../dto/saveRoutineExercise.reques
 import { RoutineExercise } from '../domain/RoutineExercise.entity';
 import { ExerciseService } from '../../exercise/application/exercise.service';
 import { SaveRoutineExerciseResponseDto } from '../dto/saveRoutineExercise.response.dto';
+import { findDataByRoutineIdRequestDto } from '../dto/findDataByRoutineId.request.dto';
+import { FineDataByRoutineIdResponseDto } from '../dto/fineDataByRoutineId.response.dto';
 
 @Injectable()
 export class RoutineExerciseService {
@@ -62,5 +64,24 @@ export class RoutineExerciseService {
         exerciseBodyPart: data.exercise.bodyPart,
       };
     });
+  }
+
+  async findRoutineExercisesByRoutineId(
+    requestDataByRoutineId: findDataByRoutineIdRequestDto,
+  ): Promise<FineDataByRoutineIdResponseDto> {
+    const { id } = requestDataByRoutineId;
+    const foundData = await this.routineExerciseRepository.findRoutineExerciseByRoutineId(id);
+    if (foundData.length === 0) {
+      throw new NotFoundException(`routineId ${id}:No matching data found in the RoutineExercise`);
+    }
+
+    const foundRoutineName = foundData[0].routine.name;
+    const foundOrderExercise = foundData.map((data) => {
+      return { order: data.order, exerciseName: data.exercise.exerciseName, bodyPart: data.exercise.bodyPart };
+    });
+    return {
+      routineName: foundRoutineName,
+      routines: foundOrderExercise,
+    };
   }
 }
