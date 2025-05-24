@@ -9,4 +9,10 @@ export class TypeOrmRoutineExerciseRepository implements RoutineExerciseReposito
   async saveRoutineExercises(newRoutineExercises: RoutineExercise[]): Promise<RoutineExercise[]> {
     return await this.routineExerciseRepository.save(newRoutineExercises);
   }
+  async findRoutineExerciseByRoutineId(routineId: number): Promise<RoutineExercise[]> {
+    return await this.routineExerciseRepository.find({
+      where: { routine: { id: routineId } },
+      relations: ['routine', 'exercise'],
+    });
+  }
 }
