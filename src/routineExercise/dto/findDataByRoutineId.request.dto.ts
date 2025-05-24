@@ -1,3 +1,3 @@
-export class findDataByRoutineIdRequestDto {
+export class FindDataByRoutineIdRequestDto {
   id: number;
 }
