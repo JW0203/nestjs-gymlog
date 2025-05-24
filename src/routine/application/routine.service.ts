@@ -3,7 +3,6 @@ import { User } from '../../user/domain/User.entity';
 import { GetRoutineByNameRequestDto } from '../dto/getRoutineByName.request.dto';
 import { UpdateRoutinesRequestDto } from '../dto/updateRoutines.request.dto';
 import { DeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
-import { SaveRoutinesRequestDto } from '../dto/saveRoutines.request.dto';
 import { ROUTINE_REPOSITORY } from '../../common/const/inject.constant';
 import { RoutineRepository } from '../domain/routine.repository';
 import { Routine } from '../domain/Routine.entity';
@@ -18,6 +17,8 @@ import { SaveRoutineRequestDto } from '../dto/saveRoutine.request.dto';
 import { SaveRoutineResponseDto } from '../dto/saveRoutine.response.dto';
 import { SaveRoutineExerciseRequestDto } from '../../routineExercise/dto/saveRoutineExercise.request.dto';
 import { RoutineExerciseService } from '../../routineExercise/application/routineExercise.service';
+import { FindDataByRoutineIdRequestDto } from '../../routineExercise/dto/findDataByRoutineId.request.dto';
+import { FindDataByRoutineIdResponseDto } from '../../routineExercise/dto/fineDataByRoutineId.response.dto';
 
 @Injectable()
 export class RoutineService {
@@ -47,17 +48,23 @@ export class RoutineService {
     return new SaveRoutineResponseDto(savedRoutine);
   }
 
-  async getRoutineByName(getRoutineByNameRequest: GetRoutineByNameRequestDto, user: User) {
+  async getRoutineByName(
+    getRoutineByNameRequest: GetRoutineByNameRequestDto,
+    user: User,
+  ): Promise<FindDataByRoutineIdResponseDto> {
+    console.log(getRoutineByNameRequest);
     const { name } = getRoutineByNameRequest;
-    const foundRoutines = await this.routineRepository.findRoutinesByName(name, user);
-    if (foundRoutines.length == 0) {
+    const foundRoutine = await this.routineRepository.findOneRoutineByName(name, user);
+    if (!foundRoutine) {
       throw new NotFoundException(`Routines not found`);
     }
-    return foundRoutines.map((routine) => new RoutineResponseDto(routine));
+    const requestDataByRoutineId: FindDataByRoutineIdRequestDto = { id: foundRoutine.id };
+    return await this.routineExerciseService.findRoutineExercisesByRoutineId(requestDataByRoutineId);
   }
 
+  /*
   @Transactional()
-  async bulkUpdateRoutines(updateRoutineRequest: UpdateRoutinesRequestDto, user: User) {
+  async updateRoutine(updateRoutineRequest: UpdateRoutinesRequestDto, user: User) {
     const { updateData } = updateRoutineRequest;
     const exercises = updateData.map(({ exerciseName, bodyPart }) => ({ exerciseName, bodyPart }));
 
@@ -125,4 +132,6 @@ export class RoutineService {
     }
     return routineGroupByName(userRoutines);
   }
+
+ */
 }
