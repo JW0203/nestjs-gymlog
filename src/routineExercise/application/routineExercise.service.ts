@@ -6,7 +6,7 @@ import { RoutineExercise } from '../domain/RoutineExercise.entity';
 import { ExerciseService } from '../../exercise/application/exercise.service';
 import { SaveRoutineExerciseResponseDto } from '../dto/saveRoutineExercise.response.dto';
 import { FindDataByRoutineIdRequestDto } from '../dto/findDataByRoutineId.request.dto';
-import { FineDataByRoutineIdResponseDto } from '../dto/fineDataByRoutineId.response.dto';
+import { FindDataByRoutineIdResponseDto, RoutineExerciseItemDto } from '../dto/fineDataByRoutineId.response.dto';
 
 @Injectable()
 export class RoutineExerciseService {
@@ -68,7 +68,7 @@ export class RoutineExerciseService {
 
   async findRoutineExercisesByRoutineId(
     requestDataByRoutineId: FindDataByRoutineIdRequestDto,
-  ): Promise<FineDataByRoutineIdResponseDto> {
+  ): Promise<FindDataByRoutineIdResponseDto> {
     const { id } = requestDataByRoutineId;
     const foundData = await this.routineExerciseRepository.findRoutineExerciseByRoutineId(id);
     if (foundData.length === 0) {
@@ -76,12 +76,9 @@ export class RoutineExerciseService {
     }
 
     const foundRoutineName = foundData[0].routine.name;
-    const foundOrderExercise = foundData.map((data) => {
-      return { order: data.order, exerciseName: data.exercise.exerciseName, bodyPart: data.exercise.bodyPart };
+    const foundOrderExercise: RoutineExerciseItemDto[] = foundData.map((data) => {
+      return RoutineExerciseItemDto.fromEntity(data);
     });
-    return {
-      routineName: foundRoutineName,
-      routines: foundOrderExercise,
-    };
+    return new FindDataByRoutineIdResponseDto({ routineName: foundRoutineName, routines: foundOrderExercise });
   }
 }
