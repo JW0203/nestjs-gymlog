@@ -34,6 +34,10 @@ export class RoutineService {
   @Transactional()
   async saveRoutine(saveRoutineRequestDto: SaveRoutineRequestDto, user: User): Promise<SaveRoutineResponseDto> {
     const { routineName, exercises } = saveRoutineRequestDto;
+    const isRoutineName = await this.routineRepository.findOneRoutineByName(routineName, user);
+    if (isRoutineName) {
+      throw new BadRequestException(`The routine name (${routineName}) is already used`);
+    }
     const newRoutine = new Routine({ user, name: routineName });
     const savedRoutine = await this.routineRepository.saveRoutine(newRoutine);
     const saveDataRequestToRoutineExercise: SaveRoutineExerciseRequestDto[] = exercises.map((exercise, index) => {
@@ -54,7 +58,6 @@ export class RoutineService {
   ): Promise<FindDataByRoutineIdResponseDto> {
     console.log(getRoutineByNameRequest);
     const { name } = getRoutineByNameRequest;
-
     const foundRoutine = await this.routineRepository.findOneRoutineByName(name, user);
     if (!foundRoutine) {
       throw new NotFoundException(`Routines not found`);
