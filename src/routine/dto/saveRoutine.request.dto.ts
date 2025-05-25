@@ -1,6 +1,6 @@
-import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
+import { OderAndExercise } from './oderAndExercise.dto';
 
 export class SaveRoutineRequestDto {
   routineName: string;
-  exercises: ExerciseDataFormatDto[];
+  orderAndExercise: OderAndExercise[];
 }
