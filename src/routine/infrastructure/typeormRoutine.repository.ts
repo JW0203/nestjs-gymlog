@@ -2,7 +2,7 @@ import { RoutineRepository } from '../domain/routine.repository';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Routine } from '../domain/Routine.entity';
 import { User } from '../../user/domain/User.entity';
-import { In, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 
 export class TypeormRoutineRepository implements RoutineRepository {
   constructor(@InjectRepository(Routine) private routineRepository: Repository<Routine>) {}
@@ -21,7 +21,7 @@ export class TypeormRoutineRepository implements RoutineRepository {
   async findOneRoutineById(id: number, user: User): Promise<Routine | null> {
     return await this.routineRepository.findOne({
       where: { id, user: { id: user.id } },
-      relations: ['exercise', 'user'],
+      relations: ['user'],
     });
   }
 
