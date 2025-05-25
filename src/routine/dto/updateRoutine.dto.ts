@@ -1,13 +1,13 @@
-import { IsEnum, IsInt, IsString } from 'class-validator';
+import { IsEnum, IsNumber } from 'class-validator';
 import { IsExerciseName } from '../../common/validation/isExerciseName.validation';
 import { BodyPart } from '../../common/bodyPart.enum';
 
 export class UpdateRoutine {
-  @IsInt()
-  id: number;
+  @IsNumber()
+  order: number;
 
-  @IsString()
-  routineName: string;
+  @IsNumber()
+  exerciseId?: number;
 
   @IsExerciseName()
   exerciseName: string;
