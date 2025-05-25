@@ -31,10 +31,9 @@ export class Routine extends Timestamps {
     }
   }
 
-  update(params: { name: string; user: User; routineExercise: RoutineExercise[] }) {
+  update(params: { name: string; user: User }) {
     this.name = params.name;
     this.user = params.user;
-    this.routineExercise = params.routineExercise;
 
     validateOrReject(this).catch((errors) => {
       const logger = new Logger('Routine Entity Update');
