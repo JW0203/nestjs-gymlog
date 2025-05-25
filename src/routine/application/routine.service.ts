@@ -19,6 +19,7 @@ import { SaveRoutineExerciseRequestDto } from '../../routineExercise/dto/saveRou
 import { RoutineExerciseService } from '../../routineExercise/application/routineExercise.service';
 import { FindDataByRoutineIdRequestDto } from '../../routineExercise/dto/findDataByRoutineId.request.dto';
 import { FindDataByRoutineIdResponseDto } from '../../routineExercise/dto/fineDataByRoutineId.response.dto';
+import { OderAndExercise } from '../dto/oderAndExercise.dto';
 
 @Injectable()
 export class RoutineService {
@@ -33,20 +34,23 @@ export class RoutineService {
 
   @Transactional()
   async saveRoutine(saveRoutineRequestDto: SaveRoutineRequestDto, user: User): Promise<SaveRoutineResponseDto> {
-    const { routineName, exercises } = saveRoutineRequestDto;
+    const { routineName, orderAndExercise } = saveRoutineRequestDto;
     const isRoutineName = await this.routineRepository.findOneRoutineByName(routineName, user);
     if (isRoutineName) {
       throw new BadRequestException(`The routine name (${routineName}) is already used`);
     }
     const newRoutine = new Routine({ user, name: routineName });
     const savedRoutine = await this.routineRepository.saveRoutine(newRoutine);
-    const saveDataRequestToRoutineExercise: SaveRoutineExerciseRequestDto[] = exercises.map((exercise, index) => {
-      return {
-        order: index + 1,
-        exercise: new Exercise(exercise),
-        routine: newRoutine,
-      };
-    });
+    const saveDataRequestToRoutineExercise: SaveRoutineExerciseRequestDto[] = orderAndExercise.map(
+      ({ order, exercise }) => {
+        return {
+          order,
+          exercise: new Exercise({ exerciseName: exercise.exerciseName, bodyPart: exercise.bodyPart }),
+          routine: savedRoutine,
+        };
+      },
+    );
+
     await this.routineExerciseService.saveRoutineExercises(saveDataRequestToRoutineExercise);
 
     return new SaveRoutineResponseDto(savedRoutine);
@@ -66,51 +70,44 @@ export class RoutineService {
     return await this.routineExerciseService.findRoutineExercisesByRoutineId(requestDataByRoutineId);
   }
 
-  /*
   @Transactional()
   async updateRoutine(updateRoutineRequest: UpdateRoutinesRequestDto, user: User) {
-    const { updateData } = updateRoutineRequest;
-    const exercises = updateData.map(({ exerciseName, bodyPart }) => ({ exerciseName, bodyPart }));
+    const { id, routineName, updateData } = updateRoutineRequest;
 
-    const newExercises = await this.exerciseService.findNewExercises({ exercises });
-    if (newExercises.length > 0) {
-      await this.exerciseService.bulkInsertExercises({ exercises: newExercises });
+    const foundRoutine = await this.routineRepository.findOneRoutineById(id, user);
+    if (!foundRoutine) {
+      throw new NotFoundException(`Routine can not found using the given id(${id}).`);
+    }
+    const foundRoutineName = foundRoutine.name;
+    let nameUpdated = false;
+    if (foundRoutineName !== routineName) {
+      foundRoutine.update({ name: routineName, user });
+      await this.routineRepository.saveRoutine(foundRoutine);
+      nameUpdated = true;
     }
 
-    const foundExercises = await this.exerciseService.findExercisesByExerciseNameAndBodyPart(exercises);
-
-    if (foundExercises.length === 0) {
-      throw new NotFoundException('exercises can not found');
+    const updatedRoutine = await this.routineRepository.findOneRoutineByName(routineName, user);
+    if (!updatedRoutine) {
+      throw new NotFoundException(`Routine name was not updated into given ${routineName}.`);
     }
-    const updatedIds: number[] = [];
-    const promiseUpdateRoutine = await Promise.all(
-      updateData.map(async (updateRoutine) => {
-        const { routineName, id, exerciseName, bodyPart } = updateRoutine;
-        updatedIds.push(id);
-        const exercise = foundExercises.find(
-          (exercise) => exercise.exerciseName === exerciseName && exercise.bodyPart === bodyPart,
-        );
-        if (!exercise) {
-          throw new NotFoundException(`${exerciseName}, ${bodyPart} can not find`);
-        }
-        const foundRoutine = await this.routineRepository.findOneRoutineById(id, user);
-        if (!foundRoutine) {
-          throw new NotFoundException(`Routine with id ${id} not found.`);
-        }
-        foundRoutine.update({
-          name: routineName,
-          exercise,
-          user,
-        });
-        return foundRoutine;
-      }),
-    );
-    const updateRoutines = await Promise.all(promiseUpdateRoutine);
-    await this.routineRepository.bulkUpdateRoutines(updateRoutines);
-    const foundRoutines = await this.routineRepository.findRoutinesByIds(updatedIds, user);
-    return foundRoutines.map((routine) => new RoutineResponseDto(routine));
+    const orderAndExercises: OderAndExercise[] = updateData.map(({ order, exerciseName, bodyPart }) => {
+      return {
+        order: order,
+        exercise: { exerciseName, bodyPart },
+      };
+    });
+
+    const result = await this.routineExerciseService.updateRoutineExercise(updatedRoutine, orderAndExercises);
+    if (result.type === 'UPDATED') {
+      return { updated: result.data };
+    } else {
+      if (nameUpdated) {
+        return { updated: { updatedRoutineName: routineName, previousRoutineName: foundRoutineName } };
+      }
+      return { updated: 'Nothing' };
+    }
   }
-
+  /*
   async softDeleteRoutines(deleteRoutineRequestDto: DeleteRoutineRequestDto, user: User) {
     const { ids } = deleteRoutineRequestDto;
     const routines = await this.routineRepository.findRoutinesByIds(ids, user);
