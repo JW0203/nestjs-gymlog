@@ -1,10 +1,12 @@
 import { BodyPart } from '../../common/bodyPart.enum';
 
 export class FindDataByRoutineIdResponseDto {
+  routineId: number;
   routineName: string;
   routines: RoutineExerciseItemDto[];
 
-  constructor(params: { routineName: string; routines: RoutineExerciseItemDto[] }) {
+  constructor(params: { routineId: number; routineName: string; routines: RoutineExerciseItemDto[] }) {
+    this.routineId = params.routineId;
     this.routineName = params.routineName;
     this.routines = params.routines;
   }
