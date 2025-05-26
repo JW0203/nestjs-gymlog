@@ -5,7 +5,7 @@ export interface RoutineRepository {
   findOneRoutineByName(name: string, user: User): Promise<Routine | null>;
   findOneRoutineById(id: number, user: User): Promise<Routine | null>;
   updateRoutine(updateRoutines: Routine): Promise<Routine>;
-  softDeleteRoutine(routineIds: number): Promise<void>;
+  softDeleteRoutine(routineId: number): Promise<void>;
   findAllByUserId(userId: number): Promise<Routine[]>;
   saveRoutine(newRoutine: Routine): Promise<Routine>;
 }

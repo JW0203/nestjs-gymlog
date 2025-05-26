@@ -30,8 +30,8 @@ export class TypeormRoutineRepository implements RoutineRepository {
     return await this.routineRepository.save(updateRoutines);
   }
 
-  async softDeleteRoutine(routineIds: number): Promise<void> {
-    await this.routineRepository.softDelete({ id: routineIds });
+  async softDeleteRoutine(routineId: number): Promise<void> {
+    await this.routineRepository.softDelete({ id: routineId });
   }
 
   async findAllByUserId(userId: number): Promise<Routine[]> {
