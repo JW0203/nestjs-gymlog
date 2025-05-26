@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Routine } from '../domain/Routine.entity';
 import { User } from '../../user/domain/User.entity';
 import { In, Repository } from 'typeorm';
-import { RoutineExercise } from '../../routineExercise/domain/RoutineExercise.entity';
 
 export class TypeormRoutineRepository implements RoutineRepository {
   constructor(@InjectRepository(Routine) private routineRepository: Repository<Routine>) {}
@@ -26,12 +25,19 @@ export class TypeormRoutineRepository implements RoutineRepository {
     });
   }
 
+  async findRoutinesByIds(ids: number[], user: User): Promise<Routine[]> {
+    return await this.routineRepository.find({
+      where: { id: In(ids), user: { id: user.id } },
+      relations: ['user'],
+    });
+  }
+
   async updateRoutine(updateRoutines: Routine): Promise<Routine> {
     return await this.routineRepository.save(updateRoutines);
   }
 
-  async softDeleteRoutine(routineId: number): Promise<void> {
-    await this.routineRepository.softDelete({ id: routineId });
+  async softDeleteRoutines(routineIds: number[]): Promise<void> {
+    await this.routineRepository.softDelete({ id: In(routineIds) });
   }
 
   async findAllByUserId(userId: number): Promise<Routine[]> {
