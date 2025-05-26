@@ -1,3 +1,3 @@
-export class DeleteRoutineRequestDto {
-  ids: number[];
+export class SoftDeleteRoutineRequestDto {
+  id: number;
 }
