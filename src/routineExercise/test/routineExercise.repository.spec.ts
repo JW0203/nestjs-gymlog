@@ -52,4 +52,21 @@ describe('RoutineExercise', () => {
       expect(savedRoutineExercises[0].order).toBe(1);
     });
   });
+
+  describe('findRoutineExerciseByRoutineId', () => {
+    it('should find routineExercise data associated to routine id', async () => {
+      const testUser: User = await createTestUserRepo(dataSource);
+      const routine: Routine = await createTestRoutineRepo(dataSource, testUser);
+      const exercise: Exercise = await createTestExerciseRepo(dataSource);
+      const routineExerciseData = new RoutineExercise({ routine: routine, exercise: exercise, order: 1 });
+      await routineExerciseRepository.saveRoutineExercises([routineExerciseData]);
+
+      const foundResult = await routineExerciseRepository.findRoutineExerciseByRoutineId(routine.id);
+      expect(foundResult.length).toBe(1);
+      expect(foundResult[0].routine.id).toBe(routine.id);
+      expect(foundResult[0].routine.name).toBe(routine.name);
+      expect(foundResult[0].exercise.exerciseName).toBe(exercise.exerciseName);
+      expect(foundResult[0].exercise.bodyPart).toBe(exercise.bodyPart);
+    });
+  });
 });
