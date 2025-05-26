@@ -10,6 +10,9 @@ import { FindDataByRoutineIdResponseDto, RoutineExerciseItemDto } from '../dto/f
 import { Routine } from '../../routine/domain/Routine.entity';
 import { OderAndExercise } from '../../routine/dto/oderAndExercise.dto';
 import { ExerciseInRoutineDto } from '../dto/exerciseInRoutine.dto';
+import { SoftDeleteRoutineExercisesRequestDto } from '../dto/softDeleteRoutineExercises.request.dto';
+import { Transactional } from 'typeorm-transactional';
+import { SaveRoutineResponseDto } from '../../routine/dto/saveRoutine.response.dto';
 
 type RoutineUpdateResult = { type: 'NOT_UPDATED' } | { type: 'UPDATED'; data: object };
 
@@ -24,7 +27,7 @@ export class RoutineExerciseService {
 
   async saveRoutineExercises(
     saveRoutineExerciseRequestDto: SaveRoutineExerciseRequestDto[],
-  ): Promise<SaveRoutineExerciseResponseDto[]> {
+  ): Promise<SaveRoutineResponseDto> {
     const receivedDataArray: RoutineExercise[] = saveRoutineExerciseRequestDto.map((data) => {
       return new RoutineExercise({
         order: data.order,
@@ -58,17 +61,8 @@ export class RoutineExerciseService {
     });
 
     const savedData = await this.routineExerciseRepository.saveRoutineExercises(saveDataArray);
-    return savedData.map((data) => {
-      return {
-        id: data.id,
-        order: data.order,
-        routineId: data.routine.id,
-        routineName: data.routine.name,
-        exerciseId: data.exercise.id,
-        exerciseName: data.exercise.exerciseName,
-        exerciseBodyPart: data.exercise.bodyPart,
-      };
-    });
+
+    return SaveRoutineResponseDto.fromEntities(savedData);
   }
 
   async findRoutineExercisesByRoutineId(
@@ -90,7 +84,7 @@ export class RoutineExerciseService {
       routines: foundOrderExercise,
     });
   }
-
+  //todo: idObject: { ids: number[] } 수정및 dto 생성
   async findAllRoutineExercisesByRoutineIds(idObject: { ids: number[] }): Promise<FindDataByRoutineIdResponseDto[]> {
     const { ids } = idObject;
     const foundData = await this.routineExerciseRepository.findAllRoutineExerciseByRoutineIds(ids);
@@ -148,8 +142,8 @@ export class RoutineExerciseService {
     if (isSameExercise) {
       return { type: 'NOT_UPDATED' };
     }
-
-    await this.softDeleteRoutineExercise(routineId);
+    const softDeleteRequest: SoftDeleteRoutineExercisesRequestDto = { routineIds: [routineId] };
+    await this.softDeleteRoutineExercises(softDeleteRequest);
 
     const exercises = orderAndExercises.map(({ exercise }) => {
       return { exerciseName: exercise.exerciseName, bodyPart: exercise.bodyPart };
@@ -192,10 +186,12 @@ export class RoutineExerciseService {
     return { type: 'UPDATED', data: filteredData };
   }
 
-  async softDeleteRoutineExercise(routineId: number) {
-    const foundRoutineExercise = await this.routineExerciseRepository.findRoutineExerciseByRoutineId(routineId);
+  @Transactional()
+  async softDeleteRoutineExercises(softDeleteRequest: SoftDeleteRoutineExercisesRequestDto) {
+    const { routineIds } = softDeleteRequest;
+    const foundRoutineExercise = await this.routineExerciseRepository.findAllRoutineExerciseByRoutineIds(routineIds);
     if (foundRoutineExercise.length === 0) {
-      throw new NotFoundException(`Can't delete routine. No Routine matches ID(${routineId})`);
+      throw new NotFoundException(`Can't delete routine. No Routine matches ID(${routineIds})`);
     }
     const ids = foundRoutineExercise.map((entity) => entity.id);
     await this.routineExerciseRepository.softDeleteRoutineExercise(ids);
