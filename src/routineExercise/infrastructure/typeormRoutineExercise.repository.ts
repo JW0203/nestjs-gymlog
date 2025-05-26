@@ -23,4 +23,10 @@ export class TypeOrmRoutineExerciseRepository implements RoutineExerciseReposito
   async softDeleteRoutineExercise(ids: number[]): Promise<void> {
     await this.routineExerciseRepository.softDelete({ id: In(ids) });
   }
+  async findAllRoutineExerciseByRoutineIds(routineIds: number[]): Promise<RoutineExercise[]> {
+    return await this.routineExerciseRepository.find({
+      where: { routine: { id: In(routineIds) } },
+      relations: ['routine', 'exercise'],
+    });
+  }
 }
