@@ -91,6 +91,41 @@ export class RoutineExerciseService {
     });
   }
 
+  async findAllRoutineExercisesByRoutineIds(idObject: { ids: number[] }): Promise<FindDataByRoutineIdResponseDto[]> {
+    const { ids } = idObject;
+    const foundData = await this.routineExerciseRepository.findAllRoutineExerciseByRoutineIds(ids);
+
+    if (foundData.length === 0) {
+      throw new NotFoundException(`routineId ${ids}:No matching data found in the RoutineExercise`);
+    }
+    const routineMap = new Map<
+      number,
+      {
+        routineId: number;
+        routineName: string;
+        routines: RoutineExerciseItemDto[];
+      }
+    >();
+
+    for (const routineExercise of foundData) {
+      const routineId = routineExercise.routine.id;
+      const routineName = routineExercise.routine.name;
+      const item = RoutineExerciseItemDto.fromEntity(routineExercise);
+
+      if (!routineMap.has(routineId)) {
+        routineMap.set(routineId, {
+          routineId,
+          routineName,
+          routines: [item],
+        });
+      } else {
+        routineMap.get(routineId)!.routines.push(item);
+      }
+    }
+
+    return Array.from(routineMap.values());
+  }
+
   async updateRoutineExercise(routine: Routine, orderAndExercises: OderAndExercise[]): Promise<RoutineUpdateResult> {
     const routineId = routine.id;
 
