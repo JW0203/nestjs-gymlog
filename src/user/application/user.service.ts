@@ -23,7 +23,7 @@ import { UpdateEmailRequestDto } from '../dto/updateEmail.request.dto';
 import { WorkoutLogService } from '../../workoutLog/application/workoutLog.service';
 import { RoutineService } from '../../routine/application/routine.service';
 import { SoftDeleteWorkoutLogRequestDto } from '../../workoutLog/dto/softDeleteWorkoutLog.request.dto';
-import { DeleteRoutineRequestDto } from '../../routine/dto/deleteRoutine.request.dto';
+import { SoftDeleteRoutineRequestDto } from '../../routine/dto/deleteRoutine.request.dto';
 
 @Injectable()
 export class UserService {
@@ -106,11 +106,11 @@ export class UserService {
       await this.workoutLogService.softDeleteWorkoutLogs(softDeleteWorkoutLogRequestDto, user);
     }
 
-    const userRoutines = await this.routineService.findAllRoutinesByUserId(user);
+    const userRoutines = await this.routineService.getUserRoutines(user);
     if (userRoutines.length !== 0) {
       const routineIds = userRoutines.map((routine) => routine.id);
-      const deleteRoutineRequestDto: DeleteRoutineRequestDto = { ids: routineIds };
-      await this.routineService.softDeleteRoutines(deleteRoutineRequestDto, user);
+      const softDeleteRoutineRequest = new SoftDeleteRoutineRequestDto(routineIds);
+      await this.routineService.softDeleteRoutine(softDeleteRoutineRequest, user);
     }
     await this.userRepository.softDeleteUser(userId);
   }
