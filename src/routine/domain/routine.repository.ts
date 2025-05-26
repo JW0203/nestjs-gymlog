@@ -4,8 +4,9 @@ import { Routine } from './Routine.entity';
 export interface RoutineRepository {
   findOneRoutineByName(name: string, user: User): Promise<Routine | null>;
   findOneRoutineById(id: number, user: User): Promise<Routine | null>;
+  findRoutinesByIds(ids: number[], user: User): Promise<Routine[]>;
   updateRoutine(updateRoutines: Routine): Promise<Routine>;
-  softDeleteRoutine(routineId: number): Promise<void>;
+  softDeleteRoutines(routineIds: number[]): Promise<void>;
   findAllByUserId(userId: number): Promise<Routine[]>;
   saveRoutine(newRoutine: Routine): Promise<Routine>;
 }
