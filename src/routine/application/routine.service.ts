@@ -2,7 +2,7 @@ import { BadRequestException, Inject, Injectable, NotFoundException } from '@nes
 import { User } from '../../user/domain/User.entity';
 import { GetRoutineByNameRequestDto } from '../dto/getRoutineByName.request.dto';
 import { UpdateRoutinesRequestDto } from '../dto/updateRoutines.request.dto';
-import { DeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
+import { SoftDeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
 import { ROUTINE_REPOSITORY } from '../../common/const/inject.constant';
 import { RoutineRepository } from '../domain/routine.repository';
 import { Routine } from '../domain/Routine.entity';
@@ -118,5 +118,21 @@ export class RoutineService {
     return await this.routineExerciseService.findAllRoutineExercisesByRoutineIds({
       ids: routineIds,
     });
+  }
+
+  async softDeleteRoutine(deleteRoutineRequestDto: SoftDeleteRoutineRequestDto, user: User): Promise<void> {
+    const { id } = deleteRoutineRequestDto;
+    const routines = await this.routineRepository.findOneRoutineById(id, user);
+    if (!routines) {
+      return;
+    }
+
+    await this.routineExerciseService.softDeleteRoutineExercise(id);
+    await this.routineRepository.softDeleteRoutine(id);
+
+    const checkRoutines = await this.routineRepository.findOneRoutineById(id, user);
+    if (checkRoutines) {
+      throw new BadRequestException(`Routine is not deleted`);
+    }
   }
 }
