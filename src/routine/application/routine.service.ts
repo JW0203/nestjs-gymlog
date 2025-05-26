@@ -107,32 +107,16 @@ export class RoutineService {
       return { updated: 'Nothing' };
     }
   }
-  /*
-  async softDeleteRoutines(deleteRoutineRequestDto: DeleteRoutineRequestDto, user: User) {
-    const { ids } = deleteRoutineRequestDto;
-    const routines = await this.routineRepository.findRoutinesByIds(ids, user);
-    if (routines.length === 0) {
-      return;
-    }
-    const routineIds = routines.map((routine) => {
-      return routine.id;
-    });
-    await this.routineRepository.softDeleteRoutines(routineIds);
-  }
-  async findAllRoutinesByUserId(user: User): Promise<GetAllRoutineByUserResponseDto[]> {
+
+  async getAllRoutinesByUser(user: User): Promise<FindDataByRoutineIdResponseDto[]> {
     const userRoutines = await this.routineRepository.findAllByUserId(user.id);
     if (userRoutines.length === 0) {
-      return Promise.resolve<GetAllRoutineByUserResponseDto[]>([]);
+      return Promise.resolve<FindDataByRoutineIdResponseDto[]>([]);
     }
-    return userRoutines.map((routine) => new GetAllRoutineByUserResponseDto(routine));
-  }
-  async getAllRoutinesByUser(user: User): Promise<GroupedRoutine[]> {
-    const userRoutines = await this.findAllRoutinesByUserId(user);
-    if (userRoutines.length === 0) {
-      return Promise.resolve<GroupedRoutine[]>([]);
-    }
-    return routineGroupByName(userRoutines);
-  }
+    const routineIds = userRoutines.map((routine) => routine.id);
 
- */
+    return await this.routineExerciseService.findAllRoutineExercisesByRoutineIds({
+      ids: routineIds,
+    });
+  }
 }
