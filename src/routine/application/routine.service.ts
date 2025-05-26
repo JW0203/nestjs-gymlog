@@ -16,6 +16,7 @@ import { RoutineExerciseService } from '../../routineExercise/application/routin
 import { FindDataByRoutineIdRequestDto } from '../../routineExercise/dto/findDataByRoutineId.request.dto';
 import { FindDataByRoutineIdResponseDto } from '../../routineExercise/dto/fineDataByRoutineId.response.dto';
 import { OderAndExercise } from '../dto/oderAndExercise.dto';
+import { SoftDeleteRoutineExercisesRequestDto } from '../../routineExercise/dto/softDeleteRoutineExercises.request.dto';
 
 @Injectable()
 export class RoutineService {
@@ -31,6 +32,7 @@ export class RoutineService {
   @Transactional()
   async saveRoutine(saveRoutineRequestDto: SaveRoutineRequestDto, user: User): Promise<SaveRoutineResponseDto> {
     const { routineName, orderAndExercise } = saveRoutineRequestDto;
+
     const isRoutineName = await this.routineRepository.findOneRoutineByName(routineName, user);
     if (isRoutineName) {
       throw new BadRequestException(`The routine name (${routineName}) is already used`);
@@ -47,9 +49,7 @@ export class RoutineService {
       },
     );
 
-    await this.routineExerciseService.saveRoutineExercises(saveDataRequestToRoutineExercise);
-
-    return new SaveRoutineResponseDto(savedRoutine);
+    return await this.routineExerciseService.saveRoutineExercises(saveDataRequestToRoutineExercise);
   }
 
   async getRoutineByName(
@@ -104,8 +104,12 @@ export class RoutineService {
     }
   }
 
+  async getUserRoutines(user: User): Promise<Routine[]> {
+    return await this.routineRepository.findAllByUserId(user.id);
+  }
+
   async getAllRoutinesByUser(user: User): Promise<FindDataByRoutineIdResponseDto[]> {
-    const userRoutines = await this.routineRepository.findAllByUserId(user.id);
+    const userRoutines = await this.getUserRoutines(user);
     if (userRoutines.length === 0) {
       return Promise.resolve<FindDataByRoutineIdResponseDto[]>([]);
     }
@@ -116,18 +120,22 @@ export class RoutineService {
     });
   }
 
+  @Transactional()
   async softDeleteRoutine(deleteRoutineRequestDto: SoftDeleteRoutineRequestDto, user: User): Promise<void> {
-    const { id } = deleteRoutineRequestDto;
-    const routines = await this.routineRepository.findOneRoutineById(id, user);
-    if (!routines) {
+    const { ids } = deleteRoutineRequestDto;
+
+    const routines = await this.routineRepository.findRoutinesByIds(ids, user);
+    if (routines.length === 0) {
       return;
     }
 
-    await this.routineExerciseService.softDeleteRoutineExercise(id);
-    await this.routineRepository.softDeleteRoutine(id);
+    const softDeleteRoutineExercisesRequest = new SoftDeleteRoutineExercisesRequestDto(ids);
+    await this.routineExerciseService.softDeleteRoutineExercises(softDeleteRoutineExercisesRequest);
+    await this.routineRepository.softDeleteRoutines(ids);
 
-    const checkRoutines = await this.routineRepository.findOneRoutineById(id, user);
-    if (checkRoutines) {
+    const checkRoutine = await this.routineRepository.findRoutinesByIds(ids, user);
+
+    if (checkRoutine.length > 0) {
       throw new BadRequestException(`Routine is not deleted`);
     }
   }
