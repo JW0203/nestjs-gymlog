@@ -4,7 +4,6 @@ import { RoutineExerciseRepository } from '../domain/routineExercise.repository'
 import { SaveRoutineExerciseRequestDto } from '../dto/saveRoutineExercise.request.dto';
 import { RoutineExercise } from '../domain/RoutineExercise.entity';
 import { ExerciseService } from '../../exercise/application/exercise.service';
-import { SaveRoutineExerciseResponseDto } from '../dto/saveRoutineExercise.response.dto';
 import { FindDataByRoutineIdRequestDto } from '../dto/findDataByRoutineId.request.dto';
 import { FindDataByRoutineIdResponseDto, RoutineExerciseItemDto } from '../dto/fineDataByRoutineId.response.dto';
 import { Routine } from '../../routine/domain/Routine.entity';
@@ -13,6 +12,7 @@ import { ExerciseInRoutineDto } from '../dto/exerciseInRoutine.dto';
 import { SoftDeleteRoutineExercisesRequestDto } from '../dto/softDeleteRoutineExercises.request.dto';
 import { Transactional } from 'typeorm-transactional';
 import { SaveRoutineResponseDto } from '../../routine/dto/saveRoutine.response.dto';
+import { FindAllRoutineExerciseRequestDto } from '../dto/findAllRoutineExercise.request.dto';
 
 type RoutineUpdateResult = { type: 'NOT_UPDATED' } | { type: 'UPDATED'; data: object };
 
@@ -84,9 +84,11 @@ export class RoutineExerciseService {
       routines: foundOrderExercise,
     });
   }
-  //todo: idObject: { ids: number[] } 수정및 dto 생성
-  async findAllRoutineExercisesByRoutineIds(idObject: { ids: number[] }): Promise<FindDataByRoutineIdResponseDto[]> {
-    const { ids } = idObject;
+
+  async findAllRoutineExercisesByRoutineIds(
+    findAllRoutineExerciseRequest: FindAllRoutineExerciseRequestDto,
+  ): Promise<FindDataByRoutineIdResponseDto[]> {
+    const { ids } = findAllRoutineExerciseRequest;
     const foundData = await this.routineExerciseRepository.findAllRoutineExerciseByRoutineIds(ids);
 
     if (foundData.length === 0) {
