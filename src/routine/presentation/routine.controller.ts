@@ -4,7 +4,6 @@ import { JwtAuthGuard } from '../../common/jwtPassport/jwtAuth.guard';
 import { GetRoutineByNameRequestDto } from '../dto/getRoutineByName.request.dto';
 import { UpdateRoutinesRequestDto } from '../dto/updateRoutines.request.dto';
 // import { DeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
-// import { SaveRoutinesRequestDto } from '../dto/saveRoutines.request.dto';
 import { SaveRoutineRequestDto } from '../dto/saveRoutine.request.dto';
 
 @Controller('routines')
@@ -25,12 +24,12 @@ export class RoutineController {
     return this.routineService.getRoutineByName(getRoutineByName, req.user);
   }
 
-  // @Get('all')
-  // @UseGuards(JwtAuthGuard)
-  // @HttpCode(200)
-  // getAllRoutineByUser(@Request() req: any) {
-  //   return this.routineService.getAllRoutinesByUser(req.user);
-  // }
+  @Get('all')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(200)
+  getAllRoutineByUser(@Request() req: any) {
+    return this.routineService.getAllRoutinesByUser(req.user);
+  }
 
   @Patch()
   @UseGuards(JwtAuthGuard)
