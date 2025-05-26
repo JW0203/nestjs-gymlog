@@ -8,7 +8,6 @@ import { RoutineRepository } from '../domain/routine.repository';
 import { Routine } from '../domain/Routine.entity';
 import { ExerciseService } from '../../exercise/application/exercise.service';
 import { Transactional } from 'typeorm-transactional';
-import { GroupedRoutine, routineGroupByName } from '../functions/routineGroupByName';
 import { Exercise } from '../../exercise/domain/Exercise.entity';
 import { SaveRoutineRequestDto } from '../dto/saveRoutine.request.dto';
 import { SaveRoutineResponseDto } from '../dto/saveRoutine.response.dto';
