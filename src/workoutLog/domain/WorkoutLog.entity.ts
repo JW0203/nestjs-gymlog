@@ -37,7 +37,6 @@ export class WorkoutLog extends Timestamps {
   public exercise: Exercise;
 
   @ManyToOne(() => User, (user) => user.workoutLogs)
-  @JoinColumn({ name: 'user_id' })
   public user: User;
 
   constructor(params: {
@@ -55,9 +54,6 @@ export class WorkoutLog extends Timestamps {
       this.repeatCount = params.repeatCount;
       this.exercise = params.exercise;
       this.user = params.user;
-      // this.bodyPart = params.bodyPart;
-      // this.userNickName = params.userNickName;
-      // this.exerciseName = params.exerciseName;
 
       validateOrReject(this).catch((errors) => {
         const logger = new Logger('WorkoutLog Entity');
