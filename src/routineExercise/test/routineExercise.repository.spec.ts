@@ -55,6 +55,11 @@ describe('RoutineExercise', () => {
   });
 
   describe('findRoutineExerciseByRoutineId', () => {
+    beforeEach(async () => {
+      await dataSource.dropDatabase();
+      await dataSource.synchronize();
+    });
+
     it('should find routineExercise data associated to routine id', async () => {
       const testUser: User = await createTestUserRepo(dataSource);
       const routine: Routine = await createTestRoutineRepo(dataSource, testUser);
@@ -72,6 +77,11 @@ describe('RoutineExercise', () => {
   });
 
   describe('updateRoutineExercise', () => {
+    beforeEach(async () => {
+      await dataSource.dropDatabase();
+      await dataSource.synchronize();
+    });
+
     it('should update updateRoutineExercise', async () => {
       const testUser: User = await createTestUserRepo(dataSource);
       const routine: Routine = await createTestRoutineRepo(dataSource, testUser);
