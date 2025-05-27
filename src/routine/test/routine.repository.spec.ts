@@ -8,7 +8,6 @@ import { TypeormRoutineRepository } from '../infrastructure/typeormRoutine.repos
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource, In } from 'typeorm';
 import { getMySqlTypeOrmConfig } from '../../../test/utils/getMySql.TypeOrm.config';
-import { UpdateRoutine } from '../dto/updateRoutine.dto';
 import { createAndSaveTestUserRepo } from '../../../test/utils/createAndSaveTestUser.repo.layer';
 import { createAndSaveTestRoutineRepo } from '../../../test/utils/createAndSaveTestRoutine.repo.layer';
 
