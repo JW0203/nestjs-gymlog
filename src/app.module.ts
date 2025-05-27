@@ -15,6 +15,7 @@ import { JwtPassportModule } from './common/jwtPassport.module';
 import { addTransactionalDataSource } from 'typeorm-transactional';
 import { DataSource } from 'typeorm';
 import { RedisModule } from './cache/redis.module';
+import { RoutineExerciseModule } from './routineExercise/routineExercise.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { RedisModule } from './cache/redis.module';
     WorkoutLogModule,
     ExerciseModule,
     JwtPassportModule,
+    RoutineExerciseModule,
   ],
   controllers: [AppController],
   providers: [AppService],
