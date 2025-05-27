@@ -111,7 +111,7 @@ describe('Test User controller', () => {
       expect(userService.softDeleteUser).toHaveBeenCalledWith(req.user.id);
     });
 
-    it('should have correct method DELETE and paht "/" ', () => {
+    it('should have correct method DELETE and path "/" ', () => {
       const method = Reflect.getMetadata(METHOD_METADATA, userController.softDeleteUser);
       const path = Reflect.getMetadata(PATH_METADATA, userController.softDeleteUser);
 
