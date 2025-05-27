@@ -78,7 +78,7 @@ describe('Test RoutineRepository', () => {
       expect(result?.user.id).toBe(user.id);
     });
   });
-  /*
+
   describe('findOneRoutinesById', () => {
     beforeEach(async () => {
       await dataSource.dropDatabase();
@@ -87,7 +87,6 @@ describe('Test RoutineRepository', () => {
 
     it('should find a routine saved by a user when a user searches for a routine id', async () => {
       const user: User = await createTestUserRepo(dataSource);
-      // const Exercise = await createTestExerciseRepo(dataSource);
       const routines = await createTestRoutineRepo(dataSource, user);
 
       await routineRepository.saveRoutine(routines);
@@ -111,6 +110,7 @@ describe('Test RoutineRepository', () => {
       expect(result).toStrictEqual(findOneQueryResult);
     });
   });
+
   /*
   describe('updateRoutine', () => {
     beforeEach(async () => {
