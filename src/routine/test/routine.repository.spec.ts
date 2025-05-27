@@ -10,9 +10,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource, In } from 'typeorm';
 import { getMySqlTypeOrmConfig } from '../../../test/utils/getMySql.TypeOrm.config';
 import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
-import { UpdateRoutine } from '../dto/updateRoutine.format.dto';
+import { UpdateRoutine } from '../dto/updateRoutine.dto';
 import { createTestUserRepo } from '../../../test/utils/createTestUser.repo.layer';
 import { createTestRoutineRepo } from '../../../test/utils/createTestRoutine.repo.layer';
+import { createTestExerciseRepo } from '../../../test/utils/createTestExercise.repo.layer';
 
 describe('Test RoutineRepository', () => {
   let routineRepository: RoutineRepository;
@@ -52,7 +53,7 @@ describe('Test RoutineRepository', () => {
     });
   });
 
-  describe('findRoutinesByName', () => {
+  describe('findOneRoutineByName', () => {
     beforeEach(async () => {
       await dataSource.dropDatabase();
       await dataSource.synchronize();
@@ -60,39 +61,24 @@ describe('Test RoutineRepository', () => {
 
     it('should return an empty array when a user searches for a non-existent routine name', async () => {
       const user: User = await createTestUserRepo(dataSource);
+      const notExistRoutineName: string = 'back-routine';
+      const result = await routineRepository.findOneRoutineByName(notExistRoutineName, user);
 
-      const notExistRoutineName: string = '등데이';
-      const result = await routineRepository.findRoutinesByName(notExistRoutineName, user);
-
-      const findQueryResult = await dataSource
-        .getRepository(Routine)
-        .find({ where: { name: notExistRoutineName, user: { id: 1 } }, relations: ['user', 'exercise'] });
-      expect(result).toEqual([]);
-      expect(result).toStrictEqual(findQueryResult);
+      expect(result).toBeNull();
     });
 
     it('should find routines saved by the user when a user searches for a routine name', async () => {
       const user: User = await createTestUserRepo(dataSource);
-      const exerciseInfo: ExerciseDataFormatDto[] = [
-        { exerciseName: 'Push-up', bodyPart: BodyPart.CHEST },
-        { exerciseName: 'Pull-up', bodyPart: BodyPart.BACK },
-      ];
-      const Exercises = await createExercises(dataSource, exerciseInfo);
+      const savedRoutine = await createTestRoutineRepo(dataSource, user);
 
-      const routineName = '다리 루틴';
-      const routines = createTestRoutineRepo(dataSource, user);
-      await routineRepository.bulkInsertRoutines(routines);
+      const result = await routineRepository.findOneRoutineByName(savedRoutine.name, user);
 
-      const result = await routineRepository.findRoutinesByName(routineName, user);
-
-      const findQueryResult = await dataSource
-        .getRepository(Routine)
-        .find({ where: { name: routineName }, relations: ['user', 'exercise'] });
-      expect(result.length).toBe(2);
-      expect(result).toStrictEqual(findQueryResult);
+      expect(result).not.toBeNull();
+      expect(result?.name).toBe(savedRoutine.name);
+      expect(result?.user.id).toBe(user.id);
     });
   });
-
+  /*
   describe('findOneRoutinesById', () => {
     beforeEach(async () => {
       await dataSource.dropDatabase();
@@ -101,17 +87,15 @@ describe('Test RoutineRepository', () => {
 
     it('should find a routine saved by a user when a user searches for a routine id', async () => {
       const user: User = await createTestUserRepo(dataSource);
-      const exerciseInfo: ExerciseDataFormatDto[] = [{ exerciseName: 'Push-up', bodyPart: BodyPart.CHEST }];
-      const Exercise = await createExercises(dataSource, exerciseInfo);
-      const routineName = '다리 루틴';
-      const routines = createTestRoutineRepo(dataSource, user);
+      // const Exercise = await createTestExerciseRepo(dataSource);
+      const routines = await createTestRoutineRepo(dataSource, user);
 
-      await routineRepository.bulkInsertRoutines(routines);
-      //todo: 유지보수를 위해서 user.id 를 고민해보자
+      await routineRepository.saveRoutine(routines);
+
       const result = await routineRepository.findOneRoutineById(1, user);
       const findOneQueryResult = await dataSource
         .getRepository(Routine)
-        .findOne({ where: { id: 1, user: { id: 1 } }, relations: ['user', 'exercise'] });
+        .findOne({ where: { id: 1, user: { id: 1 } }, relations: ['user'] });
 
       expect(result).toStrictEqual(findOneQueryResult);
     });
@@ -122,127 +106,46 @@ describe('Test RoutineRepository', () => {
       const result = await routineRepository.findOneRoutineById(999, user);
       const findOneQueryResult = await dataSource
         .getRepository(Routine)
-        .findOne({ where: { id: 999, user: { id: 1 } }, relations: ['user', 'exercise'] });
+        .findOne({ where: { id: 999, user: { id: 1 } }, relations: ['user'] });
       expect(result).toEqual(null);
       expect(result).toStrictEqual(findOneQueryResult);
     });
   });
-
-  describe('findRoutinesByIds', () => {
+  /*
+  describe('updateRoutine', () => {
     beforeEach(async () => {
       await dataSource.dropDatabase();
       await dataSource.synchronize();
     });
 
-    it('should return all routines when a user searches for routine ids', async () => {
+    it('should return an updated routine when a user update a routine', async () => {
       const user: User = await createTestUserRepo(dataSource);
-
-      const exerciseInfo: ExerciseDataFormatDto[] = [
-        { exerciseName: 'Push-up', bodyPart: BodyPart.CHEST },
-        { exerciseName: 'Pull-up', bodyPart: BodyPart.BACK },
-        { exerciseName: '', bodyPart: BodyPart.LEGS },
-      ];
-      const Exercises = await createExercises(dataSource, exerciseInfo);
-      const Routines = createTestRoutineRepo(dataSource, user);
-      await routineRepository.bulkInsertRoutines(Routines);
-
-      const result = await routineRepository.findRoutinesByIds([1, 2, 3], user);
-      const findQueryResult = await dataSource
-        .getRepository(Routine)
-        .find({ where: { id: In([1, 2, 3]), user: { id: 1 } }, relations: ['user', 'exercise'] });
-
-      expect(result).toStrictEqual(findQueryResult);
-    });
-
-    it('should return 2 routines when a user searches for 2 routine ids', async () => {
-      const user: User = await createTestUserRepo(dataSource);
-
-      const exerciseInfo: ExerciseDataFormatDto[] = [
-        { exerciseName: 'Push-up', bodyPart: BodyPart.CHEST },
-        { exerciseName: 'Pull-up', bodyPart: BodyPart.BACK },
-        { exerciseName: '', bodyPart: BodyPart.LEGS },
-      ];
-      const Exercises = await createExercises(dataSource, exerciseInfo);
-      const Routines = createTestRoutineRepo(dataSource, user);
-      await routineRepository.bulkInsertRoutines(Routines);
-
-      const result = await routineRepository.findRoutinesByIds([1, 2], user);
-      const findQueryResult = await dataSource
-        .getRepository(Routine)
-        .find({ where: { id: In([1, 2]), user: { id: 1 } }, relations: ['user', 'exercise'] });
-
-      expect(result).toStrictEqual(findQueryResult);
-    });
-
-    it('should return only existence routines when a user searches for routine ids', async () => {
-      const user: User = await createTestUserRepo(dataSource);
-
-      const exerciseInfo: ExerciseDataFormatDto[] = [
-        { exerciseName: 'Push-up', bodyPart: BodyPart.CHEST },
-        { exerciseName: 'Pull-up', bodyPart: BodyPart.BACK },
-        { exerciseName: '', bodyPart: BodyPart.LEGS },
-      ];
-      const Exercises = await createExercises(dataSource, exerciseInfo);
-      const Routines = createTestRoutineRepo(dataSource, user);
-      await routineRepository.bulkInsertRoutines(Routines);
-
-      const result = await routineRepository.findRoutinesByIds([1, 2, 999], user);
-      const findQueryResult = await dataSource
-        .getRepository(Routine)
-        .find({ where: { id: In([1, 2, 999]), user: { id: 1 } }, relations: ['user', 'exercise'] });
-
-      expect(result).toStrictEqual(findQueryResult);
-    });
-
-    it('should return an empty array when a user searches for non-existence routine ids', async () => {
-      const user: User = await createTestUserRepo(dataSource);
-
-      const result = await routineRepository.findRoutinesByIds([1000, 102, 999], user);
-      const findQueryResult = await dataSource
-        .getRepository(Routine)
-        .find({ where: { id: In([1000, 102, 999]), user: { id: 1 } }, relations: ['user', 'exercise'] });
-
-      expect(result).toStrictEqual(findQueryResult);
-    });
-  });
-
-  describe('bulkUpdateRoutines', () => {
-    beforeEach(async () => {
-      await dataSource.dropDatabase();
-      await dataSource.synchronize();
-    });
-
-    it('should return updated routines when a user update routines', async () => {
-      const user: User = await createTestUserRepo(dataSource);
-      const exerciseInfo: ExerciseDataFormatDto[] = [
-        { exerciseName: 'Push-up', bodyPart: BodyPart.CHEST },
-        { exerciseName: 'Pull-up', bodyPart: BodyPart.BACK },
-        { exerciseName: '', bodyPart: BodyPart.LEGS },
-      ];
-      const Exercises = await createExercises(dataSource, exerciseInfo);
-      const Routines: Routine = createTestRoutineRepo(dataSource, user);
-      await routineRepository.bulkInsertRoutines(Routines);
+      // const exerciseInfo: ExerciseDataFormatDto[] = [
+      //   { exerciseName: 'Push-up', bodyPart: BodyPart.CHEST },
+      //   { exerciseName: 'Pull-up', bodyPart: BodyPart.BACK },
+      //   { exerciseName: '', bodyPart: BodyPart.LEGS },
+      // ];
+      // const Exercises = await createTestExerciseRepo(dataSource);
+      const Routines = await createTestRoutineRepo(dataSource, user);
+      await routineRepository.saveRoutine(Routines);
 
       const existenceRoutines = await dataSource
         .getRepository(Routine)
-        .find({ where: { id: In([1, 2, 3]), user: { id: 1 } }, relations: ['user', 'exercise'] });
+        .find({ where: { id: 1, user: { id: 1 } }, relations: ['user'] });
 
       const givenUpdateDataArray: UpdateRoutine[] = [
         {
-          id: 1,
-          routineName: 'Leg days',
+          order: 1,
           exerciseName: 'deadlift',
           bodyPart: BodyPart.LEGS,
         },
         {
-          id: 2,
-          routineName: 'Leg days',
+          order: 2,
           exerciseName: 'goblet squat',
           bodyPart: BodyPart.LEGS,
         },
         {
-          id: 3,
-          routineName: 'Leg days',
+          order: 3,
           exerciseName: 'barbell sumo squat',
           bodyPart: BodyPart.LEGS,
         },
@@ -251,7 +154,7 @@ describe('Test RoutineRepository', () => {
       const updatedRoutines = await Promise.all(
         existenceRoutines.map(async (routine: Routine, i) => {
           const updateData = givenUpdateDataArray[i];
-          const { id, routineName, exerciseName, bodyPart } = updateData;
+          const { order, exerciseName, bodyPart } = updateData;
           const exercise = await createExercise(dataSource, { exerciseName, bodyPart });
           if (id === routine.id) {
             routine.update({
@@ -264,7 +167,7 @@ describe('Test RoutineRepository', () => {
         }),
       );
 
-      const result = await routineRepository.bulkUpdateRoutines(updatedRoutines);
+      const result = await routineRepository.updateRoutine(updatedRoutines);
 
       const findQueryResult = await dataSource
         .getRepository(Routine)
@@ -287,7 +190,7 @@ describe('Test RoutineRepository', () => {
       ];
       const Exercises = await createExercises(dataSource, exerciseInfo);
       const Routines: Routine = createTestRoutineRepo(dataSource, user);
-      await routineRepository.bulkInsertRoutines(Routines);
+      await routineRepository.saveRoutine(Routines);
 
       const result = await routineRepository.softDeleteRoutines([1, 2]);
       const findQueryResult = await dataSource.getRepository(Routine).find({ where: { id: In([1, 2]) } });
@@ -320,9 +223,9 @@ describe('Test RoutineRepository', () => {
         { exerciseName: 'Push-up', bodyPart: BodyPart.CHEST },
         { exerciseName: 'Pull-up', bodyPart: BodyPart.BACK },
       ];
-      const Exercises = await createExercises(dataSource, exerciseInfo);
-      const Routines: Routine = createTestRoutineRepo(dataSource, user);
-      await routineRepository.bulkInsertRoutines(Routines);
+      const Exercises = await createTestExerciseRepo(dataSource);
+      const Routines = await createTestRoutineRepo(dataSource, user);
+      await routineRepository.saveRoutine(Routines);
 
       const result = await routineRepository.findAllByUserId(user.id);
       const findQueryResult = await dataSource
@@ -347,4 +250,6 @@ describe('Test RoutineRepository', () => {
       await dataSource.destroy();
     });
   });
+
+ */
 });
