@@ -2,7 +2,11 @@ import { User } from '../../src/user/domain/User.entity';
 import { DataSource } from 'typeorm';
 import { Routine } from '../../src/routine/domain/Routine.entity';
 
-export async function createTestRoutineRepo(dataSource: DataSource, user: User, overrides: Partial<Routine> = {}) {
+export async function createAndSaveTestRoutineRepo(
+  dataSource: DataSource,
+  user: User,
+  overrides: Partial<Routine> = {},
+) {
   const routineRepository = dataSource.getRepository(Routine);
   const routineData = {
     user,
