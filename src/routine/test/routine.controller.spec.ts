@@ -1,18 +1,17 @@
 import { RoutineController } from '../presentation/routine.controller';
 import { Test, TestingModule } from '@nestjs/testing';
 import { RoutineService } from '../application/routine.service';
-import { SaveRoutineFormatDto } from '../dto/saveRoutine.format.dto';
 import { BodyPart } from '../../common/bodyPart.enum';
-import { SaveRoutinesRequestDto } from '../dto/saveRoutines.request.dto';
 import { JwtAuthGuard } from '../../common/jwtPassport/jwtAuth.guard';
 import { GetRoutineByNameRequestDto } from '../dto/getRoutineByName.request.dto';
 import { GUARDS_METADATA, HTTP_CODE_METADATA, METHOD_METADATA, PATH_METADATA } from '@nestjs/common/constants';
 import { RequestMethod } from '@nestjs/common';
-import { DeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
+import { SoftDeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
 import { UpdateRoutinesRequestDto } from '../dto/updateRoutines.request.dto';
+import { SaveRoutineRequestDto } from '../dto/saveRoutine.request.dto';
 
 const mockRoutineService = {
-  bulkInsertRoutines: jest.fn(),
+  saveRoutine: jest.fn(),
   getRoutineByName: jest.fn(),
   getAllRoutinesByUser: jest.fn(),
   bulkUpdateRoutines: jest.fn(),
@@ -39,26 +38,18 @@ describe('RoutineController', () => {
   });
 
   describe('postRoutine', () => {
-    it('should call service method (bulkInsertRoutines) with correct parameters', async () => {
+    it('should call service method (saveRoutine) with correct parameters', async () => {
       const req = { user: { id: 1 } };
-
-      const routines: SaveRoutineFormatDto[] = [
+      const orderAndExercise = [
         {
-          routineName: '등데이',
-          exerciseName: '케이블 암 풀다운',
-          bodyPart: BodyPart.BACK,
-        },
-        {
-          routineName: '등데이',
-          exerciseName: '어시스트 풀업 머신',
-          bodyPart: BodyPart.BACK,
+          order: 1,
+          exercise: { bodyPart: BodyPart.BACK, exerciseName: 'dead lift' },
         },
       ];
-      const saveRoutinesDto: SaveRoutinesRequestDto = { routines };
+      const saveRoutineRequest: SaveRoutineRequestDto = { routineName: 'testRoutine', orderAndExercise };
+      await routineController.postRoutine(saveRoutineRequest, req);
 
-      await routineController.postRoutine(saveRoutinesDto, req);
-
-      expect(routineService.bulkInsertRoutines).toHaveBeenCalledWith(req.user, saveRoutinesDto);
+      expect(routineService.saveRoutine).toHaveBeenCalledWith(saveRoutineRequest, req.user);
     });
 
     it('should use JwtAuthGuard', () => {
@@ -138,7 +129,9 @@ describe('RoutineController', () => {
     it('should call service method (bulkUpdateRoutines) with correct parameters', async () => {
       const req = { user: { id: 1 } };
       const updateRoutinesRequestDto: UpdateRoutinesRequestDto = {
-        updateData: [{ id: 1, routineName: '등 루틴', exerciseName: '케이블 암 풀다운', bodyPart: BodyPart.BACK }],
+        id: 1,
+        routineName: 'back routine',
+        updateData: [{ order: 1, exerciseName: 'cable pulldown', bodyPart: BodyPart.BACK }],
       };
       await routineService.bulkUpdateRoutines(updateRoutinesRequestDto, req.user);
       expect(routineService.bulkUpdateRoutines).toHaveBeenCalledWith(updateRoutinesRequestDto, req.user);
@@ -161,10 +154,11 @@ describe('RoutineController', () => {
       expect(path).toBe('/');
     });
   });
+
   describe('deleteRoutine', () => {
     it('should call service method (softDeleteRoutines) with correct parameters', async () => {
       const req = { user: { id: 1 } };
-      const softDeleteRoutineByIds: DeleteRoutineRequestDto = { ids: [1, 2] };
+      const softDeleteRoutineByIds: SoftDeleteRoutineRequestDto = { ids: [1, 2] };
 
       await routineService.softDeleteRoutines(softDeleteRoutineByIds, req.user);
       expect(routineService.softDeleteRoutines).toHaveBeenCalledWith(softDeleteRoutineByIds, req.user);
