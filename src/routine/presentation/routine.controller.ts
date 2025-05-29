@@ -42,6 +42,6 @@ export class RoutineController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(204)
   deleteRoutine(@Body() softDeleteRoutineRequestDto: SoftDeleteRoutineRequestDto, @Request() req: any) {
-    return this.routineService.softDeleteRoutine(softDeleteRoutineRequestDto, req.user);
+    return this.routineService.softDeleteRoutines(softDeleteRoutineRequestDto, req.user);
   }
 }
