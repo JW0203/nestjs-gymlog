@@ -1,39 +1,38 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RoutineService } from '../application/routine.service';
 import { ROUTINE_REPOSITORY } from '../../common/const/inject.constant';
-import { ExerciseService } from '../../exercise/application/exercise.service';
-import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
 import { BodyPart } from '../../common/bodyPart.enum';
-import { SaveRoutineFormatDto } from '../dto/saveRoutine.format.dto';
 import { User } from '../../user/domain/User.entity';
 import { Exercise } from '../../exercise/domain/Exercise.entity';
 import { Routine } from '../domain/Routine.entity';
-import { RoutineResponseDto } from '../dto/routine.response.dto';
 import { initializeTransactionalContext } from 'typeorm-transactional';
 import { SaveRoutineRequestDto } from '../dto/saveRoutine.request.dto';
 import { SaveRoutineResponseDto } from '../dto/saveRoutine.response.dto';
 import { GetRoutineByNameRequestDto } from '../dto/getRoutineByName.request.dto';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { UpdateRoutinesRequestDto } from '../dto/updateRoutines.request.dto';
-import { DeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
-import { GetAllRoutineByUserResponseDto } from '../dto/getAllRoutineByUser.response.dto';
+import { SoftDeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
+import { RoutineExercise } from '../../routineExercise/domain/RoutineExercise.entity';
+import { RoutineExerciseService } from '../../routineExercise/application/routineExercise.service';
+import { UpdateRoutine } from '../dto/updateRoutine.dto';
+import { FindDataByRoutineIdResponseDto } from '../../routineExercise/dto/fineDataByRoutineId.response.dto';
 
 const mockRoutineRepository = {
-  findRoutinesByNameLockMode: jest.fn(),
-  bulkInsertRoutines: jest.fn(),
-  findRoutinesByName: jest.fn(),
+  findOneRoutineByName: jest.fn(),
   findOneRoutineById: jest.fn(),
-  bulkUpdateRoutines: jest.fn(),
   findRoutinesByIds: jest.fn(),
+  updateRoutine: jest.fn(),
   softDeleteRoutines: jest.fn(),
   findAllByUserId: jest.fn(),
   saveRoutine: jest.fn(),
 };
 
-const mockExerciseService = {
-  findNewExercises: jest.fn(),
-  bulkInsertExercises: jest.fn(),
-  findExercisesByExerciseNameAndBodyPart: jest.fn(),
+const mockRoutineExerciseService = {
+  saveRoutineExercises: jest.fn(),
+  findRoutineExercisesByRoutineId: jest.fn(),
+  updateRoutineExercise: jest.fn(),
+  findAllRoutineExercisesByRoutineIds: jest.fn(),
+  softDeleteRoutineExercises: jest.fn(),
 };
 
 jest.mock('typeorm-transactional', () => ({
@@ -44,7 +43,7 @@ jest.mock('typeorm-transactional', () => ({
 describe('Test RoutineService', () => {
   let routineService: RoutineService;
   let routineRepository: jest.Mocked<typeof mockRoutineRepository>;
-  let exerciseService: jest.Mocked<typeof mockExerciseService>;
+  let routineExerciseService: jest.Mocked<typeof mockRoutineExerciseService>;
 
   beforeAll(async () => {
     initializeTransactionalContext();
@@ -57,274 +56,364 @@ describe('Test RoutineService', () => {
           useValue: mockRoutineRepository,
         },
         {
-          provide: ExerciseService,
-          useValue: mockExerciseService,
+          provide: RoutineExerciseService,
+          useValue: mockRoutineExerciseService,
         },
       ],
     }).compile();
 
     routineService = module.get<RoutineService>(RoutineService);
     routineRepository = module.get(ROUTINE_REPOSITORY);
-    exerciseService = module.get(ExerciseService);
+    routineExerciseService = module.get(RoutineExerciseService);
   });
 
-  describe('saveRoutine service', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  describe('saveRoutine', () => {
     it('should return a new routine if a routine is saved', async () => {
-      //saveRoutineRequestDto: SaveRoutineRequestDto, user: User
-      const testUser: User = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
-      testUser.id = 1;
+      const user: User = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
+      user.id = 1;
       const routineName: string = 'Chest Day';
-      const exercises: ExerciseDataFormatDto[] = [
-        { bodyPart: BodyPart.BACK, exerciseName: 'cable arm pull down' },
-        { bodyPart: BodyPart.LEGS, exerciseName: 'squart' },
+
+      const newRoutine: Routine = new Routine({ name: routineName, user });
+      newRoutine.id = 1;
+
+      const orderAndExercise = [
+        {
+          order: 1,
+          bodyPart: BodyPart.BACK,
+          exerciseName: 'dead lift',
+        },
       ];
 
-      const newRoutine: Routine = new Routine({ name: routineName, user: testUser });
-      newRoutine.id = 1;
-      console.log('newRoutine:', newRoutine);
+      const saveRoutineRequest: SaveRoutineRequestDto = { routineName, orderAndExercise };
 
-      routineRepository.saveRoutine.mockImplementation(async (newRoutine) => {
-        console.log('received:', newRoutine);
-        expect(newRoutine.name).toBe('Chest Day');
-        expect(newRoutine.user.id).toBe(1);
-        newRoutine.id = 1;
-        return newRoutine;
-      });
+      const exercise = new Exercise({ bodyPart: BodyPart.BACK, exerciseName: 'dead lift' });
+      const newRoutineExercise = new RoutineExercise({ order: 1, routine: newRoutine, exercise });
+      exercise.id = 1;
 
-      const saveRoutineRequest: SaveRoutineRequestDto = { routineName, exercises };
-      const result: SaveRoutineResponseDto = await routineService.saveRoutine(saveRoutineRequest, testUser);
+      const expectedResult = SaveRoutineResponseDto.fromEntities([newRoutineExercise]);
+      routineRepository.findOneRoutineByName.mockResolvedValue(null);
+      routineRepository.saveRoutine.mockResolvedValue(newRoutine);
+      routineExerciseService.saveRoutineExercises.mockResolvedValue(expectedResult);
 
-      expect(result).toEqual(newRoutine);
-      expect(result.id).toBe(1);
-      expect(result.name).toBe('Chest Day');
-      expect(result.userId).toBe(1);
+      const result: SaveRoutineResponseDto = await routineService.saveRoutine(saveRoutineRequest, user);
+
+      expect(result).toEqual(expectedResult);
+      expect(routineRepository.findOneRoutineByName).toHaveBeenCalledWith(routineName, user);
+      expect(routineRepository.saveRoutine).toHaveBeenCalledWith({ name: routineName, user });
+      expect(routineExerciseService.saveRoutineExercises).toHaveBeenCalledWith([
+        expect.objectContaining({
+          order: 1,
+          exercise: expect.objectContaining({ exerciseName: 'dead lift', bodyPart: BodyPart.BACK }),
+          routine: newRoutine,
+        }),
+      ]);
+      expect(result.routineId).toBe(1);
+      expect(result.routineName).toBe('Chest Day');
+      expect(result.routines[0].order).toBe(1);
+      expect(result.routines[0].exerciseName).toBe('dead lift');
+      expect(result.routines[0].bodyPart).toBe(BodyPart.BACK);
+    });
+
+    it('should throw BadRequestException if the routine name is already used', async () => {
+      const user = new User({ email: 'used@email.com', password: '12345678', nickName: 'tester' });
+      const routineName = 'AlreadyUsedRoutine';
+      const routine = new Routine({ name: routineName, user });
+      const saveRoutineRequest: SaveRoutineRequestDto = {
+        routineName,
+        orderAndExercise: [],
+      };
+
+      routineRepository.findOneRoutineByName.mockResolvedValue(routine);
+
+      await expect(routineService.saveRoutine(saveRoutineRequest, user)).rejects.toThrow(BadRequestException);
     });
   });
 
-  describe('getRoutineByName service', () => {
+  describe('getRoutineByName', () => {
     it('should return the routine when searching by the name of a routine registered by the user', async () => {
-      const routineNameDto: GetRoutineByNameRequestDto = { name: '등데이' };
+      const routineNameDto: GetRoutineByNameRequestDto = { name: 'Back routine' };
       const routineName = routineNameDto.name;
+      const user: User = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
+      const routine = new Routine({ name: routineName, user });
+      routine.id = 1;
 
-      const routines: SaveRoutineFormatDto[] = [
-        {
-          routineName,
-          exerciseName: '케이블 암 풀다운',
-          bodyPart: BodyPart.BACK,
-        },
-        {
-          routineName,
-          exerciseName: '어시스트 풀업 머신',
-          bodyPart: BodyPart.BACK,
-        },
-      ];
+      const exercise = new Exercise({ bodyPart: BodyPart.BACK, exerciseName: 'dead lift' });
+      const newRoutineExercise = new RoutineExercise({ order: 1, routine: routine, exercise });
+      exercise.id = 1;
 
-      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
-      const newRoutines = routines.map(
-        (routine) =>
-          new Routine({
-            name: routine.routineName,
-            user: mockUser,
-            // exercise: new Exercise({ bodyPart: routine.bodyPart, exerciseName: routine.exerciseName }),
-          }),
-      );
+      const expectedResult = SaveRoutineResponseDto.fromEntities([newRoutineExercise]);
 
-      const expectedRoutineData = newRoutines.map((routine) => new RoutineResponseDto(routine));
+      routineRepository.findOneRoutineByName.mockResolvedValue(routine);
+      routineExerciseService.findRoutineExercisesByRoutineId.mockResolvedValue(expectedResult);
+      const result = await routineService.getRoutineByName({ name: routineName }, user);
 
-      routineRepository.findRoutinesByName.mockResolvedValue(newRoutines);
-
-      const result = await routineService.getRoutineByName({ name: routineName }, mockUser);
-
-      expect(result).toEqual(expectedRoutineData);
+      expect(result).toEqual(expectedResult);
+      expect(routineRepository.findOneRoutineByName).toHaveBeenCalledWith(routineName, user);
+      expect(routineExerciseService.findRoutineExercisesByRoutineId).toHaveBeenCalledWith({ id: 1 });
     });
 
     it('should return an empty array when searching for a routine not registered by the user', async () => {
       const routineNameDto = { name: 'non-existent-name' };
       const name: string = routineNameDto.name;
-      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
-      routineRepository.findRoutinesByName.mockResolvedValue([]);
+      const user: User = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
+      routineRepository.findOneRoutineByName.mockResolvedValue(null);
 
-      await expect(routineService.getRoutineByName({ name }, mockUser)).rejects.toThrow(NotFoundException);
+      await expect(routineService.getRoutineByName({ name }, user)).rejects.toThrow(NotFoundException);
     });
   });
 
-  describe('bulkUpdateRoutines service', () => {
-    it('should return a updated routine if the routine is updated', async () => {
-      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
-      mockUser.id = 1;
+  describe('updateRoutine', () => {
+    it('should return a updated routine when routine name and exercises are updated', async () => {
+      const user: User = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
+      user.id = 1;
+      const routineName: string = 'hamstring set';
+      const routine = new Routine({ name: routineName, user });
+      routine.id = 1;
 
-      const routineName: string = '하체 뒤';
-
-      const mockExercise1 = new Exercise({ exerciseName: '레그 프레스', bodyPart: BodyPart.LEGS });
-      mockExercise1.id = 1;
-      const mockExercise2 = new Exercise({ exerciseName: '고블린 스쿼트', bodyPart: BodyPart.LEGS });
-      mockExercise2.id = 2;
-
-      const mockRoutine1 = new Routine({
-        name: routineName,
-        user: mockUser,
-        // exercise: new Exercise({ exerciseName: '스모 데드리프트', bodyPart: BodyPart.LEGS }),
-      });
-      mockRoutine1.id = 1;
-
-      const mockRoutine2 = new Routine({
-        name: routineName,
-        user: mockUser,
-        // exercise: new Exercise({ exerciseName: '고블린 스쿼트', bodyPart: BodyPart.LEGS }),
-      });
-      mockRoutine2.id = 2;
+      const updateData: UpdateRoutine[] = [
+        {
+          order: 1,
+          exerciseName: 'leg press',
+          bodyPart: BodyPart.LEGS,
+        },
+        {
+          order: 2,
+          exerciseName: 'goblet squat',
+          bodyPart: BodyPart.LEGS,
+        },
+      ];
 
       const updateRoutineRequest: UpdateRoutinesRequestDto = {
-        updateData: [
-          {
-            id: 1,
-            routineName: '업데이트 등 루틴',
-            exerciseName: '레그 프레스',
-            bodyPart: BodyPart.LEGS,
-          },
-          {
-            id: 2,
-            routineName: '업데이트 등 루틴',
-            exerciseName: '고블린 스쿼트',
-            bodyPart: BodyPart.LEGS,
-          },
-        ],
+        routineId: 1,
+        routineName,
+        updateData,
       };
+      const exercisesInRoutine = [
+        {
+          id: 1,
+          order: 1,
+          exerciseId: 1,
+          exerciseName: 'leg press',
+          bodyPart: BodyPart.LEGS,
+        },
+        {
+          id: 2,
+          order: 2,
+          exerciseId: 2,
+          exerciseName: 'goblet squat',
+          bodyPart: BodyPart.LEGS,
+        },
+      ];
 
-      exerciseService.findNewExercises.mockResolvedValue([]);
-      exerciseService.findExercisesByExerciseNameAndBodyPart.mockResolvedValue([mockExercise1, mockExercise2]);
-
-      routineRepository.findOneRoutineById.mockImplementation((id: number) => {
-        if (id === 1) return Promise.resolve(mockRoutine1);
-        if (id === 2) return Promise.resolve(mockRoutine2);
-        return Promise.resolve(null);
+      routineRepository.findOneRoutineById.mockResolvedValue(routine);
+      routineExerciseService.updateRoutineExercise.mockResolvedValue({
+        type: 'EXERCISE_UPDATED',
+        data: { routineId: 1, routineName, routines: exercisesInRoutine },
       });
-      routineRepository.bulkUpdateRoutines.mockResolvedValue([mockRoutine1, mockRoutine2]);
-      routineRepository.findRoutinesByIds.mockResolvedValue([mockRoutine1, mockRoutine2]);
 
-      const result = await routineService.bulkUpdateRoutines(updateRoutineRequest, mockUser);
+      routineRepository.updateRoutine.mockResolvedValue({
+        updated: { routineId: 1, routineName, routines: exercisesInRoutine },
+      });
 
-      const expectedResult: RoutineResponseDto[] = [mockRoutine1, mockRoutine2].map((r) => new RoutineResponseDto(r));
+      const result = await routineService.updateRoutine(updateRoutineRequest, user);
 
-      expect(result).toHaveLength(2);
-      expect(mockRoutine1.name).toBe('업데이트 등 루틴');
-      // expect(mockRoutine1.exercise).toBe(mockExercise1);
-      expect(result).toEqual(expectedResult);
+      expect(result).toEqual({ updated: { routineId: 1, routineName, routines: exercisesInRoutine } });
+      expect(routineRepository.findOneRoutineById).toHaveBeenCalledWith(1, user);
+      expect(routineExerciseService.updateRoutineExercise).toHaveBeenCalledWith(routine, updateData);
+    });
+
+    it('should return a updated routine when only routine name is updated', async () => {
+      const user: User = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
+      user.id = 1;
+      const routineName: string = 'update name';
+      const routine = new Routine({ name: routineName, user });
+      routine.id = 1;
+
+      const updateData: UpdateRoutine[] = [
+        {
+          order: 1,
+          exerciseName: 'leg press',
+          bodyPart: BodyPart.LEGS,
+        },
+        {
+          order: 2,
+          exerciseName: 'goblet squat',
+          bodyPart: BodyPart.LEGS,
+        },
+      ];
+
+      const updateRoutineRequest: UpdateRoutinesRequestDto = {
+        routineId: 1,
+        routineName,
+        updateData,
+      };
+      const exercisesInRoutine = [
+        {
+          order: 1,
+          exerciseName: 'leg press',
+          bodyPart: BodyPart.LEGS,
+        },
+        {
+          order: 2,
+          exerciseName: 'goblet squat',
+          bodyPart: BodyPart.LEGS,
+        },
+      ];
+
+      const foundRoutine = new Routine({ name: 'current name', user });
+      foundRoutine.id = 1;
+
+      routineRepository.findOneRoutineById.mockResolvedValue(foundRoutine);
+      routineRepository.saveRoutine.mockResolvedValue(routine);
+      routineExerciseService.updateRoutineExercise.mockResolvedValue({
+        type: 'EXERCISE_NOT_UPDATED',
+      });
+      routineRepository.updateRoutine.mockResolvedValue({
+        updated: { routineId: 1, routineName: 'update name', routines: exercisesInRoutine },
+      });
+
+      const result = await routineService.updateRoutine(updateRoutineRequest, user);
+
+      expect(result).toEqual({
+        updated: { routineId: 1, routineName, routines: exercisesInRoutine },
+      });
+      expect(routineRepository.findOneRoutineById).toHaveBeenCalledWith(1, user);
+      expect(routineExerciseService.updateRoutineExercise).toHaveBeenCalledWith(routine, updateData);
     });
 
     it('should handle routine not found during update', async () => {
-      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
-      mockUser.id = 1;
-      const mockExercise: Exercise = new Exercise({ exerciseName: '레그 프레스', bodyPart: BodyPart.LEGS });
-      const updateRoutinesDto: UpdateRoutinesRequestDto = {
+      const user: User = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
+      user.id = 1;
+      const routineName: string = 'hamstring set';
+      const updateRoutineRequest: UpdateRoutinesRequestDto = {
+        routineId: 1,
+        routineName,
         updateData: [
           {
-            id: 999, // 존재하지 않는 ID
-            routineName: 'Non-existent Routine',
-            exerciseName: '레그 프레스',
+            order: 1,
+            exerciseName: 'leg press',
+            bodyPart: BodyPart.LEGS,
+          },
+          {
+            order: 2,
+            exerciseName: 'goblet squat',
             bodyPart: BodyPart.LEGS,
           },
         ],
       };
-
-      exerciseService.findNewExercises.mockResolvedValue([]);
-      exerciseService.findExercisesByExerciseNameAndBodyPart.mockResolvedValue([mockExercise]);
       routineRepository.findOneRoutineById.mockResolvedValue(null);
 
-      await expect(routineService.bulkUpdateRoutines(updateRoutinesDto, mockUser)).rejects.toThrow(NotFoundException);
-    });
-
-    it('should handle exercise not found during update', async () => {
-      const mockUser: User = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
-      mockUser.id = 1;
-
-      const updateRoutinesDto: UpdateRoutinesRequestDto = {
-        updateData: [
-          {
-            id: 1,
-            routineName: 'Non-existent Routine',
-            exerciseName: '레그 프레스',
-            bodyPart: BodyPart.LEGS,
-          },
-        ],
-      };
-
-      exerciseService.findNewExercises.mockResolvedValue([]);
-      exerciseService.findExercisesByExerciseNameAndBodyPart.mockResolvedValue([]);
-      routineRepository.findOneRoutineById.mockResolvedValue(null);
-
-      await expect(routineService.bulkUpdateRoutines(updateRoutinesDto, mockUser)).rejects.toThrow(NotFoundException);
+      await expect(routineService.updateRoutine(updateRoutineRequest, user)).rejects.toThrow(NotFoundException);
     });
   });
 
-  describe('Test softDeleteRoutines', () => {
+  describe('softDeleteRoutines', () => {
     it('should return no content if routines are deleted', async () => {
-      const mockRoutineIds: DeleteRoutineRequestDto = { ids: [1, 2] };
-      const mockUser = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
-      mockUser.id = 1;
+      const user = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
+      user.id = 1;
+
+      const routineIds = [1, 2];
+      const request = new SoftDeleteRoutineRequestDto(routineIds);
 
       const routineName = '하체 루틴';
 
-      const mockRoutine1 = new Routine({
+      const routine1 = new Routine({
         name: routineName,
-        user: mockUser,
-        // exercise: new Exercise({ bodyPart: BodyPart.LEGS, exerciseName: '레그 프레스' }),
+        user,
       });
-      mockRoutine1.id = 1;
+      routine1.id = 1;
 
-      const mockRoutine2 = new Routine({
+      const routine2 = new Routine({
         name: routineName,
-        user: mockUser,
-        // exercise: new Exercise({ bodyPart: BodyPart.LEGS, exerciseName: '고블린 스쿼트' }),
+        user,
       });
-      mockRoutine2.id = 2;
+      routine2.id = 2;
 
-      routineRepository.findRoutinesByIds.mockResolvedValue([mockRoutine1, mockRoutine2]);
-      routineRepository.softDeleteRoutines.mockResolvedValue(undefined);
+      routineRepository.findRoutinesByIds.mockResolvedValue([routine1, routine2]);
+      routineRepository.softDeleteRoutines.mockResolvedValue([]);
+      routineExerciseService.softDeleteRoutineExercises.mockResolvedValue(undefined);
 
-      const result = await routineService.softDeleteRoutines(mockRoutineIds, mockUser);
+      const result = await routineService.softDeleteRoutines(request, user);
 
       expect(result).toEqual(undefined);
-      expect(routineRepository.findRoutinesByIds).toHaveBeenCalledWith([1, 2], mockUser);
+      expect(routineRepository.findRoutinesByIds).toHaveBeenCalledWith(routineIds, user);
       expect(routineRepository.softDeleteRoutines).toHaveBeenCalledWith([1, 2]);
     });
 
     it('should do nothing when no routines found', async () => {
-      const mockRoutineIds: DeleteRoutineRequestDto = { ids: [1, 2] };
+      const routineIds: SoftDeleteRoutineRequestDto = { ids: [1, 2] };
       const mockUser = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
       mockUser.id = 1;
 
       routineRepository.findRoutinesByIds.mockResolvedValue([]);
-      const result = await routineService.softDeleteRoutines(mockRoutineIds, mockUser);
+      const result = await routineService.softDeleteRoutines(routineIds, mockUser);
       expect(result).toBeUndefined();
     });
   });
 
-  describe('Test getAllRoutinesByUser', () => {
+  describe('getAllRoutinesByUser', () => {
     it('should return all routines', async () => {
-      const mockUser = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
-      mockUser.id = 1;
+      const user = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
+      user.id = 1;
 
-      const routineName = '하체 루틴';
-
-      const mockRoutine1 = new Routine({
-        name: routineName,
-        user: mockUser,
-        // exercise: new Exercise({ bodyPart: BodyPart.LEGS, exerciseName: '레그 프레스' }),
+      const routine1 = new Routine({
+        name: 'Leg routine',
+        user,
       });
-      mockRoutine1.id = 1;
+      routine1.id = 1;
 
-      const mockRoutine2 = new Routine({
-        name: routineName,
-        user: mockUser,
-        // exercise: new Exercise({ bodyPart: BodyPart.LEGS, exerciseName: '고블린 스쿼트' }),
+      const routine2 = new Routine({
+        name: 'Back routine',
+        user,
       });
-      mockRoutine2.id = 2;
+      routine2.id = 2;
 
-      routineRepository.findAllByUserId.mockResolvedValue([mockRoutine1, mockRoutine2]);
-      const result = await routineService.getAllRoutinesByUser(mockUser);
-      expect(result[0].exercises).toHaveLength(2);
-      expect(result[0].name).toBe(routineName);
+      const routineExercise1 = {
+        routineId: 1,
+        routineName: 'Leg routine',
+        routines: [
+          {
+            order: 1,
+            exerciseName: 'leg press',
+            bodyPart: BodyPart.LEGS,
+          },
+          {
+            order: 2,
+            exerciseName: 'goblet squat',
+            bodyPart: BodyPart.LEGS,
+          },
+        ],
+      };
+
+      const routineExercise2 = {
+        routineId: 2,
+        routineName: 'Back routine',
+        routines: [
+          {
+            order: 1,
+            exerciseName: 'pulldown',
+            bodyPart: BodyPart.BACK,
+          },
+          {
+            order: 2,
+            exerciseName: 'seated row machine',
+            bodyPart: BodyPart.BACK,
+          },
+        ],
+      };
+
+      routineRepository.findAllByUserId.mockResolvedValue([routine1, routine2]);
+      routineExerciseService.findAllRoutineExercisesByRoutineIds.mockResolvedValue([
+        routineExercise1,
+        routineExercise2,
+      ]);
+
+      const result = await routineService.getAllRoutinesByUser(user);
+      expect(result[0].routineName).toBe('Leg routine');
+      expect(result[1].routineName).toBe('Back routine');
     });
 
     it('should return empty array, when a logged in user has no routine', async () => {
@@ -337,42 +426,84 @@ describe('Test RoutineService', () => {
     });
   });
 
-  describe('Test findAllRoutinesByUserId', () => {
+  describe('findAllRoutinesByUserId', () => {
     it('should return all routines', async () => {
       const user = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
       user.id = 1;
-      const routineName = '하체 루틴';
 
       const routine1 = new Routine({
-        name: routineName,
+        name: 'Leg routine',
         user: user,
-        // exercise: new Exercise({ bodyPart: BodyPart.LEGS, exerciseName: '레그 프레스' }),
       });
       routine1.id = 1;
 
       const routine2 = new Routine({
-        name: routineName,
+        name: 'Back routine',
         user: user,
-        // exercise: new Exercise({ bodyPart: BodyPart.LEGS, exerciseName: '고블린 스쿼트' }),
       });
       routine2.id = 2;
+      const routineExercise1 = {
+        routineId: 1,
+        routineName: 'Leg routine',
+        routines: [
+          {
+            id: 1,
+            order: 1,
+            exerciseName: 'leg press',
+            bodyPart: BodyPart.LEGS,
+          },
+          {
+            id: 2,
+            order: 2,
+            exerciseName: 'goblet squat',
+            bodyPart: BodyPart.LEGS,
+          },
+        ],
+      };
 
+      const routineExercise2 = {
+        routineId: 2,
+        routineName: 'Back routine',
+        routines: [
+          {
+            id: 3,
+            order: 1,
+            exerciseName: 'pulldown',
+            bodyPart: BodyPart.BACK,
+          },
+          {
+            id: 4,
+            order: 2,
+            exerciseName: 'seated row machine',
+            bodyPart: BodyPart.BACK,
+          },
+        ],
+      };
       routineRepository.findAllByUserId.mockResolvedValue([routine1, routine2]);
+      routineExerciseService.findAllRoutineExercisesByRoutineIds.mockResolvedValue([
+        routineExercise1,
+        routineExercise2,
+      ]);
+      const result: FindDataByRoutineIdResponseDto[] = await routineService.getAllRoutinesByUser(user);
 
-      const result: GetRoutineByNameRequestDto[] = await routineService.findAllRoutinesByUserId(user);
-      const expectResult: GetRoutineByNameRequestDto[] = [routine1, routine2].map(
-        (routine) => new GetAllRoutineByUserResponseDto(routine),
+      const expectResult: FindDataByRoutineIdResponseDto[] = [routineExercise1, routineExercise2].map(
+        ({ routineId, routines, routineName }) =>
+          new FindDataByRoutineIdResponseDto({ routineName, routineId, routines }),
       );
+
       expect(result).toEqual(expectResult);
+      expect(routineExerciseService.findAllRoutineExercisesByRoutineIds).toHaveBeenCalledWith({ ids: [1, 2] });
+      expect(routineRepository.findAllByUserId).toHaveBeenCalledWith(1);
     });
 
     it('should return empty array, when a logged in user has no routine', async () => {
       const user = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
-      user.id = 1;
+      user.id = 2;
 
       routineRepository.findAllByUserId.mockResolvedValue([]);
-      const result: GetRoutineByNameRequestDto[] = await routineService.findAllRoutinesByUserId(user);
+      const result: FindDataByRoutineIdResponseDto[] = await routineService.getAllRoutinesByUser(user);
       expect(result).toEqual([]);
+      expect(routineRepository.findAllByUserId).toHaveBeenCalledWith(2);
     });
   });
 });
