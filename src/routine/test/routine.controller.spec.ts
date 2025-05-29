@@ -43,7 +43,8 @@ describe('RoutineController', () => {
       const orderAndExercise = [
         {
           order: 1,
-          exercise: { bodyPart: BodyPart.BACK, exerciseName: 'dead lift' },
+          bodyPart: BodyPart.BACK,
+          exerciseName: 'dead lift',
         },
       ];
       const saveRoutineRequest: SaveRoutineRequestDto = { routineName: 'testRoutine', orderAndExercise };
@@ -129,7 +130,7 @@ describe('RoutineController', () => {
     it('should call service method (bulkUpdateRoutines) with correct parameters', async () => {
       const req = { user: { id: 1 } };
       const updateRoutinesRequestDto: UpdateRoutinesRequestDto = {
-        id: 1,
+        routineId: 1,
         routineName: 'back routine',
         updateData: [{ order: 1, exerciseName: 'cable pulldown', bodyPart: BodyPart.BACK }],
       };
