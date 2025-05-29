@@ -6,7 +6,6 @@ import { SoftDeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
 import { ROUTINE_REPOSITORY } from '../../common/const/inject.constant';
 import { RoutineRepository } from '../domain/routine.repository';
 import { Routine } from '../domain/Routine.entity';
-import { ExerciseService } from '../../exercise/application/exercise.service';
 import { Transactional } from 'typeorm-transactional';
 import { Exercise } from '../../exercise/domain/Exercise.entity';
 import { SaveRoutineRequestDto } from '../dto/saveRoutine.request.dto';
@@ -23,9 +22,6 @@ export class RoutineService {
   constructor(
     @Inject(ROUTINE_REPOSITORY)
     private readonly routineRepository: RoutineRepository,
-
-    readonly exerciseService: ExerciseService,
-
     readonly routineExerciseService: RoutineExerciseService,
   ) {}
 
@@ -40,10 +36,10 @@ export class RoutineService {
     const newRoutine = new Routine({ user, name: routineName });
     const savedRoutine = await this.routineRepository.saveRoutine(newRoutine);
     const saveDataRequestToRoutineExercise: SaveRoutineExerciseRequestDto[] = orderAndExercise.map(
-      ({ order, exercise }) => {
+      ({ order, exerciseName, bodyPart }) => {
         return {
           order,
-          exercise: new Exercise({ exerciseName: exercise.exerciseName, bodyPart: exercise.bodyPart }),
+          exercise: new Exercise({ exerciseName, bodyPart }),
           routine: savedRoutine,
         };
       },
@@ -56,7 +52,6 @@ export class RoutineService {
     getRoutineByNameRequest: GetRoutineByNameRequestDto,
     user: User,
   ): Promise<FindDataByRoutineIdResponseDto> {
-    console.log(getRoutineByNameRequest);
     const { name } = getRoutineByNameRequest;
     const foundRoutine = await this.routineRepository.findOneRoutineByName(name, user);
     if (!foundRoutine) {
@@ -68,40 +63,36 @@ export class RoutineService {
 
   @Transactional()
   async updateRoutine(updateRoutineRequest: UpdateRoutinesRequestDto, user: User) {
-    const { id, routineName, updateData } = updateRoutineRequest;
+    const { routineId, routineName, updateData } = updateRoutineRequest;
 
-    const foundRoutine = await this.routineRepository.findOneRoutineById(id, user);
-    if (!foundRoutine) {
-      throw new NotFoundException(`Routine can not found using the given id(${id}).`);
-    }
-    const foundRoutineName = foundRoutine.name;
-    let nameUpdated = false;
-    if (foundRoutineName !== routineName) {
-      foundRoutine.update({ name: routineName, user });
-      await this.routineRepository.saveRoutine(foundRoutine);
-      nameUpdated = true;
+    const routine = await this.routineRepository.findOneRoutineById(routineId, user);
+    if (!routine) {
+      throw new NotFoundException(`Routine can not found using the given id(${routineId}).`);
     }
 
-    const updatedRoutine = await this.routineRepository.findOneRoutineByName(routineName, user);
-    if (!updatedRoutine) {
-      throw new NotFoundException(`Routine name was not updated into given ${routineName}.`);
+    const isNameChanged = routine.name !== routineName;
+    if (isNameChanged) {
+      routine.update({ name: routineName, user });
+      await this.routineRepository.saveRoutine(routine);
     }
+
     const orderAndExercises: OderAndExercise[] = updateData.map(({ order, exerciseName, bodyPart }) => {
-      return {
-        order: order,
-        exercise: { exerciseName, bodyPart },
-      };
+      return { order, exerciseName, bodyPart };
     });
 
-    const result = await this.routineExerciseService.updateRoutineExercise(updatedRoutine, orderAndExercises);
-    if (result.type === 'UPDATED') {
+    const result = await this.routineExerciseService.updateRoutineExercise(routine, orderAndExercises);
+    if (result.type === 'EXERCISE_UPDATED') {
       return { updated: result.data };
-    } else {
-      if (nameUpdated) {
-        return { updated: { updatedRoutineName: routineName, previousRoutineName: foundRoutineName } };
-      }
-      return { updated: 'Nothing' };
     }
+    if (result.type === 'EXERCISE_NOT_UPDATED' && isNameChanged) {
+      const returnData = {
+        routineId: updateRoutineRequest.routineId,
+        routineName: updateRoutineRequest.routineName,
+        routines: updateRoutineRequest.updateData,
+      };
+      return { updated: returnData };
+    }
+    return { updated: 'Nothing' };
   }
 
   async getUserRoutines(user: User): Promise<Routine[]> {
@@ -121,7 +112,7 @@ export class RoutineService {
   }
 
   @Transactional()
-  async softDeleteRoutine(deleteRoutineRequestDto: SoftDeleteRoutineRequestDto, user: User): Promise<void> {
+  async softDeleteRoutines(deleteRoutineRequestDto: SoftDeleteRoutineRequestDto, user: User): Promise<void> {
     const { ids } = deleteRoutineRequestDto;
 
     const routines = await this.routineRepository.findRoutinesByIds(ids, user);
@@ -132,11 +123,5 @@ export class RoutineService {
     const softDeleteRoutineExercisesRequest = new SoftDeleteRoutineExercisesRequestDto(ids);
     await this.routineExerciseService.softDeleteRoutineExercises(softDeleteRoutineExercisesRequest);
     await this.routineRepository.softDeleteRoutines(ids);
-
-    const checkRoutine = await this.routineRepository.findRoutinesByIds(ids, user);
-
-    if (checkRoutine.length > 0) {
-      throw new BadRequestException(`Routine is not deleted`);
-    }
   }
 }
