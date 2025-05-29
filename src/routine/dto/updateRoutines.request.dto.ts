@@ -4,7 +4,7 @@ import { UpdateRoutine } from './updateRoutine.dto';
 
 export class UpdateRoutinesRequestDto {
   @IsNumber()
-  id: number;
+  routineId: number;
 
   @IsString()
   routineName: string;
