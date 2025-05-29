@@ -1,6 +1,14 @@
-import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
+import { IsExerciseName } from '../../common/validation/isExerciseName.validation';
+import { IsEnum, IsNumber } from 'class-validator';
+import { BodyPart } from '../../common/bodyPart.enum';
 
 export class OderAndExercise {
+  @IsNumber()
   order: number;
-  exercise: ExerciseDataFormatDto;
+
+  @IsExerciseName()
+  exerciseName: string;
+
+  @IsEnum(BodyPart)
+  bodyPart: BodyPart;
 }
