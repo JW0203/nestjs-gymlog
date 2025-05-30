@@ -6,11 +6,20 @@ import { AppModule } from '../../app.module';
 import * as request from 'supertest';
 import { BodyPart } from '../../common/bodyPart.enum';
 import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
-import { UpdateRoutine } from '../dto/updateRoutine.format.dto';
+import { UpdateRoutine } from '../dto/updateRoutine.dto';
 import { UpdateRoutinesRequestDto } from '../dto/updateRoutines.request.dto';
-import { SaveRoutinesRequestDto } from '../dto/saveRoutines.request.dto';
 import { clearAndResetTable } from '../../../test/utils/dbUtils';
 import { createUser, getUserAccessToken, TEST_USER } from '../../../test/utils/userUtils';
+import { createAndSaveTestRoutineRepo } from '../../../test/utils/createAndSaveTestRoutine.repo.layer';
+import { SaveRoutineRequestDto } from '../dto/saveRoutine.request.dto';
+import { SaveRoutineExerciseRequestDto } from '../../routineExercise/dto/saveRoutineExercise.request.dto';
+import { OderAndExercise } from '../dto/oderAndExercise.dto';
+import {
+  FindDataByRoutineIdResponseDto,
+  RoutineExerciseItemDto,
+} from '../../routineExercise/dto/fineDataByRoutineId.response.dto';
+import { IsNotEmpty, IsNumber, IsString, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 
 function createRoutineData(routineName: string, exercises: ExerciseDataFormatDto[]) {
   const routines: { routineName: string; bodyPart: BodyPart; exerciseName: string }[] = [];
@@ -41,84 +50,157 @@ describe('Routine', () => {
   beforeEach(async () => {
     const queryRunner = dataSource.createQueryRunner();
     await queryRunner.connect();
+    await clearAndResetTable(queryRunner, 'routine_exercise');
     await clearAndResetTable(queryRunner, 'routine');
     await clearAndResetTable(queryRunner, 'user');
+    await clearAndResetTable(queryRunner, 'exercise');
     await queryRunner.release();
   });
 
-  it('Given a token of a logged-in user and a routine containing 4 exercises, when creating the new routine, then the response with status code should be 201 and response body should contain the 4 exercises', async () => {
-    // Given
-    const newUser: TEST_USER = { email: 'newuser@email.com', password: '12345678', nickName: 'tester' };
-    await createUser(app, newUser);
-    token = await getUserAccessToken(app, newUser);
+  it(`Given a token of a logged-in user, a routine name, and routine with 4 exercises
+       when creating the new routine, 
+       then then it should return 201 with routineId, routineName, and routine with 4 exercises`, async () => {
+    const user: TEST_USER = { email: 'newuser@email.com', password: '12345678', nickName: 'tester' };
+    await createUser(app, user);
+    token = await getUserAccessToken(app, user);
 
-    const routineName = '등데이';
-    const exercises: ExerciseDataFormatDto[] = [
-      { bodyPart: BodyPart.BACK, exerciseName: '케이블 암 풀다운' },
-      { bodyPart: BodyPart.BACK, exerciseName: '어시스트 풀업 머신' },
-      { bodyPart: BodyPart.BACK, exerciseName: '투 암 하이로우 머신' },
-      { bodyPart: BodyPart.BACK, exerciseName: '랫풀다운' },
+    const routineName = 'Back routine';
+    const orderAndExercise: OderAndExercise[] = [
+      { order: 1, bodyPart: BodyPart.BACK, exerciseName: 'cable arm pull down' },
+      { order: 2, bodyPart: BodyPart.BACK, exerciseName: 'assist pull up machine' },
+      { order: 3, bodyPart: BodyPart.BACK, exerciseName: 'High row machine' },
+      { order: 4, bodyPart: BodyPart.BACK, exerciseName: 'lat pull down' },
     ];
-    const newRoutine: SaveRoutinesRequestDto = createRoutineData(routineName, exercises);
 
-    // When
+    const requestData: SaveRoutineRequestDto = {
+      routineName,
+      orderAndExercise,
+    };
+
     const response = await request(app.getHttpServer())
       .post('/routines')
       .set('Authorization', `Bearer ${token}`)
-      .send(newRoutine);
+      .send(requestData);
 
-    // Then
     expect(response.status).toBe(201);
-    expect(response.body.length).toBe(exercises.length); // 4
+    expect(response.body.routineId).toBe(1);
+    expect(response.body.routineName).toBe('Back routine');
+    expect(response.body.routines.length).toBe(4);
   });
 
-  it('Given a token of a logged-in user and an existing routine, when searching routine by routine name, then the response with status code should be 200 and the length of response body should match the number of exercises in found routine ', async () => {
-    // Given
+  it('Given a token of a logged-in user, when searching for their routine by routine name, then it should return 200 with the corresponding routine', async () => {
     const newUser: TEST_USER = { email: 'newuser@email.com', password: '12345678', nickName: 'tester' };
     await createUser(app, newUser);
     token = await getUserAccessToken(app, newUser);
 
-    const routineName: string = '레그데이';
-    const exercises: ExerciseDataFormatDto[] = [
-      { bodyPart: BodyPart.LEGS, exerciseName: '덤벨 스쿼트' },
-      { bodyPart: BodyPart.LEGS, exerciseName: '케틀벨 스모 스쿼트' },
+    const routineName = 'Back routine';
+    const orderAndExercise: OderAndExercise[] = [
+      { order: 1, bodyPart: BodyPart.BACK, exerciseName: 'cable arm pull down' },
+      { order: 2, bodyPart: BodyPart.BACK, exerciseName: 'assist pull up machine' },
     ];
-    const existingRoutine: SaveRoutinesRequestDto = createRoutineData(routineName, exercises);
-    await request(app.getHttpServer()).post('/routines/').set('Authorization', `Bearer ${token}`).send(existingRoutine);
 
-    // When
+    const requestData: SaveRoutineRequestDto = {
+      routineName,
+      orderAndExercise,
+    };
+
+    await request(app.getHttpServer()).post('/routines/').set('Authorization', `Bearer ${token}`).send(requestData);
+
     const response = await request(app.getHttpServer())
       .get('/routines/')
       .set('Authorization', `Bearer ${token}`)
       .query({ name: routineName });
 
-    // Then
     expect(response.status).toBe(200);
-    expect(response.body.length).toBe(exercises.length);
+    expect(response.body.routineName).toBe('Back routine');
+    expect(response.body.routines[0].exerciseName).toBe('cable arm pull down');
+    expect(response.body.routines[1].exerciseName).toBe('assist pull up machine');
+  });
+
+  it('Given a token of a logged-in user, when searching for all routines by their id, then it should return 200 with the corresponding routine', async () => {
+    const user: TEST_USER = { email: 'newuser@email.com', password: '12345678', nickName: 'tester' };
+    await createUser(app, user);
+    token = await getUserAccessToken(app, user);
+
+    const routineName = 'Back routine';
+    const orderAndExercise: OderAndExercise[] = [
+      { order: 1, bodyPart: BodyPart.BACK, exerciseName: 'cable arm pull down' },
+      { order: 2, bodyPart: BodyPart.BACK, exerciseName: 'assist pull up machine' },
+    ];
+
+    const requestData: SaveRoutineRequestDto = {
+      routineName,
+      orderAndExercise,
+    };
+
+    await request(app.getHttpServer()).post('/routines/').set('Authorization', `Bearer ${token}`).send(requestData);
+
+    const routineName2: string = 'Chest Day';
+    const orderAndExercise2: OderAndExercise[] = [
+      { order: 1, bodyPart: BodyPart.CHEST, exerciseName: 'push up' },
+      { order: 2, bodyPart: BodyPart.CHEST, exerciseName: 'dumbbell incline' },
+    ];
+
+    const requestData2: SaveRoutineRequestDto = {
+      routineName: routineName2,
+      orderAndExercise: orderAndExercise2,
+    };
+
+    await request(app.getHttpServer()).post('/routines/').set('Authorization', `Bearer ${token}`).send(requestData2);
+
+    const requestingUser: TEST_USER = { email: 'newuser2@email.com', password: '12345678', nickName: 'tester2' };
+    await createUser(app, requestingUser);
+    token = await getUserAccessToken(app, requestingUser);
+
+    const routineName3: string = 'Leg routine';
+    const orderAndExercise3: OderAndExercise[] = [
+      { order: 1, bodyPart: BodyPart.LEGS, exerciseName: 'hack squat' },
+      { order: 2, bodyPart: BodyPart.LEGS, exerciseName: 'pendulum squat' },
+    ];
+    const requestData3: SaveRoutineRequestDto = {
+      routineName: routineName3,
+      orderAndExercise: orderAndExercise3,
+    };
+
+    await request(app.getHttpServer()).post('/routines/').set('Authorization', `Bearer ${token}`).send(requestData3);
+
+    const response = await request(app.getHttpServer()).get('/routines/all').set('Authorization', `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveLength(1);
+    expect(response.body[0].routineId).toBe(3);
+    expect(response.body[0].routineName).toBe('Leg routine');
+    expect(response.body[0].routines[0].exerciseName).toBe('hack squat');
   });
 
   it('Given a token of a logged-in user and an existing routine, when updating routine, then the response with status code should be 200 and updated information should be successfully reflected', async () => {
-    // Given
-    const newUser: TEST_USER = { email: 'newuser@email.com', password: '12345678', nickName: 'tester' };
-    await createUser(app, newUser);
-    token = await getUserAccessToken(app, newUser);
+    const user: TEST_USER = { email: 'newuser@email.com', password: '12345678', nickName: 'tester' };
+    await createUser(app, user);
+    token = await getUserAccessToken(app, user);
 
-    const routineName: string = '가슴데이';
-    const routineData: ExerciseDataFormatDto[] = [
-      { bodyPart: BodyPart.CHEST, exerciseName: '푸쉬 업' },
-      { bodyPart: BodyPart.CHEST, exerciseName: '덤벨 인클라인' },
+    const routineName: string = 'Chest Day';
+    const orderAndExercise: OderAndExercise[] = [
+      { order: 1, bodyPart: BodyPart.CHEST, exerciseName: 'push up' },
+      { order: 2, bodyPart: BodyPart.CHEST, exerciseName: 'dumbbell incline' },
     ];
-    const existingRoutine: SaveRoutinesRequestDto = createRoutineData(routineName, routineData);
-    await request(app.getHttpServer()).post('/routines/').set('Authorization', `Bearer ${token}`).send(existingRoutine);
 
-    // When
-    const routineExerciseNameUpdate: UpdateRoutine[] = [
-      { id: 1, routineName: routineName, exerciseName: '벤치 프레스', bodyPart: BodyPart.CHEST },
-      { id: 2, routineName: routineName, exerciseName: '덤벨 인클라인', bodyPart: BodyPart.CHEST },
+    const requestData: SaveRoutineRequestDto = {
+      routineName,
+      orderAndExercise,
+    };
+
+    await request(app.getHttpServer()).post('/routines/').set('Authorization', `Bearer ${token}`).send(requestData);
+
+    const updateData: UpdateRoutine[] = [
+      { order: 1, bodyPart: BodyPart.CHEST, exerciseName: 'push up' },
+      { order: 2, bodyPart: BodyPart.CHEST, exerciseName: 'dumbbell incline' },
+      { order: 3, bodyPart: BodyPart.CHEST, exerciseName: 'pec deck fly' },
     ];
 
     const routineUpdate: UpdateRoutinesRequestDto = {
-      updateData: routineExerciseNameUpdate,
+      routineId: 1,
+      routineName: 'Chest Day',
+      updateData,
     };
 
     const response = await request(app.getHttpServer())
@@ -126,41 +208,76 @@ describe('Routine', () => {
       .set('Authorization', `Bearer ${token}`)
       .send(routineUpdate);
 
-    // Then
     expect(response.status).toBe(200);
-    const containsBenchPress = response.body.some((routine: any) => routine.exercise.exerciseName === '벤치 프레스');
-    expect(containsBenchPress).toBe(true);
+    expect(response.body.updated.routines[2].order).toBe(3);
+    expect(response.body.updated.routines[2].exerciseName).toBe('pec deck fly');
   });
 
-  it('Given a logged-in user with an existing routine, when deleting a routine, then the response with status code should be 204 and the deleted routine should not be found.', async () => {
-    // Given
-    const newUser: TEST_USER = { email: 'newuser@email.com', password: '12345678', nickName: 'tester' };
-    await createUser(app, newUser);
-    token = await getUserAccessToken(app, newUser);
+  it('Given a token of a logged-in user with an existing routine, when deleting a routine, then the response with status code should be 204 and the deleted routine should not be found.', async () => {
+    const user: TEST_USER = { email: 'newuser@email.com', password: '12345678', nickName: 'tester' };
+    await createUser(app, user);
+    token = await getUserAccessToken(app, user);
 
-    const routineName: string = '등데이';
-    const routineData: ExerciseDataFormatDto[] = [
-      { bodyPart: BodyPart.BACK, exerciseName: '어시스트 풀업' },
-      { bodyPart: BodyPart.BACK, exerciseName: '데드리프트' },
-      { bodyPart: BodyPart.BACK, exerciseName: '어시스트 풀업' },
+    const routineName: string = 'Leg routine';
+    const orderAndExercise: OderAndExercise[] = [
+      { order: 1, bodyPart: BodyPart.LEGS, exerciseName: 'hack squat' },
+      { order: 2, bodyPart: BodyPart.LEGS, exerciseName: 'pendulum squat' },
     ];
-    const existingRoutine: SaveRoutinesRequestDto = createRoutineData(routineName, routineData);
-    await request(app.getHttpServer()).post('/routines/').set('Authorization', `Bearer ${token}`).send(existingRoutine);
+    const requestData: SaveRoutineRequestDto = {
+      routineName,
+      orderAndExercise,
+    };
 
-    // When
+    await request(app.getHttpServer()).post('/routines/').set('Authorization', `Bearer ${token}`).send(requestData);
+
+    const routineName2: string = 'Chest Day';
+    const orderAndExercise2: OderAndExercise[] = [
+      { order: 1, bodyPart: BodyPart.CHEST, exerciseName: 'push up' },
+      { order: 2, bodyPart: BodyPart.CHEST, exerciseName: 'dumbbell incline' },
+    ];
+
+    const requestData2: SaveRoutineRequestDto = {
+      routineName: routineName2,
+      orderAndExercise: orderAndExercise2,
+    };
+
+    await request(app.getHttpServer()).post('/routines/').set('Authorization', `Bearer ${token}`).send(requestData2);
+
+    const routineName3 = 'Back routine';
+    const orderAndExercise3: OderAndExercise[] = [
+      { order: 1, bodyPart: BodyPart.BACK, exerciseName: 'cable arm pull down' },
+      { order: 2, bodyPart: BodyPart.BACK, exerciseName: 'assist pull up machine' },
+    ];
+    const requestData3: SaveRoutineRequestDto = {
+      routineName: routineName3,
+      orderAndExercise: orderAndExercise3,
+    };
+
+    await request(app.getHttpServer()).post('/routines/').set('Authorization', `Bearer ${token}`).send(requestData3);
+
     const response = await request(app.getHttpServer())
       .delete('/routines/')
       .set('Authorization', `Bearer ${token}`)
-      .send({ ids: [1, 2, 3] });
-
-    // Then
+      .send({ ids: [1, 2] });
     expect(response.status).toBe(204);
 
-    const queryResponse = await request(app.getHttpServer())
+    const queryResponse1 = await request(app.getHttpServer())
       .get('/routines/')
       .set('Authorization', `Bearer ${token}`)
-      .query({ name: '등데이' });
-    expect(queryResponse.status).toBe(404);
+      .query({ name: 'Leg routine' });
+    expect(queryResponse1.status).toBe(404);
+
+    const queryResponse2 = await request(app.getHttpServer())
+      .get('/routines/')
+      .set('Authorization', `Bearer ${token}`)
+      .query({ name: 'Chest Day' });
+    expect(queryResponse2.status).toBe(404);
+
+    const queryResponse3 = await request(app.getHttpServer())
+      .get('/routines/')
+      .set('Authorization', `Bearer ${token}`)
+      .query({ name: 'Back routine' });
+    expect(queryResponse3.status).toBe(200);
   });
 
   afterAll(async () => {
