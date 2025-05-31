@@ -5,29 +5,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../../app.module';
 import * as request from 'supertest';
 import { BodyPart } from '../../common/bodyPart.enum';
-import { ExerciseDataFormatDto } from '../../common/dto/exerciseData.format.dto';
 import { UpdateRoutine } from '../dto/updateRoutine.dto';
 import { UpdateRoutinesRequestDto } from '../dto/updateRoutines.request.dto';
 import { clearAndResetTable } from '../../../test/utils/dbUtils';
 import { createUser, getUserAccessToken, TEST_USER } from '../../../test/utils/userUtils';
-import { createAndSaveTestRoutineRepo } from '../../../test/utils/createAndSaveTestRoutine.repo.layer';
 import { SaveRoutineRequestDto } from '../dto/saveRoutine.request.dto';
-import { SaveRoutineExerciseRequestDto } from '../../routineExercise/dto/saveRoutineExercise.request.dto';
 import { OderAndExercise } from '../dto/oderAndExercise.dto';
-import {
-  FindDataByRoutineIdResponseDto,
-  RoutineExerciseItemDto,
-} from '../../routineExercise/dto/fineDataByRoutineId.response.dto';
-import { IsNotEmpty, IsNumber, IsString, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
-
-function createRoutineData(routineName: string, exercises: ExerciseDataFormatDto[]) {
-  const routines: { routineName: string; bodyPart: BodyPart; exerciseName: string }[] = [];
-  exercises.forEach((exercise) =>
-    routines.push({ routineName, bodyPart: exercise.bodyPart, exerciseName: exercise.exerciseName }),
-  );
-  return { routineName, routines, exercises };
-}
 
 describe('Routine', () => {
   let app: INestApplication;
