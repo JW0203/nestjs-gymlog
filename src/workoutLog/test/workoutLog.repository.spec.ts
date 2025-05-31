@@ -1,9 +1,8 @@
 import { WorkoutLogRepository } from '../domain/workoutLog.repository';
-import { Between, DataSource, In, Raw } from 'typeorm';
+import { Between, DataSource, In } from 'typeorm';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { WorkoutLog } from '../domain/WorkoutLog.entity';
-import { Routine } from '../../routine/domain/Routine.entity';
 import { User } from '../../user/domain/User.entity';
 import { Exercise } from '../../exercise/domain/Exercise.entity';
 import { getMySqlTypeOrmConfig } from '../../../test/utils/getMySql.TypeOrm.config';
@@ -52,10 +51,7 @@ describe('WorkoutLogRepository', () => {
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [
-        TypeOrmModule.forRoot(getMySqlTypeOrmConfig([Routine, User, Exercise, WorkoutLog])),
-        TypeOrmModule.forFeature([WorkoutLog]),
-      ],
+      imports: [TypeOrmModule.forRoot(getMySqlTypeOrmConfig()), TypeOrmModule.forFeature([WorkoutLog])],
       providers: [{ provide: WORKOUTLOG_REPOSITORY, useClass: TypeormWorkoutLogRepository }],
     }).compile();
 
