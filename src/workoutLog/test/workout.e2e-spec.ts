@@ -14,8 +14,6 @@ import { createUser, getUserAccessToken, TEST_USER } from '../../../test/utils/u
 
 function getTodayDate() {
   const today = new Date();
-
-  // 날짜를 지정한 시간대로 변환
   const options: Intl.DateTimeFormatOptions = {
     // timeZone: 'Asia/Seoul',
     year: 'numeric',
@@ -23,7 +21,7 @@ function getTodayDate() {
     day: '2-digit',
   };
 
-  const formattedDate = new Intl.DateTimeFormat('en-CA', options).format(today); // 'YYYY-MM-DD' 형식으로 반환
+  const formattedDate = new Intl.DateTimeFormat('en-CA', options).format(today);
   return formattedDate.replace(/\//g, '-');
 }
 
@@ -67,37 +65,36 @@ describe('WorkoutLog API (e2e)', () => {
         weight: 30,
         repeatCount: 15,
         bodyPart: BodyPart.BACK,
-        exerciseName: '시티드 로우',
+        exerciseName: 'seated row',
       },
       {
         setCount: 2,
         weight: 30,
         repeatCount: 15,
         bodyPart: BodyPart.BACK,
-        exerciseName: '시티드 로우',
+        exerciseName: 'seated row',
       },
       {
         setCount: 1,
         weight: 30,
         repeatCount: 15,
         bodyPart: BodyPart.BACK,
-        exerciseName: '티바 로우',
+        exerciseName: 'T bar row',
       },
       {
         setCount: 2,
         weight: 30,
         repeatCount: 15,
         bodyPart: BodyPart.BACK,
-        exerciseName: '티바 로우',
+        exerciseName: 'T bar row',
       },
     ];
     const uniqueExercises = [
-      { bodyPart: BodyPart.BACK, exerciseName: '티바 로우' },
-      { bodyPart: BodyPart.BACK, exerciseName: '시티드 로우' },
+      { bodyPart: BodyPart.BACK, exerciseName: 'T bar row' },
+      { bodyPart: BodyPart.BACK, exerciseName: 'seated row' },
     ];
     const requestData = { workoutLogs, exercises: uniqueExercises };
 
-    // When
     const response = await request(app.getHttpServer())
       .post('/workout-logs')
       .set('Authorization', `Bearer ${token}`)
@@ -108,7 +105,6 @@ describe('WorkoutLog API (e2e)', () => {
   });
 
   it('Given a token of a logged-in user, workoutLogs and workoutLogSavedDate, when searching workoutLogs using workoutLogSavedDate, then the response status code should be 200 and the response body length should be greater than 0', async () => {
-    //Given
     const testUser: TEST_USER = { email: 'newuser@email.com', nickName: 'tester', password: '12345678' };
     await createUser(app, testUser);
     token = await getUserAccessToken(app, testUser);
@@ -119,47 +115,47 @@ describe('WorkoutLog API (e2e)', () => {
         weight: 30,
         repeatCount: 15,
         bodyPart: BodyPart.BACK,
-        exerciseName: '시티드 로우',
+        exerciseName: 'seated row',
       },
       {
         setCount: 2,
         weight: 30,
         repeatCount: 15,
         bodyPart: BodyPart.BACK,
-        exerciseName: '시티드 로우',
+        exerciseName: 'seated row',
       },
       {
         setCount: 3,
         weight: 30,
         repeatCount: 15,
         bodyPart: BodyPart.BACK,
-        exerciseName: '시티드 로우',
+        exerciseName: 'seated row',
       },
       {
         setCount: 1,
         weight: 30,
         repeatCount: 15,
         bodyPart: BodyPart.BACK,
-        exerciseName: '티바 로우',
+        exerciseName: 'T bar row',
       },
       {
         setCount: 2,
         weight: 30,
         repeatCount: 15,
         bodyPart: BodyPart.BACK,
-        exerciseName: '티바 로우',
+        exerciseName: 'T bar row',
       },
       {
         setCount: 3,
         weight: 30,
         repeatCount: 15,
         bodyPart: BodyPart.BACK,
-        exerciseName: '티바 로우',
+        exerciseName: 'T bar row',
       },
     ];
     const uniqueExercises = [
-      { bodyPart: BodyPart.BACK, exerciseName: '티바 로우' },
-      { bodyPart: BodyPart.BACK, exerciseName: '시티드 로우' },
+      { bodyPart: BodyPart.BACK, exerciseName: 'T bar row' },
+      { bodyPart: BodyPart.BACK, exerciseName: 'seated row' },
     ];
     const requestData = { workoutLogs, exercises: uniqueExercises };
 
@@ -169,19 +165,16 @@ describe('WorkoutLog API (e2e)', () => {
       .send(requestData);
     const createdDate = postedWorkoutLogs.body[0].createdAt.split('T')[0];
 
-    // When
     const response = await request(app.getHttpServer())
       .get('/workout-logs')
       .query({ date: createdDate })
       .set('Authorization', `Bearer ${token}`);
 
-    // Then
     expect(response.status).toBe(200);
     expect(response.body).not.toHaveLength(0);
   });
 
   it('Given a token of a logged-in user and workoutLogs, when searching all workoutLogs of the user, then the response status code should be 200', async () => {
-    // Given
     const testUser: TEST_USER = { email: 'newuser@email.com', nickName: 'tester', password: '12345678' };
     await createUser(app, testUser);
     token = await getUserAccessToken(app, testUser);
@@ -193,14 +186,14 @@ describe('WorkoutLog API (e2e)', () => {
           weight: 20,
           repeatCount: 15,
           bodyPart: BodyPart.ABS,
-          exerciseName: '레그레이즈',
+          exerciseName: 'leg raises',
         },
         {
           setCount: 2,
           weight: 25,
           repeatCount: 15,
           bodyPart: BodyPart.ABS,
-          exerciseName: '레그레이즈',
+          exerciseName: 'leg raises',
         },
       ],
     };
@@ -209,17 +202,14 @@ describe('WorkoutLog API (e2e)', () => {
       .set('Authorization', `Bearer ${token}`)
       .send(userWorkoutLogs);
 
-    // When
     const response = await request(app.getHttpServer())
       .get('/workout-logs/user')
       .set('Authorization', `Bearer ${token}`);
 
-    // Then
     expect(response.status).toBe(200);
   });
 
   it('Given a token of a logged-in user and workoutLogs, when updating the workoutLogs, then the response status code should be 200 and it should successfully reflect the updated information.', async () => {
-    // Given
     const testUser: TEST_USER = { email: 'newuser@email.com', nickName: 'tester', password: '12345678' };
     await createUser(app, testUser);
     token = await getUserAccessToken(app, testUser);
@@ -230,14 +220,14 @@ describe('WorkoutLog API (e2e)', () => {
         weight: 30,
         repeatCount: 15,
         bodyPart: BodyPart.SHOULDERS,
-        exerciseName: '밀리터리프레스',
+        exerciseName: 'shoulder press',
       },
       {
         setCount: 2,
         weight: 35,
         repeatCount: 15,
         bodyPart: BodyPart.SHOULDERS,
-        exerciseName: '밀리터리프레스',
+        exerciseName: 'shoulder press',
       },
     ];
 
@@ -250,7 +240,6 @@ describe('WorkoutLog API (e2e)', () => {
       .set('Authorization', `Bearer ${token}`)
       .send(userWorkoutLogs);
 
-    // When
     const updateData: UpdateWorkoutLogFormatDto[] = [
       {
         id: 1,
@@ -258,7 +247,7 @@ describe('WorkoutLog API (e2e)', () => {
         weight: 40, //30 -> 40,
         repeatCount: 10, //15 -> 10
         bodyPart: BodyPart.SHOULDERS,
-        exerciseName: '밀리터리프레스',
+        exerciseName: 'shoulder press',
       },
       {
         id: 2,
@@ -266,7 +255,7 @@ describe('WorkoutLog API (e2e)', () => {
         weight: 45, //35 -> 45,
         repeatCount: 10, //15 -> 10
         bodyPart: BodyPart.SHOULDERS,
-        exerciseName: '밀리터리프레스',
+        exerciseName: 'shoulder press',
       },
     ];
     const workoutLogUpdate: UpdateWorkoutLogsRequestDto = {
@@ -278,7 +267,6 @@ describe('WorkoutLog API (e2e)', () => {
       .set('Authorization', `Bearer ${token}`)
       .send(workoutLogUpdate);
 
-    //Then
     expect(response.status).toBe(200);
 
     const checkUpdatedData = response.body.some((workoutLog: any) => workoutLog.weight === 40);
@@ -286,7 +274,6 @@ describe('WorkoutLog API (e2e)', () => {
   });
 
   it('Given a token of logged-in user and workoutLogs, when the user delete the workoutLogs, then the response status code should be 204 and the workoutLogs should not be searched.', async () => {
-    // Given
     const testUser: TEST_USER = { email: 'newuser@email.com', nickName: 'tester', password: '12345678' };
     await createUser(app, testUser);
     token = await getUserAccessToken(app, testUser);
@@ -297,14 +284,14 @@ describe('WorkoutLog API (e2e)', () => {
         weight: 30,
         repeatCount: 15,
         bodyPart: BodyPart.SHOULDERS,
-        exerciseName: '밀리터리프레스',
+        exerciseName: 'shoulder press',
       },
       {
         setCount: 2,
         weight: 35,
         repeatCount: 15,
         bodyPart: BodyPart.SHOULDERS,
-        exerciseName: '밀리터리프레스',
+        exerciseName: 'shoulder press',
       },
     ];
 
@@ -316,13 +303,11 @@ describe('WorkoutLog API (e2e)', () => {
       .send(userWorkoutLogs)
       .set('Authorization', `Bearer ${token}`);
 
-    // When
     const response = await request(app.getHttpServer())
       .delete('/workout-logs/')
       .set('Authorization', `Bearer ${token}`)
       .send({ ids: [1, 2] });
 
-    // Then
     expect(response.status).toBe(204);
 
     const searchResponse = await request(app.getHttpServer())
