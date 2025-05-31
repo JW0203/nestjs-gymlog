@@ -54,7 +54,6 @@ describe('WorkoutLog API (e2e)', () => {
   });
 
   it('Given a token of a logged-in user and workoutLogs, when saving the workoutLogs, then then the response with status code should be 201.', async () => {
-    // Given
     const testUser: TEST_USER = { email: 'newuser@email.com', nickName: 'tester', password: '12345678' };
     await createUser(app, testUser);
     token = await getUserAccessToken(app, testUser);
@@ -100,7 +99,6 @@ describe('WorkoutLog API (e2e)', () => {
       .set('Authorization', `Bearer ${token}`)
       .send(requestData);
 
-    // Then
     expect(response.status).toBe(201);
   });
 
