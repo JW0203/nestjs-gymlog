@@ -73,14 +73,14 @@ describe('WorkoutLogService', () => {
             weight: 30,
             repeatCount: 15,
             bodyPart: BodyPart.BACK,
-            exerciseName: '시티드 로우',
+            exerciseName: 'seated row',
           },
           {
             setCount: 2,
             weight: 35,
             repeatCount: 15,
             bodyPart: BodyPart.BACK,
-            exerciseName: '시티드 로우',
+            exerciseName: 'seated row',
           },
         ],
       };
@@ -100,19 +100,19 @@ describe('WorkoutLogService', () => {
             weight: 30,
             repeatCount: 15,
             bodyPart: BodyPart.LEGS,
-            exerciseName: '레그 프레스',
+            exerciseName: 'reg press',
           },
           {
             setCount: 2,
             weight: 35,
             repeatCount: 15,
             bodyPart: BodyPart.LEGS,
-            exerciseName: '레그 프레스',
+            exerciseName: 'reg press',
           },
         ],
       };
 
-      const otherExercise = new Exercise({ bodyPart: BodyPart.BACK, exerciseName: '티바로우' });
+      const otherExercise = new Exercise({ bodyPart: BodyPart.BACK, exerciseName: 'T bar row' });
 
       userService.findOneById(user);
       exerciseService.findNewExercises.mockResolvedValue([]);
@@ -132,14 +132,14 @@ describe('WorkoutLogService', () => {
             weight: 30,
             repeatCount: 15,
             bodyPart: BodyPart.LEGS,
-            exerciseName: '레그 프레스',
+            exerciseName: 'reg press',
           },
           {
             setCount: 2,
             weight: 35,
             repeatCount: 15,
             bodyPart: BodyPart.LEGS,
-            exerciseName: '레그 프레스',
+            exerciseName: 'reg press',
           },
         ],
       };
@@ -201,14 +201,14 @@ describe('WorkoutLogService', () => {
           weight: 30,
           repeatCount: 15,
           bodyPart: BodyPart.LEGS,
-          exerciseName: '레그 프레스',
+          exerciseName: 'reg press',
         },
         {
           setCount: 2,
           weight: 35,
           repeatCount: 15,
           bodyPart: BodyPart.LEGS,
-          exerciseName: '레그 프레스',
+          exerciseName: 'reg press',
         },
       ];
       const workoutLogsEntity: WorkoutLog[] = workoutLogs.map((workoutLog, i) => {
@@ -245,7 +245,7 @@ describe('WorkoutLogService', () => {
     it('Should throw NotFoundException if user can not be found using user id', async () => {
       const updateWorkoutLogRequest: UpdateWorkoutLogsRequestDto = {
         updateWorkoutLogs: [
-          { setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: '런지', id: 1 },
+          { setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: 'lunge', id: 1 },
         ],
       };
 
@@ -264,7 +264,7 @@ describe('WorkoutLogService', () => {
       user.id = userId;
       const updateWorkoutLogRequest: UpdateWorkoutLogsRequestDto = {
         updateWorkoutLogs: [
-          { id: 1, setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: '런지' },
+          { id: 1, setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: 'lunge' },
         ],
       };
 
@@ -284,8 +284,8 @@ describe('WorkoutLogService', () => {
       user.id = userId;
       const updateWorkoutLogsRequest: UpdateWorkoutLogsRequestDto = {
         updateWorkoutLogs: [
-          { id: 1, setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: '런지' },
-          { id: 2, setCount: 2, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: '런지' },
+          { id: 1, setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: 'reg press' },
+          { id: 2, setCount: 2, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: 'reg press' },
         ],
       };
 
@@ -304,7 +304,7 @@ describe('WorkoutLogService', () => {
         return workoutLogEntity;
       });
 
-      const otherExerciseEntity = [new Exercise({ bodyPart: BodyPart.BACK, exerciseName: '암풀 다운' })];
+      const otherExerciseEntity = [new Exercise({ bodyPart: BodyPart.BACK, exerciseName: 'arm pull down' })];
 
       userService.findOneById.mockResolvedValue(user);
       workoutLogRepository.findWorkoutLogsByIdsLockMode.mockResolvedValue(workoutLogEntities);
@@ -321,20 +321,20 @@ describe('WorkoutLogService', () => {
       const user: User = new User({ nickName: 'tester', email: 'user@email.com', password: 'password123' });
       user.id = userId;
       const originWorkoutLogs = [
-        { id: 1, setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: '런지' },
-        { id: 2, setCount: 2, weight: 0, repeatCount: 20, bodyPart: BodyPart.LEGS, exerciseName: '런지' },
+        { id: 1, setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: 'lunge' },
+        { id: 2, setCount: 2, weight: 0, repeatCount: 20, bodyPart: BodyPart.LEGS, exerciseName: 'lunge' },
       ];
       const changeRepeatCount = 15;
       const updateWorkoutLogsRequest: UpdateWorkoutLogsRequestDto = {
         updateWorkoutLogs: [
-          { id: 1, setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: '런지' },
+          { id: 1, setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: 'lunge' },
           {
             id: 2,
             setCount: 2,
             weight: 0,
             repeatCount: changeRepeatCount,
             bodyPart: BodyPart.LEGS,
-            exerciseName: '런지',
+            exerciseName: 'lunge',
           },
         ],
       };
@@ -373,7 +373,7 @@ describe('WorkoutLogService', () => {
         return workoutLogEntity;
       });
 
-      const exerciseEntity = [new Exercise({ bodyPart: BodyPart.LEGS, exerciseName: '런지' })];
+      const exerciseEntity = [new Exercise({ bodyPart: BodyPart.LEGS, exerciseName: 'lunge' })];
       const expectedResult = updatedWorkoutLogEntities.map((workoutLog) => {
         return new WorkoutLogResponseDto(workoutLog);
       });
@@ -424,8 +424,8 @@ describe('WorkoutLogService', () => {
       user.id = 1;
       const workoutLogIds = [1, 2];
       const workoutLogs = [
-        { setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: '런지' },
-        { setCount: 2, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: '런지' },
+        { setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: 'lunge' },
+        { setCount: 2, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: 'lunge' },
       ];
       const workoutLogEntities: WorkoutLog[] = workoutLogs.map(
         ({ setCount, weight, repeatCount, bodyPart, exerciseName }, i) => {
@@ -460,8 +460,8 @@ describe('WorkoutLogService', () => {
       user.id = 1;
 
       const workoutLogs = [
-        { setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: '런지' },
-        { setCount: 2, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: '런지' },
+        { setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: 'lunge' },
+        { setCount: 2, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: 'lunge' },
       ];
       const workoutLogEntities: WorkoutLog[] = workoutLogs.map(
         ({ setCount, weight, repeatCount, bodyPart, exerciseName }, i) => {
