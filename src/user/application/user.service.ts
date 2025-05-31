@@ -110,7 +110,7 @@ export class UserService {
     if (userRoutines.length !== 0) {
       const routineIds = userRoutines.map((routine) => routine.id);
       const softDeleteRoutineRequest = new SoftDeleteRoutineRequestDto(routineIds);
-      await this.routineService.softDeleteRoutine(softDeleteRoutineRequest, user);
+      await this.routineService.softDeleteRoutines(softDeleteRoutineRequest, user);
     }
     await this.userRepository.softDeleteUser(userId);
   }
