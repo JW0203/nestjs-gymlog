@@ -14,7 +14,7 @@ import { Transactional } from 'typeorm-transactional';
 import { SaveRoutineResponseDto } from '../../routine/dto/saveRoutine.response.dto';
 import { FindAllRoutineExerciseRequestDto } from '../dto/findAllRoutineExercise.request.dto';
 
-type RoutineUpdateResult = { type: 'NOT_UPDATED' } | { type: 'UPDATED'; data: object };
+type RoutineUpdateResult = { type: 'EXERCISE_NOT_UPDATED' } | { type: 'EXERCISE_UPDATED'; data: object };
 
 @Injectable()
 export class RoutineExerciseService {
@@ -136,19 +136,19 @@ export class RoutineExerciseService {
         const target = sortedInput[index];
         return (
           item.order === target.order &&
-          item.exercise.exerciseName === target.exercise.exerciseName &&
-          item.exercise.bodyPart === target.exercise.bodyPart
+          item.exercise.exerciseName === target.exerciseName &&
+          item.exercise.bodyPart === target.bodyPart
         );
       });
 
     if (isSameExercise) {
-      return { type: 'NOT_UPDATED' };
+      return { type: 'EXERCISE_NOT_UPDATED' };
     }
     const softDeleteRequest: SoftDeleteRoutineExercisesRequestDto = { routineIds: [routineId] };
     await this.softDeleteRoutineExercises(softDeleteRequest);
 
-    const exercises = orderAndExercises.map(({ exercise }) => {
-      return { exerciseName: exercise.exerciseName, bodyPart: exercise.bodyPart };
+    const exercises = orderAndExercises.map(({ exerciseName, bodyPart }) => {
+      return { exerciseName, bodyPart };
     });
 
     const newExercises = await this.exerciseService.findNewExercises({ exercises });
@@ -158,14 +158,12 @@ export class RoutineExerciseService {
 
     const exerciseEntities = await this.exerciseService.findExercisesByExerciseNameAndBodyPart(exercises);
 
-    const updateDataArray: RoutineExercise[] = orderAndExercises.map(({ order, exercise }) => {
-      const exerciseName = exercise.exerciseName;
-      const exerciseBodyPart = exercise.bodyPart;
+    const updateDataArray: RoutineExercise[] = orderAndExercises.map(({ order, exerciseName, bodyPart }) => {
       const foundExercise = exerciseEntities.find(
-        (entity) => entity.exerciseName === exerciseName && entity.bodyPart === exerciseBodyPart,
+        (entity) => entity.exerciseName === exerciseName && entity.bodyPart === bodyPart,
       );
       if (!foundExercise) {
-        throw new NotFoundException(`exercise (${exerciseName}, ${exerciseBodyPart}) can not found. `);
+        throw new NotFoundException(`exercise (${exerciseName}, ${bodyPart}) can not found. `);
       }
 
       return new RoutineExercise({
@@ -174,6 +172,7 @@ export class RoutineExerciseService {
         exercise: foundExercise,
       });
     });
+
     const updatedData = await this.routineExerciseRepository.updateRoutineExercise(updateDataArray);
 
     const routines = updatedData.map((data) => {
@@ -185,7 +184,7 @@ export class RoutineExerciseService {
       routineName: updatedData[0].routine.name,
       routines,
     };
-    return { type: 'UPDATED', data: filteredData };
+    return { type: 'EXERCISE_UPDATED', data: filteredData };
   }
 
   @Transactional()
