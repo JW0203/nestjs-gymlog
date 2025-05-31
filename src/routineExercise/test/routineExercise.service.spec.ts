@@ -8,6 +8,7 @@ import { ROUTINE_EXERCISE_REPOSITORY } from '../../common/const/inject.constant'
 import { BodyPart } from '../../common/bodyPart.enum';
 import { RoutineExercise } from '../domain/RoutineExercise.entity';
 import { NotFoundException } from '@nestjs/common';
+import { FindDataByRoutineIdRequestDto } from '../dto/findDataByRoutineId.request.dto';
 
 const mockExerciseService = {
   findNewExercises: jest.fn(),
@@ -17,11 +18,12 @@ const mockExerciseService = {
 
 const mockRoutineExerciseRepository = {
   saveRoutineExercises: jest.fn(),
+  findRoutineExerciseByRoutineId: jest.fn(),
 };
 
 describe('RoutineExerciseService', () => {
-  let service: RoutineExerciseService;
-  let repository: jest.Mocked<typeof mockRoutineExerciseRepository>;
+  let routineExerciseService: RoutineExerciseService;
+  let routineExerciseRepository: jest.Mocked<typeof mockRoutineExerciseRepository>;
   let exerciseService: jest.Mocked<typeof mockExerciseService>;
 
   beforeAll(async () => {
@@ -39,14 +41,12 @@ describe('RoutineExerciseService', () => {
       ],
     }).compile();
 
-    service = module.get(RoutineExerciseService);
-    repository = module.get(ROUTINE_EXERCISE_REPOSITORY);
+    routineExerciseService = module.get(RoutineExerciseService);
+    routineExerciseRepository = module.get(ROUTINE_EXERCISE_REPOSITORY);
     exerciseService = module.get(ExerciseService);
   });
 
   describe('saveRoutineExercises', () => {
-    beforeEach(async () => {});
-
     it('should return new RoutineExercises if RoutineExercises have been saved', async () => {
       const testUser = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
       testUser.id = 1;
@@ -69,19 +69,18 @@ describe('RoutineExerciseService', () => {
       exerciseService.findNewExercises.mockResolvedValue([]);
       exerciseService.findExercisesByExerciseNameAndBodyPart.mockResolvedValue([savedExercise]);
 
-      repository.saveRoutineExercises.mockResolvedValue([
+      routineExerciseRepository.saveRoutineExercises.mockResolvedValue([
         new RoutineExercise({ routine: testRoutine, exercise: savedExercise, order: 1 }),
       ]);
 
-      const result = await service.saveRoutineExercises(inputData);
+      const result = await routineExerciseService.saveRoutineExercises(inputData);
 
-      expect(result).toHaveLength(1);
-      expect(result[0].order).toBe(1);
-      expect(result[0].routineId).toBe(1); // testRoutine.id
-      expect(result[0].routineName).toBe('testRoutine'); // testRoutine.name
-      expect(result[0].exerciseId).toBe(1); //savedExercise.id
-      expect(result[0].exerciseName).toBe('testLegExercise'); // savedExercise.exerciseName
-      expect(result[0].exerciseBodyPart).toBe(BodyPart.LEGS); // savedExercise.bodyPart
+      expect(result.routineId).toBe(1);
+      expect(result.routineName).toBe('testRoutine');
+      expect(result.routines[0].order).toBe(1);
+      expect(result.routines[0].exerciseId).toBe(1);
+      expect(result.routines[0].exerciseName).toBe('testLegExercise');
+      expect(result.routines[0].bodyPart).toBe(BodyPart.LEGS);
     });
 
     it('should throw NotFoundException if exercise cannot be found after insert', async () => {
@@ -104,7 +103,45 @@ describe('RoutineExerciseService', () => {
       exerciseService.findNewExercises.mockResolvedValue([]);
       exerciseService.findExercisesByExerciseNameAndBodyPart.mockResolvedValue([]);
 
-      await expect(service.saveRoutineExercises(inputData)).rejects.toThrow(NotFoundException);
+      await expect(routineExerciseService.saveRoutineExercises(inputData)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('findRoutineExercisesByRoutineId', () => {
+    it('should return routineExercises associated with a given routine ID', async () => {
+      const testUser = new User({ email: 'newuser@email.com', password: '12345678', nickName: 'tester' });
+      testUser.id = 1;
+      const testRoutine = new Routine({ name: 'testRoutine', user: testUser });
+      testRoutine.id = 1;
+      const inputExercise1 = new Exercise({ exerciseName: 'testLegExercise', bodyPart: BodyPart.LEGS });
+      const inputExercise2 = new Exercise({ exerciseName: 'testLegExercise2', bodyPart: BodyPart.LEGS });
+
+      exerciseService.findNewExercises.mockResolvedValue([]);
+      exerciseService.findExercisesByExerciseNameAndBodyPart.mockResolvedValue([inputExercise1, inputExercise2]);
+
+      routineExerciseRepository.saveRoutineExercises.mockResolvedValue([
+        new RoutineExercise({ routine: testRoutine, exercise: inputExercise1, order: 1 }),
+        new RoutineExercise({ routine: testRoutine, exercise: inputExercise2, order: 2 }),
+      ]);
+      routineExerciseRepository.findRoutineExerciseByRoutineId.mockResolvedValue([
+        new RoutineExercise({ routine: testRoutine, exercise: inputExercise1, order: 1 }),
+        new RoutineExercise({ routine: testRoutine, exercise: inputExercise2, order: 2 }),
+      ]);
+
+      const requestDataByRoutineId = new FindDataByRoutineIdRequestDto(1);
+
+      const result = await routineExerciseService.findRoutineExercisesByRoutineId(requestDataByRoutineId);
+
+      expect(result.routineId).toBe(1);
+      expect(result.routineName).toBe('testRoutine');
+      expect(result.routines).toHaveLength(2);
+    });
+
+    it('should return NotFoundException when the routineExercise not found using a given routine ID', async () => {
+      routineExerciseRepository.findRoutineExerciseByRoutineId.mockResolvedValue([]);
+      await expect(routineExerciseService.findRoutineExercisesByRoutineId({ id: 999 })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });
