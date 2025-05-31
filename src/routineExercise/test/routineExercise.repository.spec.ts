@@ -4,9 +4,9 @@ import { RoutineExercise } from '../domain/RoutineExercise.entity';
 import { ROUTINE_EXERCISE_REPOSITORY } from '../../common/const/inject.constant';
 import { getMySqlTypeOrmConfig } from '../../../test/utils/getMySql.TypeOrm.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { createTestUserRepo } from '../../../test/utils/createTestUser.repo.layer';
-import { createTestRoutineRepo } from '../../../test/utils/createTestRoutine.repo.layer';
-import { createTestExerciseRepo } from '../../../test/utils/createTestExercise.repo.layer';
+import { createAndSaveTestUserRepo } from '../../../test/utils/createAndSaveTestUser.repo.layer';
+import { createAndSaveTestRoutineRepo } from '../../../test/utils/createAndSaveTestRoutine.repo.layer';
+import { createAndSaveTestExerciseRepo } from '../../../test/utils/createAndSaveTestExercise.repo.layer';
 import { RoutineExerciseRepository } from '../domain/routineExercise.repository';
 import { TypeOrmRoutineExerciseRepository } from '../infrastructure/typeormRoutineExercise.repository';
 import { User } from '../../user/domain/User.entity';
@@ -42,9 +42,9 @@ describe('RoutineExercise', () => {
     });
 
     it('should should save new RoutineExercises at once', async () => {
-      const testUser: User = await createTestUserRepo(dataSource);
-      const routine: Routine = await createTestRoutineRepo(dataSource, testUser);
-      const exercise: Exercise = await createTestExerciseRepo(dataSource);
+      const testUser: User = await createAndSaveTestUserRepo(dataSource);
+      const routine: Routine = await createAndSaveTestRoutineRepo(dataSource, testUser);
+      const exercise: Exercise = await createAndSaveTestExerciseRepo(dataSource);
       const routineExerciseData = new RoutineExercise({ routine: routine, exercise: exercise, order: 1 });
 
       const savedRoutineExercises = await routineExerciseRepository.saveRoutineExercises([routineExerciseData]);
@@ -61,9 +61,9 @@ describe('RoutineExercise', () => {
     });
 
     it('should find routineExercise data associated to routine id', async () => {
-      const testUser: User = await createTestUserRepo(dataSource);
-      const routine: Routine = await createTestRoutineRepo(dataSource, testUser);
-      const exercise: Exercise = await createTestExerciseRepo(dataSource);
+      const testUser: User = await createAndSaveTestUserRepo(dataSource);
+      const routine: Routine = await createAndSaveTestRoutineRepo(dataSource, testUser);
+      const exercise: Exercise = await createAndSaveTestExerciseRepo(dataSource);
       const routineExerciseData = new RoutineExercise({ routine: routine, exercise: exercise, order: 1 });
       await routineExerciseRepository.saveRoutineExercises([routineExerciseData]);
 
@@ -83,9 +83,9 @@ describe('RoutineExercise', () => {
     });
 
     it('should update updateRoutineExercise', async () => {
-      const testUser: User = await createTestUserRepo(dataSource);
-      const routine: Routine = await createTestRoutineRepo(dataSource, testUser);
-      const exercise: Exercise = await createTestExerciseRepo(dataSource);
+      const testUser: User = await createAndSaveTestUserRepo(dataSource);
+      const routine: Routine = await createAndSaveTestRoutineRepo(dataSource, testUser);
+      const exercise: Exercise = await createAndSaveTestExerciseRepo(dataSource);
       const routineExerciseData = new RoutineExercise({ routine: routine, exercise: exercise, order: 1 });
       const savedRoutineExercise = await routineExerciseRepository.saveRoutineExercises([routineExerciseData]);
 
@@ -103,9 +103,9 @@ describe('RoutineExercise', () => {
     });
 
     it('should insert a new RoutineExercise', async () => {
-      const user = await createTestUserRepo(dataSource);
-      const routine = await createTestRoutineRepo(dataSource, user);
-      const exercise = await createTestExerciseRepo(dataSource);
+      const user = await createAndSaveTestUserRepo(dataSource);
+      const routine = await createAndSaveTestRoutineRepo(dataSource, user);
+      const exercise = await createAndSaveTestExerciseRepo(dataSource);
 
       const newRoutineExercise = new RoutineExercise({ routine, exercise, order: 1 });
 
@@ -118,11 +118,11 @@ describe('RoutineExercise', () => {
     });
 
     it('should insert and update mixed RoutineExercises', async () => {
-      const user = await createTestUserRepo(dataSource);
-      const routine = await createTestRoutineRepo(dataSource, user);
-      const exercise1 = await createTestExerciseRepo(dataSource, { exerciseName: 'A' });
-      const exercise2 = await createTestExerciseRepo(dataSource, { exerciseName: 'B' });
-      const exercise3 = await createTestExerciseRepo(dataSource, { exerciseName: 'C' });
+      const user = await createAndSaveTestUserRepo(dataSource);
+      const routine = await createAndSaveTestRoutineRepo(dataSource, user);
+      const exercise1 = await createAndSaveTestExerciseRepo(dataSource, { exerciseName: 'A' });
+      const exercise2 = await createAndSaveTestExerciseRepo(dataSource, { exerciseName: 'B' });
+      const exercise3 = await createAndSaveTestExerciseRepo(dataSource, { exerciseName: 'C' });
 
       const saved = await routineExerciseRepository.saveRoutineExercises([
         new RoutineExercise({ routine, exercise: exercise1, order: 1 }),
@@ -149,6 +149,45 @@ describe('RoutineExercise', () => {
     it('should return empty array when input is empty', async () => {
       const result = await routineExerciseRepository.updateRoutineExercise([]);
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('softDeleteRoutineExercise', () => {
+    beforeEach(async () => {
+      await dataSource.dropDatabase();
+      await dataSource.synchronize();
+    });
+
+    it('should delete routineExercise associated with routineExercise ids', async () => {
+      const user: User = await createAndSaveTestUserRepo(dataSource);
+      const routine: Routine = await createAndSaveTestRoutineRepo(dataSource, user);
+      const exercise: Exercise = await createAndSaveTestExerciseRepo(dataSource);
+      const routineExerciseData = new RoutineExercise({ routine: routine, exercise: exercise, order: 1 });
+      const savedRoutineExercise = await routineExerciseRepository.saveRoutineExercises([routineExerciseData]);
+      const ids = savedRoutineExercise.map((entity) => entity.id);
+
+      const result = await routineExerciseRepository.softDeleteRoutineExercise(ids);
+      expect(result).not.toBeDefined();
+    });
+  });
+
+  describe('findAllRoutineExerciseByRoutineIds', () => {
+    beforeEach(async () => {
+      await dataSource.dropDatabase();
+      await dataSource.synchronize();
+    });
+
+    it('it should find routineExercises  associated with given routineIds', async () => {
+      const user: User = await createAndSaveTestUserRepo(dataSource);
+      const routine: Routine = await createAndSaveTestRoutineRepo(dataSource, user);
+      const exercise: Exercise = await createAndSaveTestExerciseRepo(dataSource);
+      const routineExerciseData = new RoutineExercise({ routine: routine, exercise: exercise, order: 1 });
+      const savedRoutineExercise = await routineExerciseRepository.saveRoutineExercises([routineExerciseData]);
+      const routineIds = savedRoutineExercise.map((entity) => entity.routine.id);
+
+      const result = await routineExerciseRepository.findAllRoutineExerciseByRoutineIds(routineIds);
+      // console.log(result);
+      expect(result[0].routine.id).toBe(1);
     });
   });
 });
