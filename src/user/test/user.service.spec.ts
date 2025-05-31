@@ -20,7 +20,7 @@ import { WorkoutLogResponseDto } from '../../workoutLog/dto/workoutLog.response.
 import { Exercise } from '../../exercise/domain/Exercise.entity';
 import { BodyPart } from '../../common/bodyPart.enum';
 import { Routine } from '../../routine/domain/Routine.entity';
-import { GetAllRoutineByUserResponseDto } from '../../routine/dto/getAllRoutineByUser.response.dto';
+import { RoutineExerciseService } from '../../routineExercise/application/routineExercise.service';
 
 jest.mock('typeorm-transactional', () => ({
   Transactional: () => jest.fn(),
@@ -61,10 +61,14 @@ const mockWorkoutLogService = {
 };
 
 const mockRoutineService = {
-  findAllRoutinesByUserId: jest.fn(),
+  getAllRoutinesByUser: jest.fn(),
   softDeleteRoutines: jest.fn(),
+  getUserRoutines: jest.fn(),
 };
 
+const mockRoutineExerciseService = {
+  findAllRoutineExercisesByRoutineIds: jest.fn(),
+};
 describe('UserRepository', () => {
   let userRepository: jest.Mocked<typeof mockUserRepository>;
   let userService: UserService;
@@ -74,6 +78,7 @@ describe('UserRepository', () => {
   let passwordHasher: jest.Mocked<typeof mockPasswordHasher>;
   let workoutLogService: jest.Mocked<typeof mockWorkoutLogService>;
   let routineService: jest.Mocked<typeof mockRoutineService>;
+  let routineExerciseService: jest.Mocked<typeof mockRoutineExerciseService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -86,6 +91,7 @@ describe('UserRepository', () => {
         { provide: PASSWORD_HASHER, useValue: mockPasswordHasher },
         { provide: WorkoutLogService, useValue: mockWorkoutLogService },
         { provide: RoutineService, useValue: mockRoutineService },
+        { provide: RoutineExerciseService, useValue: mockRoutineExerciseService },
       ],
     }).compile();
 
@@ -97,6 +103,7 @@ describe('UserRepository', () => {
     authService = module.get(AuthService);
     workoutLogService = module.get(WorkoutLogService);
     routineService = module.get(RoutineService);
+    routineExerciseService = module.get(RoutineExerciseService);
   });
 
   describe('signUp', () => {
@@ -257,15 +264,43 @@ describe('UserRepository', () => {
       const routine = new Routine({
         name: 'test',
         user,
-        exercise: new Exercise({ bodyPart: BodyPart.BACK, exerciseName: 'Dead lift' }),
       });
       routine.id = 1;
-      const GetAllRoutineByUserResponse = new GetAllRoutineByUserResponseDto(routine);
+
+      // const testData = new RoutineExercise({
+      //   order: 1,
+      //   routine,
+      //   exercise: new Exercise({ exerciseName: 'test', bodyPart: BodyPart.LEGS }),
+      // });
+      // testData.id = 1;
+      //
+
+      const responseRindAllRoutineExercises = [
+        {
+          routineId: 12,
+          routineName: 'power chest set',
+          routines: [
+            {
+              id: 9,
+              order: 0,
+              exerciseName: 'Super Power Bench Press 1',
+              bodyPart: 'Chest',
+            },
+            {
+              id: 10,
+              order: 1,
+              exerciseName: 'Super Power Bench Press 2',
+              bodyPart: 'Chest',
+            },
+          ],
+        },
+      ];
 
       userRepository.findOneUserById.mockResolvedValue(user);
       workoutLogService.findWorkoutLogsByUser.mockResolvedValue([WorkoutLogResponse]);
       workoutLogService.softDeleteWorkoutLogs.mockResolvedValue(undefined);
-      routineService.findAllRoutinesByUserId.mockResolvedValue([GetAllRoutineByUserResponse]);
+      routineService.getUserRoutines.mockResolvedValue([Routine]);
+      routineExerciseService.findAllRoutineExercisesByRoutineIds.mockResolvedValue(responseRindAllRoutineExercises);
       routineService.softDeleteRoutines.mockResolvedValue(undefined);
 
       const result = await userService.softDeleteUser(user.id);
