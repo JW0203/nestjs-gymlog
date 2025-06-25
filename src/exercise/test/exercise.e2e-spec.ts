@@ -49,7 +49,9 @@ describe('Exercise API (e2e)', () => {
   });
 
   it('Given saved exercise, when searching a exercise using body part and exercise name, then the response with status code should be and response body should contain the body part and exercise name used in the search', async () => {
-    const exerciseDataArray: ExerciseDataFormatDto[] = [{ bodyPart: BodyPart.SHOULDERS, exerciseName: '숄더프레스' }];
+    const exerciseDataArray: ExerciseDataFormatDto[] = [
+      { bodyPart: BodyPart.SHOULDERS, exerciseName: 'shoulder press' },
+    ];
     const exercises: SaveExercisesRequestDto = {
       exercises: exerciseDataArray,
     };
