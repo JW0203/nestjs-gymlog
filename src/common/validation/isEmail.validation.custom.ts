@@ -18,13 +18,11 @@ class IsCustomEmailConstraint implements ValidatorConstraintInterface {
     const specialChars = /[!#$%&'*+/=?^_`{|}~-]/;
     const localPart = email.split('@')[0];
 
-    // Check if the first or last character is a special character
     if (specialChars.test(localPart[0]) || specialChars.test(localPart[localPart.length - 1])) {
       args.constraints[0] = 'specialCharFirstOrLast';
       return false;
     }
 
-    // Check for consecutive special characters
     for (let i = 0; i < localPart.length - 1; i++) {
       if (specialChars.test(localPart[i]) && specialChars.test(localPart[i + 1])) {
         args.constraints[0] = 'consecutiveSpecialChars';

@@ -21,10 +21,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const user = await this.userService.findOneById(payload.userId);
 
     if (!user) {
-      throw new UnauthorizedException(
-        '입력한 토큰에 해당하는 사용자는 존재하지 않습니다.',
-        'NOT_EXISTING_USER_IN_TOKEN',
-      );
+      throw new UnauthorizedException('NOT_EXISTING_USER_IN_TOKEN');
     }
 
     return user;

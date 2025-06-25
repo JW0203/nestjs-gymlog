@@ -96,7 +96,7 @@ export class WorkoutLogService {
 
     const exerciseEntities = await this.exerciseService.findExercisesByExerciseNameAndBodyPartLockMode(exercises);
 
-    const workoutLogEntities: WorkoutLog[] = []; // 모든 WorkoutLog를 저장할 배열
+    const workoutLogEntities: WorkoutLog[] = [];
 
     workoutLogs.forEach((workoutLog) => {
       const { exerciseName, bodyPart, setCount, weight, repeatCount } = workoutLog;

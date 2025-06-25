@@ -8,9 +8,6 @@ import { EXERCISE_REPOSITORY } from '../../common/const/inject.constant';
 import { TypeOrmExerciseRepository } from '../infrastructure/typeormExercise.repository';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { getMySqlTypeOrmConfig } from '../../../test/utils/getMySql.TypeOrm.config';
-import { Routine } from '../../routine/domain/Routine.entity';
-import { User } from '../../user/domain/User.entity';
-import { WorkoutLog } from '../../workoutLog/domain/WorkoutLog.entity';
 import { LockConfigManager } from '../../common/infrastructure/typeormMysql.lock';
 import { MySqlLock } from '../../common/type/typeormLock.type';
 
@@ -20,10 +17,7 @@ describe('ExerciseRepository', () => {
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [
-        TypeOrmModule.forRoot(getMySqlTypeOrmConfig([Exercise, WorkoutLog, Routine, User])),
-        TypeOrmModule.forFeature([Exercise]),
-      ],
+      imports: [TypeOrmModule.forRoot(getMySqlTypeOrmConfig()), TypeOrmModule.forFeature([Exercise])],
       providers: [{ provide: EXERCISE_REPOSITORY, useClass: TypeOrmExerciseRepository }],
     }).compile();
 

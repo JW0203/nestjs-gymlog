@@ -4,8 +4,8 @@ import { WorkoutLog } from '../../workoutLog/domain/WorkoutLog.entity';
 import { IsEnum, IsNotEmpty, validate } from 'class-validator';
 import { BodyPart } from '../../common/bodyPart.enum';
 import { IsExerciseName } from '../../common/validation/isExerciseName.validation';
-import { Routine } from '../../routine/domain/Routine.entity';
 import { Logger } from '@nestjs/common';
+import { RoutineExercise } from '../../routineExercise/domain/RoutineExercise.entity';
 
 @Entity()
 @Index('idx_exercise_deleted_id', ['deletedAt', 'id'])
@@ -26,8 +26,8 @@ export class Exercise extends Timestamps {
   @OneToMany(() => WorkoutLog, (workoutLog) => workoutLog.exercise)
   workoutLogs: WorkoutLog[];
 
-  @OneToMany(() => Routine, (routine) => routine.exercise)
-  routines: Routine[];
+  @OneToMany(() => RoutineExercise, (RoutineExercise) => RoutineExercise.exercise)
+  public routineExercise: RoutineExercise[];
 
   constructor(params: { bodyPart: BodyPart; exerciseName: string }) {
     super();

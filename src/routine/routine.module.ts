@@ -7,9 +7,15 @@ import { RoutineController } from './presentation/routine.controller';
 import { LoggerModule } from '../common/Logger/logger.module';
 import { TypeormRoutineRepository } from './infrastructure/typeormRoutine.repository';
 import { ROUTINE_REPOSITORY } from '../common/const/inject.constant';
+import { RoutineExerciseModule } from '../routineExercise/routineExercise.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Routine]), ExerciseModule, LoggerModule],
+  imports: [
+    TypeOrmModule.forFeature([Routine]),
+    forwardRef(() => ExerciseModule),
+    LoggerModule,
+    forwardRef(() => RoutineExerciseModule),
+  ],
   providers: [RoutineService, { provide: ROUTINE_REPOSITORY, useClass: TypeormRoutineRepository }],
   controllers: [RoutineController],
   exports: [RoutineService],

@@ -22,7 +22,6 @@ export interface GetWorkoutLogByUserResponseDto {
 }
 
 export function getWorkoutLogByUserResponse(workoutLogs: WorkoutLog[]): GetWorkoutLogByUserResponseDto {
-  // const aggregatedData = new AggregatedResultDTO();
   const aggregatedData: AggregatedWorkoutData = {};
 
   workoutLogs.forEach((workoutLog) => {

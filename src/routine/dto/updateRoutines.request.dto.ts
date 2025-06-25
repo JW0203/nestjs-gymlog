@@ -1,8 +1,14 @@
-import { IsNotEmpty, ValidateNested } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
-import { UpdateRoutine } from './updateRoutine.format.dto';
+import { UpdateRoutine } from './updateRoutine.dto';
 
 export class UpdateRoutinesRequestDto {
+  @IsNumber()
+  routineId: number;
+
+  @IsString()
+  routineName: string;
+
   @IsNotEmpty()
   @ValidateNested()
   @Type(() => UpdateRoutine)

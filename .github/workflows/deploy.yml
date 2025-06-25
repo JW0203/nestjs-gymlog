@@ -10,42 +10,42 @@ jobs:
   Deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Github Repository 파일 불러오기
+      - name: Fetch files from Github Repository
         uses: actions/checkout@v4
 
-      - name : Node 설치
+      - name : Install Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - name: 의존성(라이브러리)설치
+      - name: Install dependency
         run: npm ci
 
       - name: .env 파일 만들기
         run: |
           echo '${{ secrets.ENV }}' > .env
 
-      - name: AWS Resource에 접근할 수 있게 AWS credentials 설정
+      - name: Set up AWS credentials to access AWS Resource
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: ap-northeast-2
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      - name: ECR에 로그인하기
+      - name: Login to ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Docker 이미지 생성
+      - name: Create Docker image
         run: docker build -t gymlog-server .
 
-      - name: Docker 이미지에 Tag 붙이기
+      - name: Add tag to Docker image
         run: docker tag gymlog-server ${{ steps.login-ecr.outputs.registry }}/gymlog-server:latest
 
-      - name: ECR 에 Docker 이미지 Push
+      - name: Push Docker image to ECR
         run: docker push ${{ steps.login-ecr.outputs.registry }}/gymlog-server:latest
 
-      - name: SSH로 EC2에 접속하기
+      - name: Connect EC2 using SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
             host: ${{ secrets.EC2_HOST }}

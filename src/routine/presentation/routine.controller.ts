@@ -3,8 +3,8 @@ import { RoutineService } from '../application/routine.service';
 import { JwtAuthGuard } from '../../common/jwtPassport/jwtAuth.guard';
 import { GetRoutineByNameRequestDto } from '../dto/getRoutineByName.request.dto';
 import { UpdateRoutinesRequestDto } from '../dto/updateRoutines.request.dto';
-import { DeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
-import { SaveRoutinesRequestDto } from '../dto/saveRoutines.request.dto';
+import { SoftDeleteRoutineRequestDto } from '../dto/deleteRoutine.request.dto';
+import { SaveRoutineRequestDto } from '../dto/saveRoutine.request.dto';
 
 @Controller('routines')
 export class RoutineController {
@@ -13,8 +13,8 @@ export class RoutineController {
   @Post()
   @UseGuards(JwtAuthGuard)
   @HttpCode(201)
-  postRoutine(@Body() saveRoutines: SaveRoutinesRequestDto, @Request() req: any) {
-    return this.routineService.bulkInsertRoutines(req.user, saveRoutines);
+  postRoutine(@Body() saveRoutine: SaveRoutineRequestDto, @Request() req: any) {
+    return this.routineService.saveRoutine(saveRoutine, req.user);
   }
 
   @Get()
@@ -35,13 +35,13 @@ export class RoutineController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(200)
   patchRoutine(@Body() updateRoutineRequest: UpdateRoutinesRequestDto, @Request() req: any) {
-    return this.routineService.bulkUpdateRoutines(updateRoutineRequest, req.user);
+    return this.routineService.updateRoutine(updateRoutineRequest, req.user);
   }
 
   @Delete()
   @UseGuards(JwtAuthGuard)
   @HttpCode(204)
-  deleteRoutine(@Body() deleteRoutineRequestDto: DeleteRoutineRequestDto, @Request() req: any) {
-    return this.routineService.softDeleteRoutines(deleteRoutineRequestDto, req.user);
+  deleteRoutine(@Body() softDeleteRoutineRequestDto: SoftDeleteRoutineRequestDto, @Request() req: any) {
+    return this.routineService.softDeleteRoutines(softDeleteRoutineRequestDto, req.user);
   }
 }

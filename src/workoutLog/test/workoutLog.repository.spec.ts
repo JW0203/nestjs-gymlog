@@ -1,9 +1,8 @@
 import { WorkoutLogRepository } from '../domain/workoutLog.repository';
-import { Between, DataSource, In, Raw } from 'typeorm';
+import { Between, DataSource, In } from 'typeorm';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { WorkoutLog } from '../domain/WorkoutLog.entity';
-import { Routine } from '../../routine/domain/Routine.entity';
 import { User } from '../../user/domain/User.entity';
 import { Exercise } from '../../exercise/domain/Exercise.entity';
 import { getMySqlTypeOrmConfig } from '../../../test/utils/getMySql.TypeOrm.config';
@@ -52,10 +51,7 @@ describe('WorkoutLogRepository', () => {
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [
-        TypeOrmModule.forRoot(getMySqlTypeOrmConfig([Routine, User, Exercise, WorkoutLog])),
-        TypeOrmModule.forFeature([WorkoutLog]),
-      ],
+      imports: [TypeOrmModule.forRoot(getMySqlTypeOrmConfig()), TypeOrmModule.forFeature([WorkoutLog])],
       providers: [{ provide: WORKOUTLOG_REPOSITORY, useClass: TypeormWorkoutLogRepository }],
     }).compile();
 
@@ -82,14 +78,14 @@ describe('WorkoutLogRepository', () => {
           weight: 30,
           repeatCount: 15,
           bodyPart: BodyPart.LEGS,
-          exerciseName: '레그 프레스',
+          exerciseName: 'reg press',
         },
         {
           setCount: 2,
           weight: 35,
           repeatCount: 15,
           bodyPart: BodyPart.LEGS,
-          exerciseName: '레그 프레스',
+          exerciseName: 'reg press',
         },
       ];
 
@@ -117,8 +113,8 @@ describe('WorkoutLogRepository', () => {
       await dataSource.getRepository(User).save(user);
 
       const originWorkoutLogsData = [
-        { id: 1, setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: '런지' },
-        { id: 2, setCount: 2, weight: 0, repeatCount: 20, bodyPart: BodyPart.LEGS, exerciseName: '런지' },
+        { id: 1, setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: 'lunge' },
+        { id: 2, setCount: 2, weight: 0, repeatCount: 20, bodyPart: BodyPart.LEGS, exerciseName: 'lunge' },
       ];
 
       const exerciseEntities = makeExerciseEntities(originWorkoutLogsData);
@@ -129,8 +125,8 @@ describe('WorkoutLogRepository', () => {
 
       const changeCount = 15;
       const updateWorkoutLogsData = [
-        { id: 1, setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: '런지' },
-        { id: 2, setCount: 2, weight: 0, repeatCount: changeCount, bodyPart: BodyPart.LEGS, exerciseName: '런지' },
+        { id: 1, setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: 'lunge' },
+        { id: 2, setCount: 2, weight: 0, repeatCount: changeCount, bodyPart: BodyPart.LEGS, exerciseName: 'lunge' },
       ];
 
       const updateWorkoutLogsEntities = makeWorkoutLogEntities(updateWorkoutLogsData, user, savedExercises);
@@ -158,8 +154,8 @@ describe('WorkoutLogRepository', () => {
       await dataSource.getRepository(User).save(user);
 
       const workoutLogsData = [
-        { id: 1, setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: '런지' },
-        { id: 2, setCount: 2, weight: 0, repeatCount: 20, bodyPart: BodyPart.LEGS, exerciseName: '런지' },
+        { id: 1, setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: 'lunge' },
+        { id: 2, setCount: 2, weight: 0, repeatCount: 20, bodyPart: BodyPart.LEGS, exerciseName: 'lunge' },
       ];
 
       const exerciseEntities = makeExerciseEntities(workoutLogsData);
@@ -197,8 +193,8 @@ describe('WorkoutLogRepository', () => {
       await dataSource.getRepository(User).save(user);
 
       const workoutLogsData = [
-        { setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: '런지' },
-        { setCount: 2, weight: 0, repeatCount: 20, bodyPart: BodyPart.LEGS, exerciseName: '런지' },
+        { setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: 'lunge' },
+        { setCount: 2, weight: 0, repeatCount: 20, bodyPart: BodyPart.LEGS, exerciseName: 'lunge' },
       ];
 
       const exerciseEntities = makeExerciseEntities(workoutLogsData);
@@ -229,8 +225,8 @@ describe('WorkoutLogRepository', () => {
       await dataSource.getRepository(User).save(user);
 
       const workoutLogsData = [
-        { setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: '런지' },
-        { setCount: 2, weight: 0, repeatCount: 20, bodyPart: BodyPart.LEGS, exerciseName: '런지' },
+        { setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: 'lunge' },
+        { setCount: 2, weight: 0, repeatCount: 20, bodyPart: BodyPart.LEGS, exerciseName: 'lunge' },
       ];
 
       const exerciseEntities = makeExerciseEntities(workoutLogsData);
@@ -260,8 +256,8 @@ describe('WorkoutLogRepository', () => {
       await dataSource.getRepository(User).save(user);
 
       const workoutLogsData = [
-        { setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: '런지' },
-        { setCount: 2, weight: 0, repeatCount: 20, bodyPart: BodyPart.LEGS, exerciseName: '런지' },
+        { setCount: 1, weight: 0, repeatCount: 15, bodyPart: BodyPart.LEGS, exerciseName: 'lunge' },
+        { setCount: 2, weight: 0, repeatCount: 20, bodyPart: BodyPart.LEGS, exerciseName: 'lunge' },
       ];
 
       const exerciseEntities = makeExerciseEntities(workoutLogsData);

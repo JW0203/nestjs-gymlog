@@ -4,9 +4,6 @@ import { DataSource } from 'typeorm';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { getMySqlTypeOrmConfig } from '../../../test/utils/getMySql.TypeOrm.config';
-import { Routine } from '../../routine/domain/Routine.entity';
-import { Exercise } from '../../exercise/domain/Exercise.entity';
-import { WorkoutLog } from '../../workoutLog/domain/WorkoutLog.entity';
 import { USER_REPOSITORY } from '../../common/const/inject.constant';
 import { TypeormUserRepository } from '../infrastructure/typeormUser.repository';
 
@@ -21,10 +18,7 @@ describe('Test UserRepository', () => {
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [
-        TypeOrmModule.forRoot(getMySqlTypeOrmConfig([User, WorkoutLog, Routine, Exercise])), // ,Routine, Exercise, WorkoutLog
-        TypeOrmModule.forFeature([User]),
-      ],
+      imports: [TypeOrmModule.forRoot(getMySqlTypeOrmConfig()), TypeOrmModule.forFeature([User])],
       providers: [{ provide: USER_REPOSITORY, useClass: TypeormUserRepository }],
     }).compile();
 
