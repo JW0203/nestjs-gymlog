@@ -57,11 +57,16 @@ This diagram illustrates and explains the CI/CD pipeline used in this project.
 <img src= "./docs/ci-cd-pipeline.png" width="500px" alt="CI/CD Pipeline Diagram" />
 
 ### 📈 MySQL Performance Optimization
-#### Evaluated three strategies:
-- Multi‑column indexes
-- Denormalization
-- Redis caching
-#### → **`Multi‑column indexes + Redis caching`** were selected to achieve fast query performance while preserving schema flexibility
+- **Achievement**: Reduced query latency from **2s to 0.004s (500x improvement)** on 1M+ records.
+- **Strategy**: Evaluated Multi‑column indexes, Denormalization, and Redis caching.
+- **Result**: Selected `Multi‑column indexes + Redis caching` for optimal performance and schema flexibility.
+
+<p align="left">
+  <a href="./docs/MySQL_Query_Optimization.pdf" target="_blank">
+    <strong>👉 [Technical Case Study] Detailed Analysis of SQL Tuning & Caching</strong>
+  </a>
+</p>
+<hr />
 
 <hr />
 
