@@ -68,8 +68,6 @@ This diagram illustrates and explains the CI/CD pipeline used in this project.
 </p>
 <hr />
 
-<hr />
-
 ## ☁️ Infrastructure 
 
 ### 📜 Infrastructure as Code (CloudFormation)
